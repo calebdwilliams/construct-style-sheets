@@ -1,0 +1,19 @@
+{
+  "name": "adoptedstylesheets",
+  "version": "0.1.0",
+  "description": "Constructible style sheets/ adopted style sheets polyfill",
+  "main": "index.js",
+  "scripts": {
+    "test": "karma start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/calebdwilliams/adoptedStyleSheets.git"
+  },
+  "author": "Caleb D. Williams <caleb.d.williams@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/calebdwilliams/adoptedStyleSheets/issues"
+  },
+  "homepage": "https://github.com/calebdwilliams/adoptedStyleSheets#readme"
+}
