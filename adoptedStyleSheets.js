@@ -13,12 +13,14 @@
       location.body ? location = location.body : null;
       location.appendChild(clone);
       sheet[node]._adopters.push({ location, clone });
+      return clone;
     };
 
     const updateAdopters = sheet => {
       sheet[node]._adopters.forEach(adopter => {
         adopter.location.removeChild(adopter.clone);
-        appendContent(adopter.location, sheet);
+        const newClone = appendContent(adopter.location, sheet);
+        adopter.clone = newClone;
       });
     };
 
