@@ -2,9 +2,13 @@
   "name": "adoptedstylesheets",
   "version": "0.1.0",
   "description": "Constructible style sheets/ adopted style sheets polyfill",
-  "main": "index.js",
+  "main": "./adoptedStyleSheets.js",
   "scripts": {
-    "test": "karma start"
+    "test": "karma start",
+    "build": "uglifyjs ./adoptedStyleSheets.js -o ./adoptedStyleSheets.min.js -m",
+    "prerelease": "npm run build",
+    "release": "standard-version",
+    "postrelease": "git push --follow-tags origin master; npm publish"
   },
   "repository": {
     "type": "git",
@@ -15,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/calebdwilliams/adoptedStyleSheets/issues"
   },
-  "homepage": "https://github.com/calebdwilliams/adoptedStyleSheets#readme"
+  "homepage": "https://github.com/calebdwilliams/adoptedStyleSheets#readme",
+  "devDependencies": {
+    "standard-version": "^4.4.0",
+    "uglify-es": "^3.3.9"
+  }
 }
