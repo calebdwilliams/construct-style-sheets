@@ -1,5 +1,5 @@
 {
-  "name": "adoptedstylesheets",
+  "name": "construct-style-sheets-polyfill",
   "version": "0.1.0",
   "description": "Constructible style sheets/ adopted style sheets polyfill",
   "main": "./adoptedStyleSheets.js",
