@@ -23,6 +23,18 @@
         adopter.clone = newClone;
       });
     };
+    
+    const onShadowRemoval = event => {
+      const shadowRoot = event.target.shadowRoot;
+      if (shadowRoot && shadowRoot.adoptedStyleSheets.length) {
+        const adoptedStyleSheets = shadowRoot.adoptedStyleSheets;
+        adoptedStyleSheets
+          .map(sheet => sheet[node])
+          .map(sheet => {
+          sheet._adopters = sheet._adopters.filter(adopter => adopter.location !== shadowRoot);
+        });
+      }
+    };
 
     class _StyleSheet {
       constructor() {
@@ -76,6 +88,8 @@
         sheets.forEach(sheet => {
           appendContent(this, sheet);
         });
+        
+        this.addEventListener('DOMNodeRemoved', onShadowRemoval);
       }
     };
 
