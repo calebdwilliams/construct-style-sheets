@@ -18,9 +18,7 @@
 
     const updateAdopters = sheet => {
       sheet[node]._adopters.forEach(adopter => {
-        adopter.location.removeChild(adopter.clone);
-        const newClone = appendContent(adopter.location, sheet);
-        adopter.clone = newClone;
+        adopter.clone.innerHTML = sheet[node]._sheet.innerHTML;
       });
     };
 
