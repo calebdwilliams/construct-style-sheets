@@ -1,18 +1,35 @@
 (function() {
   'use strict';
-
+  console.clear();
   const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
   if (!supportsAdoptedStyleSheets) {
     const node = Symbol('constructible style sheets');
+    const constructed = Symbol('constructed');
+    const removalListener = Symbol('listener');
     const iframe = document.createElement('iframe');
+    const mutationCallback = mutations => {
+      mutations.forEach(mutation => {
+        const { removedNodes } = mutation;
+        removedNodes.forEach(removed => {
+          if (removed[constructed]) {
+            setTimeout(() => {
+              removed[constructed].appendChild(removed);
+            });
+          }
+        });
+      });
+    };
+    const observer = new MutationObserver(mutationCallback);
+    observer.observe(document.body, { childList: true });
     iframe.hidden = true;
     document.body.appendChild(iframe);
     
     const appendContent = (location, sheet) => {
       const clone = sheet[node]._sheet.cloneNode(true);
       location.body ? location = location.body : null;
-      location.appendChild(clone);
+      clone[constructed] = location;  
       sheet[node]._adopters.push({ location, clone });
+      location.appendChild(clone);
       return clone;
     };
 
@@ -20,6 +37,19 @@
       sheet[node]._adopters.forEach(adopter => {
         adopter.clone.innerHTML = sheet[node]._sheet.innerHTML;
       });
+    };
+    
+    const onShadowRemoval = (root, observer) => event => {
+      const shadowRoot = event.target.shadowRoot;
+      if (shadowRoot && shadowRoot.adoptedStyleSheets.length) {
+        const adoptedStyleSheets = shadowRoot.adoptedStyleSheets;
+        adoptedStyleSheets
+          .map(sheet => sheet[node])
+          .map(sheet => {
+          sheet._adopters = sheet._adopters.filter(adopter => adopter.location !== shadowRoot);
+        });
+      }
+      observer.disconnect();
     };
 
     class _StyleSheet {
@@ -61,19 +91,28 @@
           return this._adopted || [];
       },
       set(sheets) {
+        const observer = new MutationObserver(mutationCallback);
+        observer.observe(this, { childList: true });
         if (!Array.isArray(sheets)) {
           throw new TypeError('Adopted style sheets must be an Array');
         }
         sheets.forEach(sheet => {
           if (!sheet instanceof CSSStyleSheet) {
-            throw new TypeError('sdkfljdslfkj');
+            throw new TypeError('Adopted style sheets must be of type CSSStyleSheet');
           }
         });
         const uniqueSheets = [...new Set(sheets)];
         this._adopted = uniqueSheets;
-        sheets.forEach(sheet => {
-          appendContent(this, sheet);
-        });
+        
+        if (this.isConnected) {
+          sheets.forEach(sheet => {
+            appendContent(this, sheet);
+          });
+        }
+        
+        const removalListener = onShadowRemoval(this, observer);
+        this[removalListener] = removalListener;
+        this.addEventListener('DOMNodeRemoved', removalListener, true);
       }
     };
 

@@ -32,11 +32,11 @@ class TestEl extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this.shadowRoot.adoptedStyleSheets = [everythingTomato];
     }
 
     connectedCallback() {
         this.shadowRoot.innerHTML = `<h1>This will be tomato colored, too</h1>`;
-        this.shadowRoot.adoptedStyleSheets = [everythingTomato];
     }
 }
 
