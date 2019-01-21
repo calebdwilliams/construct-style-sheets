@@ -21,6 +21,14 @@
   },
   "homepage": "https://github.com/calebdwilliams/adoptedStyleSheets#readme",
   "devDependencies": {
+    "jasmine-core": "^3.3.0",
+    "karma": "^3.1.4",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-coverage": "^1.1.2",
+    "karma-coverage-istanbul-reporter": "^2.0.4",
+    "karma-firefox-launcher": "^1.1.0",
+    "karma-jasmine": "^2.0.1",
+    "karma-safari-launcher": "^1.0.0",
     "standard-version": "^4.4.0",
     "uglify-es": "^3.3.9"
   }
