@@ -1,7 +1,8 @@
 (function() {
   'use strict';
-  console.clear();
+
   const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
+  
   if (!supportsAdoptedStyleSheets) {
     const node = Symbol('constructible style sheets');
     const constructed = Symbol('constructed');
@@ -9,7 +10,7 @@
     const iframe = document.createElement('iframe');
     const mutationCallback = mutations => {
       mutations.forEach(mutation => {
-        const { removedNodes } = mutation;
+        const { addedNodes, removedNodes } = mutation;
         removedNodes.forEach(removed => {
           if (removed[constructed]) {
             setTimeout(() => {
@@ -17,6 +18,15 @@
             });
           }
         });
+        
+        addedNodes.forEach(added => {
+          const { shadowRoot } = added;
+          if (shadowRoot && shadowRoot.adoptedStyleSheets) {
+            shadowRoot.adoptedStyleSheets.forEach(adopted => {
+              shadowRoot.appendChild(adopted[node]._sheet);
+            });
+          }
+        })
       });
     };
     const observer = new MutationObserver(mutationCallback);
