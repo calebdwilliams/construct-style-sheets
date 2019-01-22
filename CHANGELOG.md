@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v0.2.0...v0.3.0) (2019-01-21)
+
+
+### Features
+
+* **polyfill:** Shadow DOM nodes created before being connected now wire themselves up when connected. ([33191f9](https://github.com/calebdwilliams/adoptedStyleSheets/commit/33191f9))
+
+
+
+<a name="0.2.0"></a>
+# [0.2.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v0.1.3...v0.2.0) (2019-01-20)
+
+
+### Features
+
+* **stylesheets:** Sheets now persist ([decaf7c](https://github.com/calebdwilliams/adoptedStyleSheets/commit/decaf7c))
+
+
+
+<a name="0.1.3"></a>
+## [0.1.3](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v0.1.2...v0.1.3) (2019-01-20)
+
+
+
+<a name="0.1.2"></a>
+## [0.1.2](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v0.1.1...v0.1.2) (2019-01-19)
+
+
+### Bug Fixes
+
+* **polyfill:** Enabled multiple replacements of CSS text. ([48a74a1](https://github.com/calebdwilliams/adoptedStyleSheets/commit/48a74a1))
+
+
+
 <a name="0.1.1"></a>
 ## 0.1.1 (2019-01-18)
 
