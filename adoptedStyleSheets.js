@@ -2,26 +2,65 @@
   'use strict';
 
   const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
+  
   if (!supportsAdoptedStyleSheets) {
     const node = Symbol('constructible style sheets');
+    const constructed = Symbol('constructed');
+    const obsolete = Symbol('obsolete');
+    const removalListener = Symbol('listener');
     const iframe = document.createElement('iframe');
+    const mutationCallback = mutations => {
+      mutations.forEach(mutation => {
+        const { addedNodes, removedNodes } = mutation;
+        removedNodes.forEach(removed => {
+          if (removed[constructed] && !removed[obsolete]) {
+            setTimeout(() => {
+              removed[constructed].appendChild(removed);
+            });
+          }
+        });
+        
+        addedNodes.forEach(added => {
+          const { shadowRoot } = added;
+          if (shadowRoot && shadowRoot.adoptedStyleSheets) {
+            shadowRoot.adoptedStyleSheets.forEach(adopted => {
+              shadowRoot.appendChild(adopted[node]._sheet);
+            });
+          }
+        })
+      });
+    };
+    const observer = new MutationObserver(mutationCallback);
+    observer.observe(document.body, { childList: true });
     iframe.hidden = true;
     document.body.appendChild(iframe);
     
     const appendContent = (location, sheet) => {
       const clone = sheet[node]._sheet.cloneNode(true);
       location.body ? location = location.body : null;
-      location.appendChild(clone);
+      clone[constructed] = location;  
       sheet[node]._adopters.push({ location, clone });
+      location.appendChild(clone);
       return clone;
     };
 
     const updateAdopters = sheet => {
       sheet[node]._adopters.forEach(adopter => {
-        adopter.location.removeChild(adopter.clone);
-        const newClone = appendContent(adopter.location, sheet);
-        adopter.clone = newClone;
+        adopter.clone.innerHTML = sheet[node]._sheet.innerHTML;
       });
+    };
+    
+    const onShadowRemoval = (root, observer) => event => {
+      const shadowRoot = event.target.shadowRoot;
+      if (shadowRoot && shadowRoot.adoptedStyleSheets.length) {
+        const adoptedStyleSheets = shadowRoot.adoptedStyleSheets;
+        adoptedStyleSheets
+          .map(sheet => sheet[node])
+          .map(sheet => {
+          sheet._adopters = sheet._adopters.filter(adopter => adopter.location !== shadowRoot);
+        });
+      }
+      observer.disconnect();
     };
 
     class _StyleSheet {
@@ -63,19 +102,37 @@
           return this._adopted || [];
       },
       set(sheets) {
+        const location = this.body ? this.body : this;
+        this._adopted = this._adopted || [];
+        const observer = new MutationObserver(mutationCallback);
+        observer.observe(this, { childList: true });
         if (!Array.isArray(sheets)) {
           throw new TypeError('Adopted style sheets must be an Array');
         }
         sheets.forEach(sheet => {
           if (!sheet instanceof CSSStyleSheet) {
-            throw new TypeError('sdkfljdslfkj');
+            throw new TypeError('Adopted style sheets must be of type CSSStyleSheet');
           }
         });
         const uniqueSheets = [...new Set(sheets)];
-        this._adopted = uniqueSheets;
-        sheets.forEach(sheet => {
-          appendContent(this, sheet);
+        const removedSheets = this._adopted.filter(sheet => !uniqueSheets.includes(sheet));
+        removedSheets.forEach(sheet => {
+          console.log({sheet})
+          const styleElement = sheet[node]._adopters.filter(adopter => adopter.location === location)[0].clone;
+          styleElement[obsolete] = true;
+          styleElement.parentNode.removeChild(styleElement);
         });
+        this._adopted = uniqueSheets;
+        
+        if (this.isConnected) {
+          sheets.forEach(sheet => {
+            appendContent(this, sheet);
+          });
+        }
+        
+        const removalListener = onShadowRemoval(this, observer);
+        this[removalListener] = removalListener;
+        this.addEventListener('DOMNodeRemoved', removalListener, true);
       }
     };
 
