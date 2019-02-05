@@ -4,6 +4,28 @@
   const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
   
   if (!supportsAdoptedStyleSheets) {
+    function replaceSync(contents) {
+      if (this[node]) {
+        this[node]._sheet.innerHTML = contents;
+        updateAdopters(this);
+        return this[node]._sheet.sheet;
+      } else {
+        throw new TypeError('replaceSync can only be called on a constructed style sheet');
+      }
+    }
+
+    function replace(contents) {
+      return new Promise((resolve, reject) => {
+        if (this[node]) {
+          this[node]._sheet.innerHTML = contents;
+          resolve(this[node]._sheet.sheet);
+          updateAdopters(this);
+        } else {
+          reject('replace can only be called on a constructed style sheet');
+        }
+      });
+    }
+
     const node = Symbol('constructible style sheets');
     const constructed = Symbol('constructed');
     const obsolete = Symbol('obsolete');
@@ -66,35 +88,23 @@
     class _StyleSheet {
       constructor() {
         this._adopters = [];
-        const sheet = document.createElement('style');
-        iframe.contentWindow.document.body.appendChild(sheet);
-        this._sheet = sheet;
-        sheet.sheet[node] = this;
-        return sheet.sheet;
+        const style = document.createElement('style');
+        iframe.contentWindow.document.body.appendChild(style);
+        this._sheet = style;
+        style.sheet[node] = this;
+        if (!style.sheet.constructor.prototype.replace) {
+          style.sheet.constructor.prototype.replace = replace;
+          style.sheet.constructor.prototype.replaceSync = replaceSync;
+        }
+        return style.sheet;
       }
     }
 
-    CSSStyleSheet.prototype.replace = function(contents) {
-      return new Promise((resolve, reject) => {
-        if (this[node]) {
-          this[node]._sheet.innerHTML = contents;
-          resolve(this[node]._sheet.sheet);
-          updateAdopters(this);
-        } else {
-          reject('replace can only be called on a constructed style sheet');
-        }
-      });
-    };
+    StyleSheet.prototype.replace = replace;
+    CSSStyleSheet.prototype.replace = replace;
 
-    CSSStyleSheet.prototype.replaceSync = function(contents) {
-      if (this[node]) {
-        this[node]._sheet.innerHTML = contents;
-        updateAdopters(this);
-        return this[node]._sheet.sheet;
-      } else {
-        throw new TypeError('replaceSync can only be called on a constructed style sheet');
-      }
-    };
+    CSSStyleSheet.prototype.replaceSync = replaceSync;
+    StyleSheet.prototype.replaceSync = replaceSync;
 
     window.CSSStyleSheet = _StyleSheet;
     const adoptedStyleSheetsConfig = {
@@ -117,7 +127,6 @@
         const uniqueSheets = [...new Set(sheets)];
         const removedSheets = this._adopted.filter(sheet => !uniqueSheets.includes(sheet));
         removedSheets.forEach(sheet => {
-          console.log({sheet})
           const styleElement = sheet[node]._adopters.filter(adopter => adopter.location === location)[0].clone;
           styleElement[obsolete] = true;
           styleElement.parentNode.removeChild(styleElement);
