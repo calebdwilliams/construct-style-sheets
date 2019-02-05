@@ -1,6 +1,6 @@
 {
   "name": "construct-style-sheets-polyfill",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Constructible style sheets/ adopted style sheets polyfill",
   "main": "./adoptedStyleSheets.js",
   "scripts": {
@@ -32,5 +32,15 @@
     "standard-version": "^4.4.0",
     "uglify-es": "^3.3.9"
   },
-  "keywords": ["CSS", "CSS in JS", "constructible style sheets", "constructable style sheets", "shadow DOM", "polyfill", "web components", "custom elements", "CSSStyleSheet"]
+  "keywords": [
+    "CSS",
+    "CSS in JS",
+    "constructible style sheets",
+    "constructable style sheets",
+    "shadow DOM",
+    "polyfill",
+    "web components",
+    "custom elements",
+    "CSSStyleSheet"
+  ]
 }
