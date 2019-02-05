@@ -45,3 +45,5 @@ customElements('test-el', TestEl);
 const testEl = new TestEl;
 document.body.appendChild(testEl);
 ```
+
+The polyfill will append new `style` tags to the designated `DocumentOrShadowRoot`. Manually removing the style node will cause a re-insertion of the styles at the designated root. To remove a style sheet, you _must_ remove the style element from the `element.adoptedStyleSheets` array. The behavior here is supposed to emulate a `FrozenArray`, so modifying the array in question will have no effect until the value is changed using a setter.
