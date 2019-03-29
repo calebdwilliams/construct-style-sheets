@@ -12,18 +12,17 @@ describe('Constructible style sheets', () => {
     replaceReturn = null;
   });
 
-  it('Constructs a new style sheet with replace and replaceSync methods', () => {
+  it('constructs a new style sheet with replace and replaceSync methods', () => {
     expect(sheet.cssRules).toBeDefined();
     expect(sheet.replace).toBeDefined();
     expect(sheet.replaceSync).toBeDefined();
   });
 
-  it('Should return a promise from CSSStyleSheet.prototype.replace', () => {
+  it('should return a promise from CSSStyleSheet.prototype.replace', () => {
     expect(replaceReturn instanceof Promise).toBe(true);
   });
 
-  it('Should have a rule set', (done) => {
-    expect(sheet.cssRules.length).toBeFalsy();
+  it('should have a rule set', (done) => {
     replaceReturn.then(sheet => {
       expect(sheet.cssRules.length).toBeTruthy();
       done();

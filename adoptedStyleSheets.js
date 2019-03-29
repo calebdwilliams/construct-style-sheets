@@ -4,7 +4,14 @@
   const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
   
   if (!supportsAdoptedStyleSheets) {
+    function hasImports(content) {
+      return content.replace(/\s/g, '').match(/\@import/);
+    }
+
     function replaceSync(contents) {
+      if (hasImports(contents)) {
+        throw new Error('@import is not allowed when using CSSStyleSheet\'s replaceSync method');
+      }
       if (this[node]) {
         this[node]._sheet.innerHTML = contents;
         updateAdopters(this);
@@ -49,12 +56,16 @@
               shadowRoot.appendChild(adopted[node]._sheet);
             });
           }
-        })
+        });
+
+
       });
     };
     const observer = new MutationObserver(mutationCallback);
     observer.observe(document.body, { childList: true });
     iframe.hidden = true;
+    iframe.height = 0;
+    iframe.width = 0;
     document.body.appendChild(iframe);
     
     const appendContent = (location, sheet) => {
@@ -70,19 +81,6 @@
       sheet[node]._adopters.forEach(adopter => {
         adopter.clone.innerHTML = sheet[node]._sheet.innerHTML;
       });
-    };
-    
-    const onShadowRemoval = (root, observer) => event => {
-      const shadowRoot = event.target.shadowRoot;
-      if (shadowRoot && shadowRoot.adoptedStyleSheets.length) {
-        const adoptedStyleSheets = shadowRoot.adoptedStyleSheets;
-        adoptedStyleSheets
-          .map(sheet => sheet[node])
-          .map(sheet => {
-          sheet._adopters = sheet._adopters.filter(adopter => adopter.location !== shadowRoot);
-        });
-      }
-      observer.disconnect();
     };
 
     class _StyleSheet {
@@ -138,10 +136,6 @@
             appendContent(this, sheet);
           });
         }
-        
-        const removalListener = onShadowRemoval(this, observer);
-        this[removalListener] = removalListener;
-        this.addEventListener('DOMNodeRemoved', removalListener, true);
       }
     };
 
