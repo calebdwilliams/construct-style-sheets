@@ -36,7 +36,6 @@
     const node = Symbol('constructible style sheets');
     const constructed = Symbol('constructed');
     const obsolete = Symbol('obsolete');
-    const removalListener = Symbol('listener');
     const iframe = document.createElement('iframe');
     const mutationCallback = mutations => {
       mutations.forEach(mutation => {
@@ -57,17 +56,16 @@
             });
           }
         });
-
-
       });
     };
+
     const observer = new MutationObserver(mutationCallback);
     observer.observe(document.body, { childList: true });
     iframe.hidden = true;
-    iframe.height = 0;
-    iframe.width = 0;
     document.body.appendChild(iframe);
-    
+    const frameBody = iframe.contentWindow.document.body;
+    document.body.removeChild(iframe);
+
     const appendContent = (location, sheet) => {
       const clone = sheet[node]._sheet.cloneNode(true);
       location.body ? location = location.body : null;
@@ -87,7 +85,7 @@
       constructor() {
         this._adopters = [];
         const style = document.createElement('style');
-        iframe.contentWindow.document.body.appendChild(style);
+        frameBody.appendChild(style);
         this._sheet = style;
         style.sheet[node] = this;
         if (!style.sheet.constructor.prototype.replace) {
@@ -140,6 +138,6 @@
     };
 
     Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
-    Object.defineProperty(document, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
+    Object.defineProperty(Document.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
   }
 }(undefined));
