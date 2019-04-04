@@ -1,6 +1,8 @@
 # Constructible style sheets polyfill
 
-This package is a polyfill for the [constructible style sheets/adopted style sheets specification](https://github.com/WICG/construct-stylesheets/blob/gh-pages/explainer.md). The full specificaiton is enabled by default in Chrome Canary and according to the Chrome Platform Status page for the feature, it should be turned on by default in Chrome version 73.
+This package is a polyfill for the [constructible style sheets/adopted style sheets specification](https://github.com/WICG/construct-stylesheets/blob/gh-pages/explainer.md). The full specificaiton is enabled by default in Google Chrome as of version 73.
+
+Currently [Mozilla is considering implementation of the feature](https://github.com/mozilla/standards-positions/issues/103), marking it as "worth prototyping" while Apple has not publically signaled, they have been active in the standards discussions surrounding it.
 
 ## Use case
 

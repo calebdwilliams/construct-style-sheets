@@ -41,6 +41,9 @@
     "polyfill",
     "web components",
     "custom elements",
-    "CSSStyleSheet"
+    "CSSStyleSheet",
+    "stylesheet",
+    "polyfill",
+    "CSS modules"
   ]
 }
