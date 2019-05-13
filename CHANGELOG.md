@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v0.1.1...v2.0.0) (2019-05-13)
+
+
+### Bug Fixes
+
+* Now works in Firefox ([2259520](https://github.com/calebdwilliams/adoptedStyleSheets/commit/2259520))
+* **package.json:** Added keywords ([4d707e2](https://github.com/calebdwilliams/adoptedStyleSheets/commit/4d707e2))
+* **polyfill:** Enabled multiple replacements of CSS text. ([48a74a1](https://github.com/calebdwilliams/adoptedStyleSheets/commit/48a74a1))
+* **polyfill:** Performance improvements ([8c286c5](https://github.com/calebdwilliams/adoptedStyleSheets/commit/8c286c5))
+* **polyfill:** Polyfill will now allow the removal of style sheets via adoptedStyleSheets setter ([7120bfa](https://github.com/calebdwilliams/adoptedStyleSheets/commit/7120bfa))
+* **polyfill:** Remove document.body.removeChild on iframe to fix DeadObject error in Firefox ([204bf3b](https://github.com/calebdwilliams/adoptedStyleSheets/commit/204bf3b))
+* **polyfill:** Removed the iframe after collecting contentWindow ([09b7d7f](https://github.com/calebdwilliams/adoptedStyleSheets/commit/09b7d7f))
+
+
+### Documentation
+
+* Main README.md ([8b89fa0](https://github.com/calebdwilliams/adoptedStyleSheets/commit/8b89fa0))
+
+
+### Features
+
+* **polyfill:** Shadow DOM nodes created before being connected now wire themselves up when connected. ([33191f9](https://github.com/calebdwilliams/adoptedStyleSheets/commit/33191f9))
+* **stylesheets:** Sheets now persist ([decaf7c](https://github.com/calebdwilliams/adoptedStyleSheets/commit/decaf7c))
+
+
+### BREAKING CHANGES
+
+* Initial release
+
+
+
 <a name="1.0.3"></a>
 ## [1.0.3](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v1.0.2...v1.0.3) (2019-04-04)
 
