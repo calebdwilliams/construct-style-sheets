@@ -64,7 +64,6 @@
     iframe.hidden = true;
     document.body.appendChild(iframe);
     const frameBody = iframe.contentWindow.document.body;
-    document.body.removeChild(iframe);
 
     const appendContent = (location, sheet) => {
       const clone = sheet[node]._sheet.cloneNode(true);
