@@ -100,6 +100,26 @@
 
     CSSStyleSheet.prototype.replaceSync = replaceSync;
     StyleSheet.prototype.replaceSync = replaceSync;
+    
+    
+    function hookCSSStyleSheetMethod(/** @type {keyof typeof CSSStyleSheet.prototype} */ key) {
+        const old = CSSStyleSheet.prototype[key]
+        CSSStyleSheet.prototype[key] = function hook(...args) {
+            /** @type {_StyleSheet | CSSStyleSheet} */
+            if (node in this)
+                this[node]._adopters.forEach(i => {
+                    i.clone.sheet && i.clone.sheet[key](...args)
+                })
+            return old.call(this, ...args)
+        }
+    }
+    hookCSSStyleSheetMethod('addImport')
+    hookCSSStyleSheetMethod('addPageRule')
+    hookCSSStyleSheetMethod('addRule')
+    hookCSSStyleSheetMethod('deleteRule')
+    hookCSSStyleSheetMethod('insertRule')
+    hookCSSStyleSheetMethod('removeImport')
+    hookCSSStyleSheetMethod('removeRule')
 
     window.CSSStyleSheet = _StyleSheet;
     const adoptedStyleSheetsConfig = {
@@ -128,11 +148,9 @@
         });
         this._adopted = uniqueSheets;
         
-        if (this.isConnected) {
-          sheets.forEach(sheet => {
-            appendContent(this, sheet);
-          });
-        }
+        sheets.forEach(sheet => {
+          appendContent(this, sheet);
+        });
       }
     };
 
