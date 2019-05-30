@@ -71,11 +71,15 @@
       location.body ? location = location.body : null;
       clone[constructed] = location;  
       sheet[node]._adopters.push({ location, clone });
-      if (!location[styles]) {
-        location[styles] = document.createElement('head');
-        location.appendChild(location[styles]);
+      if (location instanceof ShadowRoot) {
+        if (!location[styles]) {
+          location[styles] = document.createElement('head');
+          location.appendChild(location[styles]);
+        }
+        location[styles].appendChild(clone);
+      } else {
+        location.appendChild(clone);
       }
-      location[styles].appendChild(clone);
       return clone;
     };
 
