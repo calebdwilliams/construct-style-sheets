@@ -37,6 +37,7 @@
     const constructed = Symbol('constructed');
     const obsolete = Symbol('obsolete');
     const iframe = document.createElement('iframe');
+    const styles = Symbol('Styles');
     const mutationCallback = mutations => {
       mutations.forEach(mutation => {
         const { addedNodes, removedNodes } = mutation;
@@ -70,7 +71,11 @@
       location.body ? location = location.body : null;
       clone[constructed] = location;  
       sheet[node]._adopters.push({ location, clone });
-      location.appendChild(clone);
+      if (!location[styles]) {
+        location[styles] = document.createElement('head');
+        location.appendChild(location[styles]);
+      }
+      location[styles].appendChild(clone);
       return clone;
     };
 
