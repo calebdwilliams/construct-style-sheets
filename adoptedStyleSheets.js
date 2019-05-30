@@ -80,6 +80,13 @@
       } else {
         location.appendChild(clone);
       }
+      if (clone.sheet) {
+        for (const action of sheet[node].pastActions) {
+          if (action.type === 'method') {
+            clone.sheet[action.key](...action.args);
+          }
+        }
+      }
       return clone;
     };
 
@@ -92,6 +99,8 @@
     class _StyleSheet {
       constructor() {
         this._adopters = [];
+        /** @type {{type: 'method', key: string, args: any[]}[]} */
+        this.pastActions = [];
         const style = document.createElement('style');
         frameBody.appendChild(style);
         this._sheet = style;
@@ -115,10 +124,12 @@
         const old = CSSStyleSheet.prototype[key]
         CSSStyleSheet.prototype[key] = function hook(...args) {
             /** @type {_StyleSheet | CSSStyleSheet} */
-            if (node in this)
-                this[node]._adopters.forEach(i => {
-                    i.clone.sheet && i.clone.sheet[key](...args)
-                })
+                if (node in this) {
+                  this[node]._adopters.forEach(i => {
+                    i.clone.sheet && i.clone.sheet[key](...args);
+                  })
+                  this[node].pastActions.push({ type: 'method', key, args });
+                }
             return old.call(this, ...args)
         }
     }
