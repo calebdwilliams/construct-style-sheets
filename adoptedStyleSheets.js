@@ -1,8 +1,8 @@
 (function() {
   'use strict';
 
-  const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
-  
+  const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;
+
   if (!supportsAdoptedStyleSheets) {
     function hasImports(content) {
       return content.replace(/\s/g, '').match(/\@import/);
@@ -10,7 +10,7 @@
 
     function replaceSync(contents) {
       if (hasImports(contents)) {
-        throw new Error('@import is not allowed when using CSSStyleSheet\'s replaceSync method');
+        throw new Error("@import is not allowed when using CSSStyleSheet's replaceSync method");
       }
       if (this[node]) {
         this[node]._sheet.innerHTML = contents;
@@ -37,6 +37,7 @@
     const constructed = Symbol('constructed');
     const obsolete = Symbol('obsolete');
     const iframe = document.createElement('iframe');
+    const styles = Symbol('Styles');
     const mutationCallback = mutations => {
       mutations.forEach(mutation => {
         const { addedNodes, removedNodes } = mutation;
@@ -47,7 +48,7 @@
             });
           }
         });
-        
+
         addedNodes.forEach(added => {
           const { shadowRoot } = added;
           if (shadowRoot && shadowRoot.adoptedStyleSheets) {
@@ -67,10 +68,26 @@
 
     const appendContent = (location, sheet) => {
       const clone = sheet[node]._sheet.cloneNode(true);
-      location.body ? location = location.body : null;
-      clone[constructed] = location;  
+      location.body ? (location = location.body) : null;
+      clone[constructed] = location;
       sheet[node]._adopters.push({ location, clone });
-      location.appendChild(clone);
+      if (location instanceof ShadowRoot) {
+        if (!location[styles]) {
+          // ? Result in HTMLUnknownElement
+          location[styles] = document.createElement('adopted-stylesheets');
+          location.appendChild(location[styles]);
+        }
+        location[styles].appendChild(clone);
+      } else {
+        location.appendChild(clone);
+      }
+      if (clone.sheet) {
+        for (const action of sheet[node].pastActions) {
+          if (action.type === 'method') {
+            clone.sheet[action.key](...action.args);
+          }
+        }
+      }
       return clone;
     };
 
@@ -83,6 +100,8 @@
     class _StyleSheet {
       constructor() {
         this._adopters = [];
+        /** @type {{type: 'method', key: string, args: any[]}[]} */
+        this.pastActions = [];
         const style = document.createElement('style');
         frameBody.appendChild(style);
         this._sheet = style;
@@ -101,11 +120,35 @@
     CSSStyleSheet.prototype.replaceSync = replaceSync;
     StyleSheet.prototype.replaceSync = replaceSync;
 
+    function hookCSSStyleSheetMethod(/** @type {keyof typeof CSSStyleSheet.prototype} */ key) {
+      const old = CSSStyleSheet.prototype[key];
+      CSSStyleSheet.prototype[key] = function hook(...args) {
+        /** @type {_StyleSheet | CSSStyleSheet} */
+        if (node in this) {
+          this[node]._adopters.forEach(adopter => {
+            adopter.clone.sheet && adopter.clone.sheet[key](...args);
+          });
+          this[node].pastActions.push({ type: 'method', key, args });
+        }
+        return old.call(this, ...args);
+      };
+    }
+    hookCSSStyleSheetMethod('addImport');
+    hookCSSStyleSheetMethod('addPageRule');
+    hookCSSStyleSheetMethod('addRule');
+    hookCSSStyleSheetMethod('deleteRule');
+    hookCSSStyleSheetMethod('insertRule');
+    hookCSSStyleSheetMethod('removeImport');
+    hookCSSStyleSheetMethod('removeRule');
+
     window.CSSStyleSheet = _StyleSheet;
     const adoptedStyleSheetsConfig = {
       get() {
-          return this._adopted || [];
+        return this._adopted || [];
       },
+      /**
+       * @this {ShadowRoot}
+       */
       set(sheets) {
         const location = this.body ? this.body : this;
         this._adopted = this._adopted || [];
@@ -127,11 +170,9 @@
           styleElement.parentNode.removeChild(styleElement);
         });
         this._adopted = uniqueSheets;
-        
+
         if (this.isConnected) {
-          sheets.forEach(sheet => {
-            appendContent(this, sheet);
-          });
+          sheets.forEach(sheet => appendContent(this, sheet));
         }
       }
     };
@@ -139,4 +180,4 @@
     Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
     Object.defineProperty(Document.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
   }
-}(undefined));
+})(undefined);
