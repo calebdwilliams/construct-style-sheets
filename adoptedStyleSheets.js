@@ -71,16 +71,7 @@
       location.body ? (location = location.body) : null;
       clone[constructed] = location;
       sheet[node]._adopters.push({ location, clone });
-      if (location instanceof ShadowRoot) {
-        if (!location[styles]) {
-          // ? Result in HTMLUnknownElement
-          location[styles] = document.createElement('adopted-stylesheets');
-          location.appendChild(location[styles]);
-        }
-        location[styles].appendChild(clone);
-      } else {
-        location.appendChild(clone);
-      }
+      location.appendChild(clone);
       if (clone.sheet) {
         for (const action of sheet[node].pastActions) {
           if (action.type === 'method') {

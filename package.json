@@ -3,6 +3,7 @@
   "version": "2.0.2",
   "description": "Constructible style sheets/ adopted style sheets polyfill",
   "main": "./adoptedStyleSheets.js",
+  "module": "./adoptedStyleSheets.min.js",
   "scripts": {
     "test": "karma start",
     "build": "uglifyjs ./adoptedStyleSheets.js -o ./adoptedStyleSheets.min.js -m",
