@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.0.3"></a>
+## [2.0.3](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.0.2...v2.0.3) (2019-07-31)
+
+
+### Bug Fixes
+
+* **polyfill:** Fix issue where removing style node does not reappend the sheet ([a1c7a13](https://github.com/calebdwilliams/adoptedStyleSheets/commit/a1c7a13))
+
+
+
 <a name="2.0.2"></a>
 ## [2.0.2](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.0.1...v2.0.2) (2019-06-14)
 
