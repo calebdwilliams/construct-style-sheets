@@ -28,4 +28,8 @@ describe('Constructible style sheets', () => {
       done();
     });
   });
+
+  it('should pass the instanceof check', () => {
+    expect(sheet instanceof CSSStyleSheet).toBeTruthy();
+  });
 });

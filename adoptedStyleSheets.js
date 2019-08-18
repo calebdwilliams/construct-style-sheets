@@ -4,6 +4,8 @@
   const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;
 
   if (!supportsAdoptedStyleSheets) {
+    const OldCSSStyleSheet = CSSStyleSheet;
+
     function hasImports(content) {
       return content.replace(/\s/g, '').match(/\@import/);
     }
@@ -89,6 +91,10 @@
     };
 
     class _StyleSheet {
+      static [Symbol.hasInstance](instance) {
+        return instance instanceof OldCSSStyleSheet;
+      }
+
       constructor() {
         this._adopters = [];
         /** @type {{type: 'method', key: string, args: any[]}[]} */
@@ -106,14 +112,14 @@
     }
 
     StyleSheet.prototype.replace = replace;
-    CSSStyleSheet.prototype.replace = replace;
+    OldCSSStyleSheet.prototype.replace = replace;
 
-    CSSStyleSheet.prototype.replaceSync = replaceSync;
+    OldCSSStyleSheet.prototype.replaceSync = replaceSync;
     StyleSheet.prototype.replaceSync = replaceSync;
 
     function hookCSSStyleSheetMethod(/** @type {keyof typeof CSSStyleSheet.prototype} */ key) {
-      const old = CSSStyleSheet.prototype[key];
-      CSSStyleSheet.prototype[key] = function hook(...args) {
+      const old = OldCSSStyleSheet.prototype[key];
+      OldCSSStyleSheet.prototype[key] = function hook(...args) {
         /** @type {_StyleSheet | CSSStyleSheet} */
         if (node in this) {
           this[node]._adopters.forEach(adopter => {
@@ -149,7 +155,7 @@
           throw new TypeError('Adopted style sheets must be an Array');
         }
         sheets.forEach(sheet => {
-          if (!sheet instanceof CSSStyleSheet) {
+          if (!sheet instanceof OldCSSStyleSheet) {
             throw new TypeError('Adopted style sheets must be of type CSSStyleSheet');
           }
         });
