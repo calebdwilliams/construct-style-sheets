@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.1.0"></a>
+# [2.1.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v1.0.3...v2.1.0) (2019-08-18)
+
+
+### Bug Fixes
+
+* **polyfill:** Fix issue where removing style node does not reappend the sheet ([a1c7a13](https://github.com/calebdwilliams/adoptedStyleSheets/commit/a1c7a13))
+* **polyfill:** Remove document.body.removeChild on iframe to fix DeadObject error in Firefox ([204bf3b](https://github.com/calebdwilliams/adoptedStyleSheets/commit/204bf3b))
+
+
+### Features
+
+* allow passing the instanceof check ([d65aaf4](https://github.com/calebdwilliams/adoptedStyleSheets/commit/d65aaf4))
+
+
+
 <a name="2.0.3"></a>
 ## [2.0.3](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.0.2...v2.0.3) (2019-07-31)
 
