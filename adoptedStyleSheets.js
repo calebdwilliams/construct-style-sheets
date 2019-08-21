@@ -1,33 +1,71 @@
-(function() {
+(() => {
   'use strict';
 
-  const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;
+  if ('adoptedStyleSheets' in document) {
+    return;
+  }
 
-  if (!supportsAdoptedStyleSheets) {
-    const OldCSSStyleSheet = CSSStyleSheet;
+  const $adoptedStyleSheets = Symbol('adoptedStyleSheets');
+  const $constructStyleSheet = Symbol('constructStyleSheet');
+  const $location = Symbol('location');
+  const $obsolete = Symbol('obsolete');
+  const $ignoreOnce = Symbol('ignoreOnce');
 
-    function hasImports(content) {
-      return content.replace(/\s/g, '').match(/\@import/);
+  const OldCSSStyleSheet = CSSStyleSheet;
+
+  // Iframe is necessary because to extract the native CSSStyleSheet object
+  // the style element should be connected to the DOM.
+  const iframe = document.createElement('iframe');
+  iframe.hidden = true;
+  document.body.appendChild(iframe);
+
+  const frameBody = iframe.contentWindow.document.body;
+
+  const updateAdopters = sheet => {
+    sheet[$constructStyleSheet].adopters.forEach(adopter => {
+      adopter.clone.innerHTML =
+        sheet[$constructStyleSheet].basicStyleElement.innerHTML;
+    });
+  };
+
+  const importPattern = /\@import/;
+
+  // This class will be a substitute for the CSSStyleSheet class that
+  // cannot be instantiated. The `new` operation will return the native
+  // CSSStyleSheet object extracted from a style element appended to the
+  // iframe.
+  class ConstructStyleSheet {
+    // Allows instanceof checks with the window.CSSStyleSheet.
+    static [Symbol.hasInstance](instance) {
+      return instance instanceof OldCSSStyleSheet;
     }
 
-    function replaceSync(contents) {
-      if (hasImports(contents)) {
-        throw new Error("@import is not allowed when using CSSStyleSheet's replaceSync method");
-      }
-      if (this[node]) {
-        this[node]._sheet.innerHTML = contents;
-        updateAdopters(this);
-        return this[node]._sheet.sheet;
-      } else {
-        throw new TypeError('replaceSync can only be called on a constructed style sheet');
-      }
+    constructor() {
+      // A style element to extract the native CSSStyleSheet object.
+      const basicStyleElement = document.createElement('style');
+      frameBody.appendChild(basicStyleElement);
+
+      const nativeStyleSheet = basicStyleElement.sheet;
+      nativeStyleSheet.constructor.prototype.replace =
+        ConstructStyleSheet.prototype.replace;
+      nativeStyleSheet.constructor.prototype.replaceSync =
+        ConstructStyleSheet.prototype.replaceSync;
+
+      // A support object to preserve all the polyfill data
+      nativeStyleSheet[$constructStyleSheet] = {
+        adopters: new Map(),
+        actions: new Map(),
+        basicStyleElement,
+      };
+
+      return nativeStyleSheet;
     }
 
-    function replace(contents) {
+    replace(contents) {
       return new Promise((resolve, reject) => {
-        if (this[node]) {
-          this[node]._sheet.innerHTML = contents;
-          resolve(this[node]._sheet.sheet);
+        if (this[$constructStyleSheet]) {
+          this[$constructStyleSheet].basicStyleElement.innerHTML = contents;
+          resolve(this[$constructStyleSheet].basicStyleElement.sheet);
           updateAdopters(this);
         } else {
           reject('replace can only be called on a constructed style sheet');
@@ -35,146 +73,204 @@
       });
     }
 
-    const node = Symbol('constructible style sheets');
-    const constructed = Symbol('constructed');
-    const obsolete = Symbol('obsolete');
-    const iframe = document.createElement('iframe');
-    const styles = Symbol('Styles');
-    const mutationCallback = mutations => {
-      mutations.forEach(mutation => {
-        const { addedNodes, removedNodes } = mutation;
-        removedNodes.forEach(removed => {
-          if (removed[constructed] && !removed[obsolete]) {
-            setTimeout(() => {
-              removed[constructed].appendChild(removed);
-            });
-          }
-        });
-
-        addedNodes.forEach(added => {
-          const { shadowRoot } = added;
-          if (shadowRoot && shadowRoot.adoptedStyleSheets) {
-            shadowRoot.adoptedStyleSheets.forEach(adopted => {
-              shadowRoot.appendChild(adopted[node]._sheet);
-            });
-          }
-        });
-      });
-    };
-
-    const observer = new MutationObserver(mutationCallback);
-    observer.observe(document.body, { childList: true });
-    iframe.hidden = true;
-    document.body.appendChild(iframe);
-    const frameBody = iframe.contentWindow.document.body;
-
-    const appendContent = (location, sheet) => {
-      const clone = sheet[node]._sheet.cloneNode(true);
-      location.body ? (location = location.body) : null;
-      clone[constructed] = location;
-      sheet[node]._adopters.push({ location, clone });
-      location.appendChild(clone);
-      if (clone.sheet) {
-        for (const action of sheet[node].pastActions) {
-          if (action.type === 'method') {
-            clone.sheet[action.key](...action.args);
-          }
-        }
-      }
-      return clone;
-    };
-
-    const updateAdopters = sheet => {
-      sheet[node]._adopters.forEach(adopter => {
-        adopter.clone.innerHTML = sheet[node]._sheet.innerHTML;
-      });
-    };
-
-    class _StyleSheet {
-      static [Symbol.hasInstance](instance) {
-        return instance instanceof OldCSSStyleSheet;
+    replaceSync(contents) {
+      if (importPattern.test(contents)) {
+        throw new Error(
+          "@import is not allowed when using CSSStyleSheet's replaceSync method",
+        );
       }
 
-      constructor() {
-        this._adopters = [];
-        /** @type {{type: 'method', key: string, args: any[]}[]} */
-        this.pastActions = [];
-        const style = document.createElement('style');
-        frameBody.appendChild(style);
-        this._sheet = style;
-        style.sheet[node] = this;
-        if (!style.sheet.constructor.prototype.replace) {
-          style.sheet.constructor.prototype.replace = replace;
-          style.sheet.constructor.prototype.replaceSync = replaceSync;
-        }
-        return style.sheet;
+      if (this[$constructStyleSheet]) {
+        this[$constructStyleSheet].basicStyleElement.innerHTML = contents;
+        updateAdopters(this);
+
+        return this[$constructStyleSheet].basicStyleElement.sheet;
+      } else {
+        throw new TypeError(
+          'replaceSync can only be called on a constructed style sheet',
+        );
       }
     }
-
-    StyleSheet.prototype.replace = replace;
-    OldCSSStyleSheet.prototype.replace = replace;
-
-    OldCSSStyleSheet.prototype.replaceSync = replaceSync;
-    StyleSheet.prototype.replaceSync = replaceSync;
-
-    function hookCSSStyleSheetMethod(/** @type {keyof typeof CSSStyleSheet.prototype} */ key) {
-      const old = OldCSSStyleSheet.prototype[key];
-      OldCSSStyleSheet.prototype[key] = function hook(...args) {
-        /** @type {_StyleSheet | CSSStyleSheet} */
-        if (node in this) {
-          this[node]._adopters.forEach(adopter => {
-            adopter.clone.sheet && adopter.clone.sheet[key](...args);
-          });
-          this[node].pastActions.push({ type: 'method', key, args });
-        }
-        return old.call(this, ...args);
-      };
-    }
-    hookCSSStyleSheetMethod('addImport');
-    hookCSSStyleSheetMethod('addPageRule');
-    hookCSSStyleSheetMethod('addRule');
-    hookCSSStyleSheetMethod('deleteRule');
-    hookCSSStyleSheetMethod('insertRule');
-    hookCSSStyleSheetMethod('removeImport');
-    hookCSSStyleSheetMethod('removeRule');
-
-    window.CSSStyleSheet = _StyleSheet;
-    const adoptedStyleSheetsConfig = {
-      get() {
-        return this._adopted || [];
-      },
-      /**
-       * @this {ShadowRoot}
-       */
-      set(sheets) {
-        const location = this.body ? this.body : this;
-        this._adopted = this._adopted || [];
-        const observer = new MutationObserver(mutationCallback);
-        observer.observe(this, { childList: true });
-        if (!Array.isArray(sheets)) {
-          throw new TypeError('Adopted style sheets must be an Array');
-        }
-        sheets.forEach(sheet => {
-          if (!sheet instanceof OldCSSStyleSheet) {
-            throw new TypeError('Adopted style sheets must be of type CSSStyleSheet');
-          }
-        });
-        const uniqueSheets = [...new Set(sheets)];
-        const removedSheets = this._adopted.filter(sheet => !uniqueSheets.includes(sheet));
-        removedSheets.forEach(sheet => {
-          const styleElement = sheet[node]._adopters.filter(adopter => adopter.location === location)[0].clone;
-          styleElement[obsolete] = true;
-          styleElement.parentNode.removeChild(styleElement);
-        });
-        this._adopted = uniqueSheets;
-
-        if (this.isConnected) {
-          sheets.forEach(sheet => appendContent(this, sheet));
-        }
-      }
-    };
-
-    Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
-    Object.defineProperty(Document.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
   }
+
+  OldCSSStyleSheet.prototype.replace = ConstructStyleSheet.prototype.replace;
+  OldCSSStyleSheet.prototype.replaceSync =
+    ConstructStyleSheet.prototype.replaceSync;
+
+  const insertStyleSheets = (location, sheets) => {
+    const newStyles = document.createDocumentFragment();
+    const justCreated = new Map();
+
+    sheets.forEach(sheet => {
+      const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
+        location,
+      );
+
+      if (adoptedStyleElement) {
+        // This operation removes the style element from the location, so we
+        // need to ignore it once in the supportStyleOnMutationCallback.
+        adoptedStyleElement[$ignoreOnce] = true;
+        newStyles.append(adoptedStyleElement);
+      } else {
+        const clone = sheet[$constructStyleSheet].basicStyleElement.cloneNode(
+          true,
+        );
+        clone[$location] = location;
+        sheet[$constructStyleSheet].adopters.set(location, clone);
+        newStyles.append(clone);
+        justCreated.set(clone, sheet[$constructStyleSheet].actions);
+      }
+    });
+
+    // Since we already removed all elements during appending them to the
+    // document fragment, we can just re-add them again.
+    location.prepend(newStyles);
+
+    // We need to apply all changes we have done with the original
+    // CSSStyleSheet to each new style element.
+    justCreated.forEach((actions, createdStyleElement) =>
+      actions.forEach((args, key) => {
+        createdStyleElement.sheet[key](...args);
+      }),
+    );
+  };
+
+  const supportStyleOnMutationCallback = mutations =>
+    mutations.forEach(({addedNodes, removedNodes}) => {
+      removedNodes.forEach(removedNode => {
+        if (
+          removedNode[$location] &&
+          !removedNode[$obsolete] &&
+          !removedNode[$ignoreOnce]
+        ) {
+          Promise.resolve().then(() => {
+            removedNode[$location].prepend(removedNode);
+          });
+        }
+
+        if (removedNode[$ignoreOnce]) {
+          removedNode[$ignoreOnce] = false;
+        }
+      });
+
+      addedNodes.forEach(addedNode => {
+        // Only the root nodes are added to the `addedNodes` collection,
+        // but custom elements can add deeply nested collections. To support
+        // this case, we need to go through all nodes and find all custom
+        // elements however nested they are.
+        const iter = document.createNodeIterator(
+          addedNode,
+          NodeFilter.SHOW_ELEMENT,
+          ({shadowRoot}) =>
+            shadowRoot ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+        );
+
+        let currentNode;
+
+        while ((currentNode = iter.nextNode())) {
+          insertStyleSheets(
+            currentNode.shadowRoot,
+            currentNode.shadowRoot.adoptedStyleSheets,
+          );
+        }
+      });
+    });
+
+  const supportStyleOnMutationOptions = {
+    childList: true,
+    subtree: true,
+  };
+
+  const documentObserver = new MutationObserver(supportStyleOnMutationCallback);
+  documentObserver.observe(document.body, supportStyleOnMutationOptions);
+
+  const adoptedStyleSheetAccessors = {
+    configurable: true,
+    get() {
+      return this[$adoptedStyleSheets] || [];
+    },
+    set(sheets) {
+      if (!Array.isArray(sheets)) {
+        throw new TypeError('Adopted style sheets must be an Array');
+      }
+
+      sheets.forEach(sheet => {
+        if (!sheet instanceof OldCSSStyleSheet) {
+          throw new TypeError(
+            'Adopted style sheets must be of type CSSStyleSheet',
+          );
+        }
+      });
+
+      // If `this` is the Document, the body element should be used as a
+      // location.
+      const location = this.body ? this.body : this;
+      const uniqueSheets = [...new Set(sheets)];
+
+      if (!this[$adoptedStyleSheets]) {
+        const observer = new MutationObserver(supportStyleOnMutationCallback);
+        observer.observe(this, supportStyleOnMutationOptions);
+      } else {
+        // Remove all the sheets the received array does not include.
+        for (const sheet of this[$adoptedStyleSheets]) {
+          if (uniqueSheets.includes(sheet)) {
+            continue;
+          }
+
+          const styleElement = sheet[$constructStyleSheet].adopters.get(
+            location,
+          ).clone;
+          // To make sure it won't be restored by a supportStyleOnMutationCallback.
+          styleElement[$obsolete] = true;
+          styleElement.remove();
+        }
+      }
+
+      this[$adoptedStyleSheets] = uniqueSheets;
+
+      if (this.isConnected) {
+        insertStyleSheets(location, this[$adoptedStyleSheets]);
+      }
+    },
+  };
+
+  Object.defineProperty(
+    ShadowRoot.prototype,
+    'adoptedStyleSheets',
+    adoptedStyleSheetAccessors,
+  );
+  Object.defineProperty(
+    Document.prototype,
+    'adoptedStyleSheets',
+    adoptedStyleSheetAccessors,
+  );
+
+  [
+    'addImport',
+    'addPageRule',
+    'addRule',
+    'deleteRule',
+    'insertRule',
+    'removeImport',
+    'removeRule',
+  ].forEach(methodKey => {
+    // Here we apply all changes we have done to the original CSSStyleSheet
+    // object to all adopted style element.
+    const oldMethod = OldCSSStyleSheet.prototype[methodKey];
+    OldCSSStyleSheet.prototype[methodKey] = function(...args) {
+      if ($constructStyleSheet in this) {
+        this[$constructStyleSheet].adopters.forEach(styleElement =>
+          styleElement.sheet[key](...args),
+        );
+
+        // And we also need to remember all these changes to apply them to
+        // each newly adopted style element.
+        this[$constructStyleSheet].actions.set(key, args);
+      }
+
+      return oldMethod.apply(this, args);
+    };
+  });
+
+  window.CSSStyleSheet = ConstructStyleSheet;
 })(undefined);
