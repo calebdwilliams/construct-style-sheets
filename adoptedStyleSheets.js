@@ -8,8 +8,7 @@
   const $adoptedStyleSheets = Symbol('adoptedStyleSheets');
   const $constructStyleSheet = Symbol('constructStyleSheet');
   const $location = Symbol('location');
-  const $obsolete = Symbol('obsolete');
-  const $ignoreOnce = Symbol('ignoreOnce');
+  const $observer = Symbol('observer');
 
   const OldCSSStyleSheet = CSSStyleSheet;
 
@@ -22,10 +21,10 @@
   const frameBody = iframe.contentWindow.document.body;
 
   const updateAdopters = sheet => {
-    sheet[$constructStyleSheet].adopters.forEach(adopter => {
+    for (const adopter of sheet[$constructStyleSheet].adopters) {
       adopter.clone.innerHTML =
         sheet[$constructStyleSheet].basicStyleElement.innerHTML;
-    });
+    }
   };
 
   const importPattern = /\@import/;
@@ -43,7 +42,7 @@
     constructor() {
       // A style element to extract the native CSSStyleSheet object.
       const basicStyleElement = document.createElement('style');
-      frameBody.appendChild(basicStyleElement);
+      frameBody.append(basicStyleElement);
 
       const nativeStyleSheet = basicStyleElement.sheet;
       nativeStyleSheet.constructor.prototype.replace =
@@ -97,20 +96,22 @@
   OldCSSStyleSheet.prototype.replaceSync =
     ConstructStyleSheet.prototype.replaceSync;
 
-  const insertStyleSheets = (location, sheets) => {
+  const adoptStyleSheets = (location, sheets, observer) => {
     const newStyles = document.createDocumentFragment();
     const justCreated = new Map();
 
-    sheets.forEach(sheet => {
+    for (const sheet of sheets) {
       const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
         location,
       );
 
       if (adoptedStyleElement) {
         // This operation removes the style element from the location, so we
-        // need to ignore it once in the supportStyleOnMutationCallback.
-        adoptedStyleElement[$ignoreOnce] = true;
+        // need to pause watching when it happens to avoid calling
+        // restoreStylesOnMutationCallback.
+        observer.disconnect();
         newStyles.append(adoptedStyleElement);
+        observer.observe();
       } else {
         const clone = sheet[$constructStyleSheet].basicStyleElement.cloneNode(
           true,
@@ -120,7 +121,7 @@
         newStyles.append(clone);
         justCreated.set(clone, sheet[$constructStyleSheet].actions);
       }
-    });
+    }
 
     // Since we already removed all elements during appending them to the
     // document fragment, we can just re-add them again.
@@ -128,61 +129,32 @@
 
     // We need to apply all changes we have done with the original
     // CSSStyleSheet to each new style element.
-    justCreated.forEach((actions, createdStyleElement) =>
-      actions.forEach((args, key) => {
+    for (const [createdStyleElement, actions] of justCreated) {
+      for (const [key, args] of actions) {
         createdStyleElement.sheet[key](...args);
-      }),
-    );
+      }
+    }
   };
 
-  const supportStyleOnMutationCallback = mutations =>
-    mutations.forEach(({addedNodes, removedNodes}) => {
-      removedNodes.forEach(removedNode => {
-        if (
-          removedNode[$location] &&
-          !removedNode[$obsolete] &&
-          !removedNode[$ignoreOnce]
-        ) {
-          Promise.resolve().then(() => {
-            removedNode[$location].prepend(removedNode);
-          });
-        }
+  // When any style is removed, we need to re-adopt all the styles because
+  // otherwise we can break the order of appended styles which will affect the
+  // rules overriding.
+  const restoreStylesOnMutationCallback = mutations => {
+    for (const {removedNodes} of mutations) {
+      for (const removedNode of removedNodes) {
+        const location = removedNode[$location];
 
-        if (removedNode[$ignoreOnce]) {
-          removedNode[$ignoreOnce] = false;
-        }
-      });
-
-      addedNodes.forEach(addedNode => {
-        // Only the root nodes are added to the `addedNodes` collection,
-        // but custom elements can add deeply nested collections. To support
-        // this case, we need to go through all nodes and find all custom
-        // elements however nested they are.
-        const iter = document.createNodeIterator(
-          addedNode,
-          NodeFilter.SHOW_ELEMENT,
-          ({shadowRoot}) =>
-            shadowRoot ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
-        );
-
-        let currentNode;
-
-        while ((currentNode = iter.nextNode())) {
-          insertStyleSheets(
-            currentNode.shadowRoot,
-            currentNode.shadowRoot.adoptedStyleSheets,
+        if (location) {
+          adoptStyleSheets(
+            location,
+            location.adoptedStyleSheets,
+            location[$observer],
           );
+          break;
         }
-      });
-    });
-
-  const supportStyleOnMutationOptions = {
-    childList: true,
-    subtree: true,
+      }
+    }
   };
-
-  const documentObserver = new MutationObserver(supportStyleOnMutationCallback);
-  documentObserver.observe(document.body, supportStyleOnMutationOptions);
 
   const adoptedStyleSheetAccessors = {
     configurable: true,
@@ -194,13 +166,11 @@
         throw new TypeError('Adopted style sheets must be an Array');
       }
 
-      sheets.forEach(sheet => {
-        if (!sheet instanceof OldCSSStyleSheet) {
-          throw new TypeError(
-            'Adopted style sheets must be of type CSSStyleSheet',
-          );
-        }
-      });
+      if (!sheets.every(sheet => sheet instanceof OldCSSStyleSheet)) {
+        throw new TypeError(
+          'Adopted style sheets must be of type CSSStyleSheet',
+        );
+      }
 
       // If `this` is the Document, the body element should be used as a
       // location.
@@ -208,8 +178,14 @@
       const uniqueSheets = [...new Set(sheets)];
 
       if (!this[$adoptedStyleSheets]) {
-        const observer = new MutationObserver(supportStyleOnMutationCallback);
-        observer.observe(this, supportStyleOnMutationOptions);
+        const observer = new MutationObserver(restoreStylesOnMutationCallback);
+
+        this[$observer] = {
+          observe: () => observer.observe(this, {childList: true}),
+          disconnect: () => observer.disconnect(),
+        };
+
+        this[$observer].observe();
       } else {
         // Remove all the sheets the received array does not include.
         for (const sheet of this[$adoptedStyleSheets]) {
@@ -220,17 +196,21 @@
           const styleElement = sheet[$constructStyleSheet].adopters.get(
             location,
           ).clone;
-          // To make sure it won't be restored by a supportStyleOnMutationCallback.
-          styleElement[$obsolete] = true;
+          this[$observer].disconnect();
           styleElement.remove();
+          this[$observer].observe();
         }
       }
 
       this[$adoptedStyleSheets] = uniqueSheets;
 
-      if (this.isConnected) {
-        insertStyleSheets(location, this[$adoptedStyleSheets]);
-      }
+      // With this style elements will be appended even before the element is
+      // connected to the DOM and become unremovable due to
+      // restoreStylesOnMutationCallback.
+      //
+      // It should not harm the developer experience, but will help to catch
+      // each custom element, no matter how nested it is.
+      adoptStyleSheets(location, this[$adoptedStyleSheets], this[$observer]);
     },
   };
 
@@ -259,9 +239,9 @@
     const oldMethod = OldCSSStyleSheet.prototype[methodKey];
     OldCSSStyleSheet.prototype[methodKey] = function(...args) {
       if ($constructStyleSheet in this) {
-        this[$constructStyleSheet].adopters.forEach(styleElement =>
-          styleElement.sheet[key](...args),
-        );
+        for (const [, styleElement] of this[$constructStyleSheet].adopters) {
+          styleElement.sheet[key](...args)
+        }
 
         // And we also need to remember all these changes to apply them to
         // each newly adopted style element.
