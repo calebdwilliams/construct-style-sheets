@@ -67,15 +67,20 @@
           resolve(this[$constructStyleSheet].basicStyleElement.sheet);
           updateAdopters(this);
         } else {
-          reject('replace can only be called on a constructed style sheet');
+          reject(
+            new TypeError(
+              "Illegal invocation: 'replace' can only be called on a Constructible Style Sheet",
+            ),
+          );
         }
       });
     }
 
     replaceSync(contents) {
       if (importPattern.test(contents)) {
-        throw new Error(
-          "@import is not allowed when using CSSStyleSheet's replaceSync method",
+        throw new DOMException(
+          '@import rules are not allowed when creating stylesheet synchronously',
+          'NotAllowedError',
         );
       }
 
@@ -86,7 +91,7 @@
         return this[$constructStyleSheet].basicStyleElement.sheet;
       } else {
         throw new TypeError(
-          'replaceSync can only be called on a constructed style sheet',
+          "Illegal invocation: 'replaceSync' can only be called on a Constructible Style Sheet",
         );
       }
     }
@@ -240,7 +245,7 @@
     OldCSSStyleSheet.prototype[methodKey] = function(...args) {
       if ($constructStyleSheet in this) {
         for (const [, styleElement] of this[$constructStyleSheet].adopters) {
-          styleElement.sheet[key](...args)
+          styleElement.sheet[key](...args);
         }
 
         // And we also need to remember all these changes to apply them to
