@@ -20,9 +20,46 @@
 
   const frameBody = iframe.contentWindow.document.body;
 
+  const cssStyleSheetMethods = [
+    'addImport',
+    'addPageRule',
+    'addRule',
+    'deleteRule',
+    'insertRule',
+    'removeImport',
+    'removeRule',
+  ];
+
+  const cssStyleSheetNewMethods = ['replace', 'replaceSync'];
+
+  const updatePrototype = proto => {
+    for (const methodKey of cssStyleSheetNewMethods) {
+      proto[methodKey] = ConstructStyleSheet.prototype[methodKey];
+    }
+
+    for (const methodKey of cssStyleSheetMethods) {
+      // Here we apply all changes we have done to the original CSSStyleSheet
+      // object to all adopted style element.
+      const oldMethod = proto[methodKey];
+      proto[methodKey] = function(...args) {
+        if ($constructStyleSheet in this) {
+          for (const [, styleElement] of this[$constructStyleSheet].adopters) {
+            styleElement.sheet[methodKey](...args);
+          }
+
+          // And we also need to remember all these changes to apply them to
+          // each newly adopted style element.
+          this[$constructStyleSheet].actions.set(methodKey, args);
+        }
+
+        return oldMethod.apply(this, args);
+      };
+    }
+  };
+
   const updateAdopters = sheet => {
-    for (const adopter of sheet[$constructStyleSheet].adopters) {
-      adopter.clone.innerHTML =
+    for (const [, styleElement] of sheet[$constructStyleSheet].adopters) {
+      styleElement.innerHTML =
         sheet[$constructStyleSheet].basicStyleElement.innerHTML;
     }
   };
@@ -45,10 +82,7 @@
       frameBody.append(basicStyleElement);
 
       const nativeStyleSheet = basicStyleElement.sheet;
-      nativeStyleSheet.constructor.prototype.replace =
-        ConstructStyleSheet.prototype.replace;
-      nativeStyleSheet.constructor.prototype.replaceSync =
-        ConstructStyleSheet.prototype.replaceSync;
+      updatePrototype(nativeStyleSheet.constructor.prototype);
 
       // A support object to preserve all the polyfill data
       nativeStyleSheet[$constructStyleSheet] = {
@@ -200,7 +234,8 @@
 
           const styleElement = sheet[$constructStyleSheet].adopters.get(
             location,
-          ).clone;
+          );
+
           this[$observer].disconnect();
           styleElement.remove();
           this[$observer].observe();
@@ -229,33 +264,6 @@
     'adoptedStyleSheets',
     adoptedStyleSheetAccessors,
   );
-
-  [
-    'addImport',
-    'addPageRule',
-    'addRule',
-    'deleteRule',
-    'insertRule',
-    'removeImport',
-    'removeRule',
-  ].forEach(methodKey => {
-    // Here we apply all changes we have done to the original CSSStyleSheet
-    // object to all adopted style element.
-    const oldMethod = OldCSSStyleSheet.prototype[methodKey];
-    OldCSSStyleSheet.prototype[methodKey] = function(...args) {
-      if ($constructStyleSheet in this) {
-        for (const [, styleElement] of this[$constructStyleSheet].adopters) {
-          styleElement.sheet[key](...args);
-        }
-
-        // And we also need to remember all these changes to apply them to
-        // each newly adopted style element.
-        this[$constructStyleSheet].actions.set(key, args);
-      }
-
-      return oldMethod.apply(this, args);
-    };
-  });
 
   window.CSSStyleSheet = ConstructStyleSheet;
 })(undefined);
