@@ -131,11 +131,7 @@
     }
   }
 
-  OldCSSStyleSheet.prototype.replace = ConstructStyleSheet.prototype.replace;
-  OldCSSStyleSheet.prototype.replaceSync =
-    ConstructStyleSheet.prototype.replaceSync;
-
-  const adoptStyleSheets = (location, sheets, observer) => {
+  const adoptStyleSheets = (location, sheets = [], observer) => {
     const newStyles = document.createDocumentFragment();
     const justCreated = new Map();
 
@@ -147,7 +143,7 @@
       if (adoptedStyleElement) {
         // This operation removes the style element from the location, so we
         // need to pause watching when it happens to avoid calling
-        // restoreStylesOnMutationCallback.
+        // adoptAndRestoreStylesOnMutationCallback.
         observer.disconnect();
         newStyles.append(adoptedStyleElement);
         observer.observe();
@@ -175,30 +171,81 @@
     }
   };
 
-  // When any style is removed, we need to re-adopt all the styles because
-  // otherwise we can break the order of appended styles which will affect the
-  // rules overriding.
-  const restoreStylesOnMutationCallback = mutations => {
-    for (const {removedNodes} of mutations) {
+  const adoptAndRestoreStylesOnMutationCallback = mutations => {
+    for (const {addedNodes, removedNodes} of mutations) {
+      // When any style is removed, we need to re-adopt all the styles because
+      // otherwise we can break the order of appended styles which will affect the
+      // rules overriding.
       for (const removedNode of removedNodes) {
         const location = removedNode[$location];
 
         if (location) {
           adoptStyleSheets(
             location,
-            location.adoptedStyleSheets,
+            location[$adoptedStyleSheets],
             location[$observer],
           );
           break;
         }
       }
+
+      // When the new custom element is added in the observing location, we need
+      // to adopt its style sheets. However, Mutation Observer can track only
+      // the top level of children while we need to catch each custom element
+      // no matter how it is nested. To go through the nodes we use the
+      // NodeIterator.
+      for (const addedNode of addedNodes) {
+        const iter = document.createNodeIterator(
+          addedNode,
+          NodeFilter.SHOW_ELEMENT,
+          ({shadowRoot}) =>
+            shadowRoot && shadowRoot.adoptedStyleSheets.length > 0
+              ? NodeFilter.FILTER_ACCEPT
+              : NodeFilter.FILTER_REJECT,
+        );
+
+        let node;
+
+        while ((node = iter.nextNode())) {
+          const {shadowRoot} = node;
+
+          adoptStyleSheets(
+            shadowRoot,
+            shadowRoot[$adoptedStyleSheets],
+            shadowRoot[$observer],
+          );
+        }
+      }
     }
   };
+
+  const createObserver = location => {
+    const observer = new MutationObserver(
+      adoptAndRestoreStylesOnMutationCallback,
+    );
+
+    location[$observer] = {
+      observe: () =>
+        observer.observe(location, {childList: true, subtree: true}),
+      disconnect: () => observer.disconnect(),
+    };
+
+    location[$observer].observe();
+  };
+
+  // Document body will be observed from the very start to catch all added
+  // custom elements
+  createObserver(document.body);
 
   const adoptedStyleSheetAccessors = {
     configurable: true,
     get() {
-      return this[$adoptedStyleSheets] || [];
+      // Technically, the real adoptedStyleSheets array is placed on the body
+      // element to unify the logic with ShadowRoot. However, it is hidden under
+      // the symbol, and the public interface follows the specification.
+      const location = this.body ? this.body : this;
+
+      return location[$adoptedStyleSheets] || [];
     },
     set(sheets) {
       if (!Array.isArray(sheets)) {
@@ -216,18 +263,9 @@
       const location = this.body ? this.body : this;
       const uniqueSheets = [...new Set(sheets)];
 
-      if (!this[$adoptedStyleSheets]) {
-        const observer = new MutationObserver(restoreStylesOnMutationCallback);
-
-        this[$observer] = {
-          observe: () => observer.observe(this, {childList: true}),
-          disconnect: () => observer.disconnect(),
-        };
-
-        this[$observer].observe();
-      } else {
+      if (location[$adoptedStyleSheets]) {
         // Remove all the sheets the received array does not include.
-        for (const sheet of this[$adoptedStyleSheets]) {
+        for (const sheet of location[$adoptedStyleSheets]) {
           if (uniqueSheets.includes(sheet)) {
             continue;
           }
@@ -236,21 +274,25 @@
             location,
           );
 
-          this[$observer].disconnect();
+          location[$observer].disconnect();
           styleElement.remove();
-          this[$observer].observe();
+          location[$observer].observe();
         }
+      } else if (location instanceof ShadowRoot) {
+        // Observer for document.body is already launched
+        createObserver(location);
       }
 
-      this[$adoptedStyleSheets] = uniqueSheets;
+      location[$adoptedStyleSheets] = uniqueSheets;
 
-      // With this style elements will be appended even before the element is
-      // connected to the DOM and become unremovable due to
-      // restoreStylesOnMutationCallback.
-      //
-      // It should not harm the developer experience, but will help to catch
-      // each custom element, no matter how nested it is.
-      adoptStyleSheets(location, this[$adoptedStyleSheets], this[$observer]);
+      // Element can adopt style sheets only when it is connected
+      if (location.isConnected) {
+        adoptStyleSheets(
+          location,
+          location[$adoptedStyleSheets],
+          location[$observer],
+        );
+      }
     },
   };
 
