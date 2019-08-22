@@ -9,6 +9,7 @@
   const $constructStyleSheet = Symbol('constructStyleSheet');
   const $location = Symbol('location');
   const $observer = Symbol('observer');
+  const $appliedActionsCursor = Symbol('methodsHistoryCursor');
 
   const OldCSSStyleSheet = CSSStyleSheet;
 
@@ -44,12 +45,14 @@
       proto[methodKey] = function(...args) {
         if ($constructStyleSheet in this) {
           for (const [, styleElement] of this[$constructStyleSheet].adopters) {
-            styleElement.sheet[methodKey](...args);
+            if (styleElement.sheet) {
+              styleElement.sheet[methodKey](...args);
+            }
           }
 
           // And we also need to remember all these changes to apply them to
           // each newly adopted style element.
-          this[$constructStyleSheet].actions.set(methodKey, args);
+          this[$constructStyleSheet].actions.push([methodKey, args]);
         }
 
         return oldMethod.apply(this, args);
@@ -87,7 +90,7 @@
       // A support object to preserve all the polyfill data
       nativeStyleSheet[$constructStyleSheet] = {
         adopters: new Map(),
-        actions: new Map(),
+        actions: [],
         basicStyleElement,
       };
 
@@ -133,7 +136,6 @@
 
   const adoptStyleSheets = (location, sheets = [], observer) => {
     const newStyles = document.createDocumentFragment();
-    const justCreated = new Map();
 
     for (const sheet of sheets) {
       const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
@@ -152,9 +154,11 @@
           true,
         );
         clone[$location] = location;
+        // The index of actions array when we stopped applying actions to the
+        // element (e.g., it was disconnected).
+        clone[$appliedActionsCursor] = 0;
         sheet[$constructStyleSheet].adopters.set(location, clone);
         newStyles.append(clone);
-        justCreated.set(clone, sheet[$constructStyleSheet].actions);
       }
     }
 
@@ -162,11 +166,23 @@
     // document fragment, we can just re-add them again.
     location.prepend(newStyles);
 
-    // We need to apply all changes we have done with the original
-    // CSSStyleSheet to each new style element.
-    for (const [createdStyleElement, actions] of justCreated) {
-      for (const [key, args] of actions) {
-        createdStyleElement.sheet[key](...args);
+    // We need to apply all actions we have done with the original CSSStyleSheet
+    // to each new style element and to any other element that missed last
+    // applied actions (e.g., it was disconnected).
+    for (const sheet of sheets) {
+      const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
+        location,
+      );
+
+      const {actions} = sheet[$constructStyleSheet];
+
+      if (actions.length > 0) {
+        for (let i = adoptedStyleElement[$appliedActionsCursor]; i < actions.length; i++) {
+          const [key, args] = actions[i];
+          adoptedStyleElement.sheet[key](...args);
+        }
+
+        adoptedStyleElement[$appliedActionsCursor] = actions.length - 1;
       }
     }
   };
