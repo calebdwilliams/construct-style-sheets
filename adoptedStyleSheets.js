@@ -134,10 +134,10 @@
     }
   }
 
-  const adoptStyleSheets = (location, sheets = [], observer) => {
+  const adoptStyleSheets = location => {
     const newStyles = document.createDocumentFragment();
 
-    for (const sheet of sheets) {
+    for (const sheet of location[$adoptedStyleSheets]) {
       const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
         location,
       );
@@ -146,9 +146,9 @@
         // This operation removes the style element from the location, so we
         // need to pause watching when it happens to avoid calling
         // adoptAndRestoreStylesOnMutationCallback.
-        observer.disconnect();
+        location[$observer].disconnect();
         newStyles.append(adoptedStyleElement);
-        observer.observe();
+        location[$observer].observe();
       } else {
         const clone = sheet[$constructStyleSheet].basicStyleElement.cloneNode(
           true,
@@ -169,7 +169,7 @@
     // We need to apply all actions we have done with the original CSSStyleSheet
     // to each new style element and to any other element that missed last
     // applied actions (e.g., it was disconnected).
-    for (const sheet of sheets) {
+    for (const sheet of location[$adoptedStyleSheets]) {
       const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
         location,
       );
@@ -177,13 +177,33 @@
       const {actions} = sheet[$constructStyleSheet];
 
       if (actions.length > 0) {
-        for (let i = adoptedStyleElement[$appliedActionsCursor]; i < actions.length; i++) {
+        for (
+          let i = adoptedStyleElement[$appliedActionsCursor];
+          i < actions.length;
+          i++
+        ) {
           const [key, args] = actions[i];
           adoptedStyleElement.sheet[key](...args);
         }
 
         adoptedStyleElement[$appliedActionsCursor] = actions.length - 1;
       }
+    }
+  };
+
+  const removeExcludedStyleSheets = (location, oldSheets) => {
+    for (const sheet of oldSheets) {
+      if (location[$adoptedStyleSheets].includes(sheet)) {
+        continue;
+      }
+
+      const styleElement = sheet[$constructStyleSheet].adopters.get(
+        location,
+      );
+
+      location[$observer].disconnect();
+      styleElement.remove();
+      location[$observer].observe();
     }
   };
 
@@ -196,11 +216,7 @@
         const location = removedNode[$location];
 
         if (location) {
-          adoptStyleSheets(
-            location,
-            location[$adoptedStyleSheets],
-            location[$observer],
-          );
+          adoptStyleSheets(location);
           break;
         }
       }
@@ -225,11 +241,7 @@
         while ((node = iter.nextNode())) {
           const {shadowRoot} = node;
 
-          adoptStyleSheets(
-            shadowRoot,
-            shadowRoot[$adoptedStyleSheets],
-            shadowRoot[$observer],
-          );
+          adoptStyleSheets(shadowRoot);
         }
       }
     }
@@ -279,35 +291,20 @@
       const location = this.body ? this.body : this;
       const uniqueSheets = [...new Set(sheets)];
 
-      if (location[$adoptedStyleSheets]) {
-        // Remove all the sheets the received array does not include.
-        for (const sheet of location[$adoptedStyleSheets]) {
-          if (uniqueSheets.includes(sheet)) {
-            continue;
-          }
 
-          const styleElement = sheet[$constructStyleSheet].adopters.get(
-            location,
-          );
-
-          location[$observer].disconnect();
-          styleElement.remove();
-          location[$observer].observe();
-        }
-      } else if (location instanceof ShadowRoot) {
+      if (!location[$adoptedStyleSheets] && location instanceof ShadowRoot) {
         // Observer for document.body is already launched
         createObserver(location);
       }
 
+      const oldSheets = location[$adoptedStyleSheets] || [];
       location[$adoptedStyleSheets] = uniqueSheets;
 
       // Element can adopt style sheets only when it is connected
       if (location.isConnected) {
-        adoptStyleSheets(
-          location,
-          location[$adoptedStyleSheets],
-          location[$observer],
-        );
+        adoptStyleSheets(location);
+        // Remove all the sheets the received array does not include.
+        removeExcludedStyleSheets(location, oldSheets);
       }
     },
   };

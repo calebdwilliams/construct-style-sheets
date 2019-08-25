@@ -229,7 +229,7 @@ describe('Constructible Style Sheets polyfill', () => {
         expect(element.shadowRoot.querySelector('style')).toBe(style);
       });
 
-      it('re-creates styles on adoptedStyleSheet assigning', async () => {
+      it('re-creates styles on adoptedStyleSheets assigning', async () => {
         ignore();
 
         const css2 = new CSSStyleSheet();
