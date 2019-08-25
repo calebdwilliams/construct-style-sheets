@@ -25,8 +25,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      {pattern: './adoptedStyleSheets.js', watch: true},
-      {pattern: 'test/*.test.js', type: 'module', watch: true},
+      {pattern: 'test/polyfill.test.js', type: 'module', watch: false},
     ],
 
     // list of files / patterns to exclude
