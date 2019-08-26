@@ -85,7 +85,6 @@
       frameBody.append(basicStyleElement);
 
       const nativeStyleSheet = basicStyleElement.sheet;
-      updatePrototype(nativeStyleSheet.constructor.prototype);
 
       // A support object to preserve all the polyfill data
       nativeStyleSheet[$constructStyleSheet] = {
@@ -133,6 +132,12 @@
       }
     }
   }
+
+  updatePrototype(OldCSSStyleSheet.prototype);
+
+  // Since we get the sheet from iframe, we need to patch prototype of the
+  // CSSStyleSheet in iframe as well.
+  updatePrototype(iframe.contentWindow.CSSStyleSheet.prototype);
 
   const adoptStyleSheets = location => {
     const newStyles = document.createDocumentFragment();
@@ -197,9 +202,7 @@
         continue;
       }
 
-      const styleElement = sheet[$constructStyleSheet].adopters.get(
-        location,
-      );
+      const styleElement = sheet[$constructStyleSheet].adopters.get(location);
 
       location[$observer].disconnect();
       styleElement.remove();
@@ -291,12 +294,6 @@
       const location = this.body ? this.body : this;
       const uniqueSheets = [...new Set(sheets)];
 
-
-      if (!location[$adoptedStyleSheets] && location instanceof ShadowRoot) {
-        // Observer for document.body is already launched
-        createObserver(location);
-      }
-
       const oldSheets = location[$adoptedStyleSheets] || [];
       location[$adoptedStyleSheets] = uniqueSheets;
 
@@ -307,6 +304,17 @@
         removeExcludedStyleSheets(location, oldSheets);
       }
     },
+  };
+
+  const oldAttachShadow = HTMLElement.prototype.attachShadow;
+
+  // Shadow root of each element should be observed to add styles to all
+  // elements added to this root.
+  HTMLElement.prototype.attachShadow = function(...args) {
+    const location = oldAttachShadow.apply(this, args);
+    createObserver(location);
+
+    return location;
   };
 
   Object.defineProperty(

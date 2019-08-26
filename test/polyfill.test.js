@@ -120,7 +120,11 @@ describe('Constructible Style Sheets polyfill', () => {
         constructor() {
           super();
           const root = this.attachShadow({mode: 'open'});
-          root.adoptedStyleSheets = sheets;
+
+          if (sheets) {
+            root.adoptedStyleSheets = sheets;
+          }
+
           root.innerHTML = html;
         }
       }
@@ -160,26 +164,6 @@ describe('Constructible Style Sheets polyfill', () => {
       checkCss(element, {...defaultChecker, height: '82px'});
     });
 
-    it('applies styling to deeply nested web components', async () => {
-      const [tag1] = createCustomElement([css]);
-      const [tag2] = createCustomElement(
-        [css],
-        `<div>
-          <div>
-            <div>
-              <${tag1} id="nested"></${tag1}>
-            </div>
-          </div>
-        </div>`,
-      );
-
-      const element = await fixture(`<${tag2}></${tag2}>`);
-      checkCss(element, defaultChecker);
-
-      const nested = element.shadowRoot.getElementById('nested');
-      checkCss(nested, defaultChecker);
-    });
-
     it('restores styles if innerHTML is cleared', async () => {
       const [tag] = createCustomElement([css]);
       const element = await fixture(`<${tag}></${tag}>`);
@@ -208,6 +192,48 @@ describe('Constructible Style Sheets polyfill', () => {
       await null; // MutationObserver is asynchronous
 
       checkCss(element, {...defaultChecker, height: '82px'});
+    });
+
+    describe('detached elements', () => {
+      const detachedFixture = async (rootTag, ...nestedTags) => {
+        const detachedElement = nestedTags.reduceRight((acc, tag) => {
+          const element = document.createElement(tag);
+
+          if (acc) {
+            element.append(acc);
+          }
+
+          return element;
+        }, null);
+
+        const rootElement = await fixture(`<${rootTag}></${rootTag}>`);
+        rootElement.shadowRoot.append(detachedElement);
+
+        return rootElement;
+      };
+
+      it('applies styling to deeply nested web components', async () => {
+        const [tag1] = createCustomElement([css]);
+        const [tag2] = createCustomElement([css]);
+
+        const element = await detachedFixture(tag2, 'div', 'div', 'div', tag1);
+        checkCss(element, defaultChecker);
+        // await null; // MutationObserver is asynchronous
+
+        const nested = element.shadowRoot.querySelector(tag1);
+        checkCss(nested, defaultChecker);
+      });
+
+      it('applies styling to deeply nested web components even if host component does not have adoptedStyleSheets set', async () => {
+        const [tag1] = createCustomElement([css]);
+        const [tag2] = createCustomElement();
+
+        const element = await detachedFixture(tag2, 'div', 'div', 'div', tag1);
+        await null; // MutationObserver is asynchronous
+
+        const nested = element.shadowRoot.querySelector(tag1);
+        checkCss(nested, defaultChecker);
+      });
     });
 
     describe('Polyfill only', () => {
