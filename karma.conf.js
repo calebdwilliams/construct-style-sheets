@@ -16,17 +16,16 @@ module.exports = function(config) {
       require('karma-firefox-launcher'),
       require('karma-safari-launcher'),
       require('karma-coverage-istanbul-reporter'),
+      require('karma-detect-browsers'),
       require('@open-wc/karma-esm'),
     ],
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine', 'esm'],
+    frameworks: ['jasmine', 'esm', 'detectBrowsers'],
 
     // list of files / patterns to load in the browser
-    files: [
-      {pattern: 'test/polyfill.test.js', type: 'module', watch: false},
-    ],
+    files: [{pattern: 'test/polyfill.test.js', type: 'module', watch: false}],
 
     // list of files / patterns to exclude
     exclude: [],
@@ -53,17 +52,6 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: watch,
 
-    // start these browsers
-    // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['ChromeHeadless', 'FirefoxHeadless'],
-
-    customLaunchers: {
-      FirefoxHeadless: {
-        base: 'Firefox',
-        flags: ['--headless'],
-      },
-    },
-
     esm: {
       coverage,
       compatibility: 'none',
@@ -75,6 +63,14 @@ module.exports = function(config) {
       dir: '.coverage',
       combineBrowserReports: true,
       skipFilesWithNoCoverage: false,
+    },
+
+    detectBrowsers: {
+      usePhantomJS: false,
+      preferHeadless: true,
+      postDetection(availableBrowsers) {
+        return availableBrowsers.filter(browser => browser !== 'IE');
+      },
     },
 
     // Continuous Integration mode
