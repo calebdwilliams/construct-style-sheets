@@ -66,7 +66,9 @@ module.exports = function(config) {
     },
 
     customLaunchers: {
-      Safari: ['SafariNative'],
+      Safari: {
+        base: 'SafariNative',
+      },
     },
 
     detectBrowsers: {
