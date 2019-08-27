@@ -14,7 +14,7 @@ module.exports = function(config) {
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
       require('karma-firefox-launcher'),
-      require('karma-safari-applescript-launcher'),
+      require('karma-safarinative-launcher'),
       require('karma-coverage-istanbul-reporter'),
       require('karma-detect-browsers'),
       require('@open-wc/karma-esm'),
@@ -63,6 +63,10 @@ module.exports = function(config) {
       dir: '.coverage',
       combineBrowserReports: true,
       skipFilesWithNoCoverage: false,
+    },
+
+    customLaunchers: {
+      Safari: ['SafariNative'],
     },
 
     detectBrowsers: {
