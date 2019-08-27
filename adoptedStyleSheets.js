@@ -104,8 +104,9 @@
           updateAdopters(this);
         } else {
           reject(
-            new TypeError(
-              "Illegal invocation: 'replace' can only be called on a Constructible Style Sheet",
+            new DOMException(
+              "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets.",
+              'NotAllowedError',
             ),
           );
         }
@@ -126,8 +127,9 @@
 
         return this[$constructStyleSheet].basicStyleElement.sheet;
       } else {
-        throw new TypeError(
-          "Illegal invocation: 'replaceSync' can only be called on a Constructible Style Sheet",
+        throw new DOMException(
+          "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
+          'NotAllowedError',
         );
       }
     }

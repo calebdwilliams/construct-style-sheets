@@ -18,6 +18,18 @@ describe('Constructible Style Sheets polyfill', () => {
   });
 
   describe('CSSStyleSheet object', () => {
+    let globalStyle;
+
+    beforeEach(() => {
+      globalStyle = document.createElement('style');
+      globalStyle.innerHTML = '.only-test { color: red; }';
+      document.body.append(globalStyle);
+    });
+
+    afterEach(() => {
+      globalStyle.remove();
+    });
+
     it('has replace and replaceSync methods', () => {
       expect(sheet.cssRules).toBeDefined();
       expect(sheet.replace).toBeDefined();
@@ -51,11 +63,14 @@ describe('Constructible Style Sheets polyfill', () => {
       });
 
       it('throws an error if it is called not from a CSSStyleSheet', async () => {
-        await CSSStyleSheet.prototype.replace
-          .call({}, '* { color: tomato; }')
+        await globalStyle.sheet
+          .replace('.only-test { color: blue; }')
           .catch(error => {
-            expect(error instanceof TypeError).toBeTruthy();
-            expect(error.message).toContain('Illegal invocation');
+            expect(error instanceof DOMException).toBeTruthy();
+            expect(error.message).toBe(
+              "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets.",
+            );
+            expect(error.name).toBe('NotAllowedError');
           });
       });
     });
@@ -94,10 +109,13 @@ describe('Constructible Style Sheets polyfill', () => {
 
       it('throws an error if it is called not from a CSSStyleSheet', () => {
         try {
-          CSSStyleSheet.prototype.replaceSync.call({}, '* { color: tomato; }');
+          globalStyle.sheet.replaceSync('.only-test { color: blue; }')
         } catch (error) {
-          expect(error instanceof TypeError).toBeTruthy();
-          expect(error.message).toContain('Illegal invocation');
+          expect(error instanceof DOMException).toBeTruthy();
+          expect(error.message).toBe(
+            "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
+          );
+          expect(error.name).toBe('NotAllowedError');
         }
       });
     });
