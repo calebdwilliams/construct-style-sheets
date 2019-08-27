@@ -32,7 +32,7 @@
     "karma-detect-browsers": "^2.3.3",
     "karma-firefox-launcher": "^1.2.0",
     "karma-jasmine": "^2.0.1",
-    "karma-safari-launcher": "^1.0.0",
+    "karma-safari-applescript-launcher": "^0.1.0",
     "karma-webpack": "^4.0.2",
     "prettier": "^1.18.2",
     "standard-version": "^7.0.0",
