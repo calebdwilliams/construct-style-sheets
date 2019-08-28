@@ -48,7 +48,7 @@
   }
 
   // Proceed with using the iframe to house style elements
-  window.addEventListener('load', initPolyfill);
+  window.addEventListener('DOMContentLoaded', initPolyfill);
 
   const $adoptedStyleSheets = Symbol('adoptedStyleSheets');
   const $constructStyleSheet = Symbol('constructStyleSheet');
@@ -323,7 +323,7 @@
         throw new TypeError('Adopted style sheets must be an Array');
       }
 
-      if (!sheets.every(sheet => sheet instanceof OldCSSStyleSheet || sheet.constructor === ConstructStyleSheet)) {
+      if (!sheets.every(sheet => sheet instanceof OldCSSStyleSheet)) {
         throw new TypeError(
           'Adopted style sheets must be of type CSSStyleSheet',
         );

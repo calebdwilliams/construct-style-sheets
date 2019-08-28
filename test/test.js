@@ -9,4 +9,8 @@ headingStyles.replace(` h1 {
 paragraphStyles.replaceSync(`p {
   color: #1121212;
   font-family: "Operator Mono", "Helvetica Neue";
-}`)
+}`);
+
+setTimeout(() => {
+  headingStyles.addRule('*', 'font-family: Helvetica');
+}, 1000);
