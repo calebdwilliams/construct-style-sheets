@@ -5,10 +5,17 @@
     return;
   }
 
+  // Can we rely on document.body
   let polyfillLoaded = false;
-  let frameBody;
-  const queue = [];
 
+  // Polyfill-level reference to the iframe body
+  let frameBody;
+
+   // Style elements that will be attached to the head
+   // that need to be moved to the iframe
+  const deferredStyleSheets = [];
+
+  // Initialize the polyfill — Will be called on the window's load event
   function initPolyfill() {
     // Iframe is necessary because to extract the native CSSStyleSheet object
     // the style element should be connected to the DOM.
@@ -26,14 +33,21 @@
     // custom elements
     createObserver(document.body);
 
+    // Document has loaded
     polyfillLoaded = true;
 
-    queue.forEach(nativeStyleSheet => {
+    // Move style elements created before document.body
+    // to the iframe along with future styles
+    deferredStyleSheets.forEach(nativeStyleSheet => {
       frameBody.append(nativeStyleSheet);
       nativeStyleSheet.disabled = false;
     });
+
+    // Clear out the deferredStyleSheets array
+    deferredStyleSheets.length = 0;
   }
 
+  // Proceed with using the iframe to house style elements
   window.addEventListener('load', initPolyfill);
 
   const $adoptedStyleSheets = Symbol('adoptedStyleSheets');
@@ -105,12 +119,15 @@
     constructor() {
       // A style element to extract the native CSSStyleSheet object.
       const basicStyleElement = document.createElement('style');
+      
       if (polyfillLoaded) {
+        // If the polyfill is ready, use the framebody
         frameBody.append(basicStyleElement);
       } else {
+        // If the polyfill is not ready, move styles to head temporarily
         document.head.append(basicStyleElement);
         basicStyleElement.disabled = true;
-        queue.push(basicStyleElement);
+        deferredStyleSheets.push(basicStyleElement);
       }
 
       const nativeStyleSheet = basicStyleElement.sheet;
