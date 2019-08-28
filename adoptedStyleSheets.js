@@ -5,6 +5,50 @@
     return;
   }
 
+  let polyfillLoaded = false;
+  let frameBody;
+  const queue = [];
+
+  function initPolyfill() {
+    // Iframe is necessary because to extract the native CSSStyleSheet object
+    // the style element should be connected to the DOM.
+    const iframe = document.createElement('iframe');
+    iframe.hidden = true;
+    document.body.appendChild(iframe);
+
+    frameBody = iframe.contentWindow.document.body;
+
+    // Since we get the sheet from iframe, we need to patch prototype of the
+    // CSSStyleSheet in iframe as well.
+    updatePrototype(iframe.contentWindow.CSSStyleSheet.prototype);
+
+    // Document body will be observed from the very start to catch all added
+    // custom elements
+    createObserver(document.body);
+
+    polyfillLoaded = true;
+
+    queue.forEach(({location, sheet}) => {
+      // sheet = Object.assign(new CSSStyleSheet(), sheet);
+      // console.log(sheet)
+      sheet.prototype = CSSStyleSheet.prototype;
+      const constructedStyleSheet = new CSSStyleSheet();
+      console.log(constructedStyleSheet)
+      for (const key in constructedStyleSheet) {
+        if (!sheet[key]) {
+          let prop = constructedStyleSheet[key];
+          if (typeof prop === 'function') {
+            prop = prop.bind(constructedStyleSheet);
+          }
+          sheet[key] = prop;
+        }
+      }
+      adoptStyleSheets(location)
+    });
+  }
+
+  window.addEventListener('load', initPolyfill);
+
   const $adoptedStyleSheets = Symbol('adoptedStyleSheets');
   const $constructStyleSheet = Symbol('constructStyleSheet');
   const $location = Symbol('location');
@@ -12,14 +56,6 @@
   const $appliedActionsCursor = Symbol('methodsHistoryCursor');
 
   const OldCSSStyleSheet = CSSStyleSheet;
-
-  // Iframe is necessary because to extract the native CSSStyleSheet object
-  // the style element should be connected to the DOM.
-  const iframe = document.createElement('iframe');
-  iframe.hidden = true;
-  document.body.appendChild(iframe);
-
-  const frameBody = iframe.contentWindow.document.body;
 
   const cssStyleSheetMethods = [
     'addImport',
@@ -80,20 +116,27 @@
     }
 
     constructor() {
-      // A style element to extract the native CSSStyleSheet object.
-      const basicStyleElement = document.createElement('style');
-      frameBody.append(basicStyleElement);
-
-      const nativeStyleSheet = basicStyleElement.sheet;
-
-      // A support object to preserve all the polyfill data
-      nativeStyleSheet[$constructStyleSheet] = {
+      if (polyfillLoaded) {
+        // A style element to extract the native CSSStyleSheet object.
+        const basicStyleElement = document.createElement('style');
+        frameBody.append(basicStyleElement);
+  
+        const nativeStyleSheet = basicStyleElement.sheet;
+  
+        // A support object to preserve all the polyfill data
+        nativeStyleSheet[$constructStyleSheet] = {
+          adopters: new Map(),
+          actions: [],
+          basicStyleElement,
+        };
+        
+        return nativeStyleSheet;
+      }
+      this[$constructStyleSheet] = {
         adopters: new Map(),
         actions: [],
-        basicStyleElement,
+        basicStyleElement: document.createElement('style'),
       };
-
-      return nativeStyleSheet;
     }
 
     replace(contents) {
@@ -137,10 +180,6 @@
 
   updatePrototype(OldCSSStyleSheet.prototype);
 
-  // Since we get the sheet from iframe, we need to patch prototype of the
-  // CSSStyleSheet in iframe as well.
-  updatePrototype(iframe.contentWindow.CSSStyleSheet.prototype);
-
   const adoptStyleSheets = location => {
     const newStyles = document.createDocumentFragment();
 
@@ -148,6 +187,11 @@
       const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
         location,
       );
+
+      if (!polyfillLoaded) {
+        queue.push({ location, sheet });
+        return;
+      }
 
       if (adoptedStyleElement) {
         // This operation removes the style element from the location, so we
@@ -266,10 +310,6 @@
     location[$observer].observe();
   };
 
-  // Document body will be observed from the very start to catch all added
-  // custom elements
-  createObserver(document.body);
-
   const adoptedStyleSheetAccessors = {
     configurable: true,
     get() {
@@ -285,7 +325,7 @@
         throw new TypeError('Adopted style sheets must be an Array');
       }
 
-      if (!sheets.every(sheet => sheet instanceof OldCSSStyleSheet)) {
+      if (!sheets.every(sheet => sheet instanceof OldCSSStyleSheet || sheet.constructor === ConstructStyleSheet)) {
         throw new TypeError(
           'Adopted style sheets must be of type CSSStyleSheet',
         );
