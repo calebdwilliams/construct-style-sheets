@@ -28,22 +28,9 @@
 
     polyfillLoaded = true;
 
-    queue.forEach(({location, sheet}) => {
-      // sheet = Object.assign(new CSSStyleSheet(), sheet);
-      // console.log(sheet)
-      sheet.prototype = CSSStyleSheet.prototype;
-      const constructedStyleSheet = new CSSStyleSheet();
-      console.log(constructedStyleSheet)
-      for (const key in constructedStyleSheet) {
-        if (!sheet[key]) {
-          let prop = constructedStyleSheet[key];
-          if (typeof prop === 'function') {
-            prop = prop.bind(constructedStyleSheet);
-          }
-          sheet[key] = prop;
-        }
-      }
-      adoptStyleSheets(location)
+    queue.forEach(nativeStyleSheet => {
+      frameBody.append(nativeStyleSheet);
+      nativeStyleSheet.disabled = false;
     });
   }
 
@@ -116,27 +103,26 @@
     }
 
     constructor() {
+      // A style element to extract the native CSSStyleSheet object.
+      const basicStyleElement = document.createElement('style');
       if (polyfillLoaded) {
-        // A style element to extract the native CSSStyleSheet object.
-        const basicStyleElement = document.createElement('style');
         frameBody.append(basicStyleElement);
-  
-        const nativeStyleSheet = basicStyleElement.sheet;
-  
-        // A support object to preserve all the polyfill data
-        nativeStyleSheet[$constructStyleSheet] = {
-          adopters: new Map(),
-          actions: [],
-          basicStyleElement,
-        };
-        
-        return nativeStyleSheet;
+      } else {
+        document.head.append(basicStyleElement);
+        basicStyleElement.disabled = true;
+        queue.push(basicStyleElement);
       }
-      this[$constructStyleSheet] = {
+
+      const nativeStyleSheet = basicStyleElement.sheet;
+
+      // A support object to preserve all the polyfill data
+      nativeStyleSheet[$constructStyleSheet] = {
         adopters: new Map(),
         actions: [],
-        basicStyleElement: document.createElement('style'),
+        basicStyleElement,
       };
+      
+      return nativeStyleSheet;
     }
 
     replace(contents) {
@@ -187,11 +173,6 @@
       const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
         location,
       );
-
-      if (!polyfillLoaded) {
-        queue.push({ location, sheet });
-        return;
-      }
 
       if (adoptedStyleElement) {
         // This operation removes the style element from the location, so we
