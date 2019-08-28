@@ -8,7 +8,6 @@
     "test": "karma start",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "npm run test -- --coverage",
-    "prerelease": "npm run build",
     "release": "standard-version",
     "postrelease": "git push --follow-tags origin master; npm publish"
   },
