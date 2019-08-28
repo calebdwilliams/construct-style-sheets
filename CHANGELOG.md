@@ -1,6 +1,22 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [2.2.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.1.0...v2.2.0) (2019-08-28)
+
+
+### Bug Fixes
+
+* add fixes for 2 issues ([5546c8b](https://github.com/calebdwilliams/adoptedStyleSheets/commit/5546c8b))
+* fix mistakes & override the CSSStyleSheet prototype on each construction ([688d963](https://github.com/calebdwilliams/adoptedStyleSheets/commit/688d963))
+* make error messages to be equal with Chrome's ([22be5d5](https://github.com/calebdwilliams/adoptedStyleSheets/commit/22be5d5))
+* solve the methods application issue ([2d9f601](https://github.com/calebdwilliams/adoptedStyleSheets/commit/2d9f601))
+
+
+### Features
+
+* allow remembering last applied action and resuming from it. ([1a7b6d2](https://github.com/calebdwilliams/adoptedStyleSheets/commit/1a7b6d2))
+* improve error messages ([70e095a](https://github.com/calebdwilliams/adoptedStyleSheets/commit/70e095a))
 
 <a name="2.1.0"></a>
 # [2.1.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v1.0.3...v2.1.0) (2019-08-18)
