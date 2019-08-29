@@ -20,6 +20,11 @@ module.exports = function(config) {
       require('@open-wc/karma-esm'),
     ],
 
+    browserNoActivityTimeout : 60000, //default 10000
+    browserDisconnectTimeout : 10000, // default 2000
+    browserDisconnectTolerance : 1, // default 0
+    captureTimeout: 60000,
+
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine', 'esm', 'detectBrowsers'],
