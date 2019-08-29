@@ -1,4 +1,4 @@
-(() => {
+(function() {
   'use strict';
 
   if ('adoptedStyleSheets' in document) {
@@ -369,4 +369,10 @@
   );
 
   window.CSSStyleSheet = ConstructStyleSheet;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPolyfill);
+  } else { 
+    initPolyfill();
+  }
 })(undefined);

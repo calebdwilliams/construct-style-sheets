@@ -10,7 +10,10 @@
     "test:coverage": "npm run test -- --coverage",
     "prerelease": "npm run build",
     "release": "standard-version",
-    "postrelease": "git push --follow-tags origin master; npm publish"
+    "postrelease": "git push --follow-tags origin master; npm publish",
+    "pretest": "rimraf .coverage",
+    "pretest:watch": "npm run pretest",
+    "pretest:coverage": "npm run pretest"
   },
   "repository": {
     "type": "git",
@@ -35,6 +38,7 @@
     "karma-safarinative-launcher": "^1.1.0",
     "karma-webpack": "^4.0.2",
     "prettier": "^1.18.2",
+    "rimraf": "^3.0.0",
     "standard-version": "^7.0.0",
     "webpack": "^4.39.2"
   },

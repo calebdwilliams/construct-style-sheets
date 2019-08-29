@@ -315,14 +315,13 @@ describe('Constructible Style Sheets polyfill', () => {
         checkShadowCss(element, {height: '82px'}, {width: '53px'});
       });
 
-      it('forbids assigning a non-Array value to adoptedStyleSheets', async (done) => {
+      it('forbids assigning a non-Array value to adoptedStyleSheets', async () => {
         const [tag] = createCustomElement([css]);
         const element = await fixture(`<${tag}></${tag}>`);
 
         expect(() => {
           element.shadowRoot.adoptedStyleSheets = {};
         }).toThrow();
-        done();
       });
 
       it('allows only CSSStyleSheet instances to be added to adoptedStyleSheets', async () => {
