@@ -1,9 +1,54 @@
-(() => {
+(function() {
   'use strict';
 
   if ('adoptedStyleSheets' in document) {
     return;
   }
+
+  // Can we rely on document.body
+  let polyfillLoaded = false;
+
+  // Polyfill-level reference to the iframe body
+  let frameBody;
+
+   // Style elements that will be attached to the head
+   // that need to be moved to the iframe
+  const deferredStyleSheets = [];
+
+  // Initialize the polyfill — Will be called on the window's load event
+  function initPolyfill() {
+    // Iframe is necessary because to extract the native CSSStyleSheet object
+    // the style element should be connected to the DOM.
+    const iframe = document.createElement('iframe');
+    iframe.hidden = true;
+    document.body.appendChild(iframe);
+
+    frameBody = iframe.contentWindow.document.body;
+
+    // Since we get the sheet from iframe, we need to patch prototype of the
+    // CSSStyleSheet in iframe as well.
+    updatePrototype(iframe.contentWindow.CSSStyleSheet.prototype);
+
+    // Document body will be observed from the very start to catch all added
+    // custom elements
+    createObserver(document.body);
+
+    // Document has loaded
+    polyfillLoaded = true;
+
+    // Move style elements created before document.body
+    // to the iframe along with future styles
+    deferredStyleSheets.forEach(nativeStyleSheet => {
+      frameBody.append(nativeStyleSheet);
+      nativeStyleSheet.disabled = false;
+    });
+
+    // Clear out the deferredStyleSheets array
+    deferredStyleSheets.length = 0;
+  }
+
+  // Proceed with using the iframe to house style elements
+  window.addEventListener('DOMContentLoaded', initPolyfill);
 
   const $adoptedStyleSheets = Symbol('adoptedStyleSheets');
   const $constructStyleSheet = Symbol('constructStyleSheet');
@@ -12,14 +57,6 @@
   const $appliedActionsCursor = Symbol('methodsHistoryCursor');
 
   const OldCSSStyleSheet = CSSStyleSheet;
-
-  // Iframe is necessary because to extract the native CSSStyleSheet object
-  // the style element should be connected to the DOM.
-  const iframe = document.createElement('iframe');
-  iframe.hidden = true;
-  document.body.appendChild(iframe);
-
-  const frameBody = iframe.contentWindow.document.body;
 
   const cssStyleSheetMethods = [
     'addImport',
@@ -82,7 +119,16 @@
     constructor() {
       // A style element to extract the native CSSStyleSheet object.
       const basicStyleElement = document.createElement('style');
-      frameBody.append(basicStyleElement);
+      
+      if (polyfillLoaded) {
+        // If the polyfill is ready, use the framebody
+        frameBody.append(basicStyleElement);
+      } else {
+        // If the polyfill is not ready, move styles to head temporarily
+        document.head.append(basicStyleElement);
+        basicStyleElement.disabled = true;
+        deferredStyleSheets.push(basicStyleElement);
+      }
 
       const nativeStyleSheet = basicStyleElement.sheet;
 
@@ -92,7 +138,7 @@
         actions: [],
         basicStyleElement,
       };
-
+      
       return nativeStyleSheet;
     }
 
@@ -136,10 +182,6 @@
   }
 
   updatePrototype(OldCSSStyleSheet.prototype);
-
-  // Since we get the sheet from iframe, we need to patch prototype of the
-  // CSSStyleSheet in iframe as well.
-  updatePrototype(iframe.contentWindow.CSSStyleSheet.prototype);
 
   const adoptStyleSheets = location => {
     const newStyles = document.createDocumentFragment();
@@ -266,10 +308,6 @@
     location[$observer].observe();
   };
 
-  // Document body will be observed from the very start to catch all added
-  // custom elements
-  createObserver(document.body);
-
   const adoptedStyleSheetAccessors = {
     configurable: true,
     get() {
@@ -331,4 +369,10 @@
   );
 
   window.CSSStyleSheet = ConstructStyleSheet;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPolyfill);
+  } else { 
+    initPolyfill();
+  }
 })(undefined);
