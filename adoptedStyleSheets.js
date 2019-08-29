@@ -47,9 +47,6 @@
     deferredStyleSheets.length = 0;
   }
 
-  // Proceed with using the iframe to house style elements
-  window.addEventListener('DOMContentLoaded', initPolyfill);
-
   const $adoptedStyleSheets = Symbol('adoptedStyleSheets');
   const $constructStyleSheet = Symbol('constructStyleSheet');
   const $location = Symbol('location');
