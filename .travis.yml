@@ -1,0 +1,12 @@
+language: node_js
+node_js: lts/*
+dist: trusty
+env:
+  global:
+    - MOZ_HEADLESS=1
+addons:
+  - chrome: stable
+  - firefox: stable
+branches:
+  only:
+    - master
