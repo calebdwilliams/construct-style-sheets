@@ -362,7 +362,7 @@
 
   
   // Double check to make sure the browser supports ShadowRoot
-  if (ShadowRoot) {
+  if (typeof ShadowRoot !== 'undefined') {
     // Shadow root of each element should be observed to add styles to all
     // elements added to this root.
     HTMLElement.prototype.attachShadow = function(...args) {
