@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.2](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.1...v2.2.2) (2019-08-29)
+
+
+### Bug Fixes
+
+* **polyfill:** Polyfill can not be used in the HTML document's head ([b55e632](https://github.com/calebdwilliams/adoptedStyleSheets/commit/b55e632))
+* **polyfill:** The polyfill now behaves properly when loaded in the document's head ([5b3115e](https://github.com/calebdwilliams/adoptedStyleSheets/commit/5b3115e))
+
 ### [2.2.1](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.0...v2.2.1) (2019-08-29)
 
 ## [2.2.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.1.0...v2.2.0) (2019-08-28)
