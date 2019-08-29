@@ -11,8 +11,8 @@
   // Polyfill-level reference to the iframe body
   let frameBody;
 
-   // Style elements that will be attached to the head
-   // that need to be moved to the iframe
+  // Style elements that will be attached to the head
+  // that need to be moved to the iframe
   const deferredStyleSheets = [];
 
   // Initialize the polyfill — Will be called on the window's load event
@@ -47,11 +47,11 @@
     deferredStyleSheets.length = 0;
   }
 
-  const $adoptedStyleSheets = Symbol('adoptedStyleSheets');
-  const $constructStyleSheet = Symbol('constructStyleSheet');
-  const $location = Symbol('location');
-  const $observer = Symbol('observer');
-  const $appliedActionsCursor = Symbol('methodsHistoryCursor');
+  const adoptedStyleSheetsRegistry = new WeakMap();
+  const constructStyleSheetRegistry = new WeakMap();
+  const locationRegistry = new WeakMap();
+  const observerRegistry = new WeakMap();
+  const appliedActionsCursorRegistry = new WeakMap();
 
   const OldCSSStyleSheet = CSSStyleSheet;
 
@@ -77,8 +77,10 @@
       // object to all adopted style element.
       const oldMethod = proto[methodKey];
       proto[methodKey] = function(...args) {
-        if ($constructStyleSheet in this) {
-          for (const [, styleElement] of this[$constructStyleSheet].adopters) {
+        if (constructStyleSheetRegistry.has(this)) {
+          const {actions, adopters} = constructStyleSheetRegistry.get(this);
+
+          for (const [, styleElement] of adopters) {
             if (styleElement.sheet) {
               styleElement.sheet[methodKey](...args);
             }
@@ -86,7 +88,7 @@
 
           // And we also need to remember all these changes to apply them to
           // each newly adopted style element.
-          this[$constructStyleSheet].actions.push([methodKey, args]);
+          actions.push([methodKey, args]);
         }
 
         return oldMethod.apply(this, args);
@@ -95,13 +97,16 @@
   };
 
   const updateAdopters = sheet => {
-    for (const [, styleElement] of sheet[$constructStyleSheet].adopters) {
-      styleElement.innerHTML =
-        sheet[$constructStyleSheet].basicStyleElement.innerHTML;
+    const {adopters, basicStyleElement} = constructStyleSheetRegistry.get(
+      sheet,
+    );
+
+    for (const [, styleElement] of adopters) {
+      styleElement.innerHTML = basicStyleElement.innerHTML;
     }
   };
 
-  const importPattern = /\@import/;
+  const importPattern = /@import/;
 
   // This class will be a substitute for the CSSStyleSheet class that
   // cannot be instantiated. The `new` operation will return the native
@@ -116,7 +121,7 @@
     constructor() {
       // A style element to extract the native CSSStyleSheet object.
       const basicStyleElement = document.createElement('style');
-      
+
       if (polyfillLoaded) {
         // If the polyfill is ready, use the framebody
         frameBody.append(basicStyleElement);
@@ -130,20 +135,22 @@
       const nativeStyleSheet = basicStyleElement.sheet;
 
       // A support object to preserve all the polyfill data
-      nativeStyleSheet[$constructStyleSheet] = {
+      constructStyleSheetRegistry.set(nativeStyleSheet, {
         adopters: new Map(),
         actions: [],
         basicStyleElement,
-      };
-      
+      });
+
       return nativeStyleSheet;
     }
 
     replace(contents) {
       return new Promise((resolve, reject) => {
-        if (this[$constructStyleSheet]) {
-          this[$constructStyleSheet].basicStyleElement.innerHTML = contents;
-          resolve(this[$constructStyleSheet].basicStyleElement.sheet);
+        if (constructStyleSheetRegistry.has(this)) {
+          const {basicStyleElement} = constructStyleSheetRegistry.get(this);
+
+          basicStyleElement.innerHTML = contents;
+          resolve(basicStyleElement.sheet);
           updateAdopters(this);
         } else {
           reject(
@@ -164,11 +171,13 @@
         );
       }
 
-      if (this[$constructStyleSheet]) {
-        this[$constructStyleSheet].basicStyleElement.innerHTML = contents;
+      if (constructStyleSheetRegistry.has(this)) {
+        const {basicStyleElement} = constructStyleSheetRegistry.get(this);
+
+        basicStyleElement.innerHTML = contents;
         updateAdopters(this);
 
-        return this[$constructStyleSheet].basicStyleElement.sheet;
+        return basicStyleElement.sheet;
       } else {
         throw new DOMException(
           "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
@@ -183,27 +192,31 @@
   const adoptStyleSheets = location => {
     const newStyles = document.createDocumentFragment();
 
-    for (const sheet of location[$adoptedStyleSheets]) {
-      const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
-        location,
+    const sheets = adoptedStyleSheetsRegistry.get(location);
+
+    for (const sheet of sheets) {
+      const {adopters, basicStyleElement} = constructStyleSheetRegistry.get(
+        sheet,
       );
+
+      const adoptedStyleElement = adopters.get(location);
 
       if (adoptedStyleElement) {
         // This operation removes the style element from the location, so we
         // need to pause watching when it happens to avoid calling
         // adoptAndRestoreStylesOnMutationCallback.
-        location[$observer].disconnect();
+        const observer = observerRegistry.get(location);
+
+        observer.disconnect();
         newStyles.append(adoptedStyleElement);
-        location[$observer].observe();
+        observer.observe();
       } else {
-        const clone = sheet[$constructStyleSheet].basicStyleElement.cloneNode(
-          true,
-        );
-        clone[$location] = location;
+        const clone = basicStyleElement.cloneNode(true);
+        locationRegistry.set(clone, location);
         // The index of actions array when we stopped applying actions to the
         // element (e.g., it was disconnected).
-        clone[$appliedActionsCursor] = 0;
-        sheet[$constructStyleSheet].adopters.set(location, clone);
+        appliedActionsCursorRegistry.set(clone, 0);
+        adopters.set(location, clone);
         newStyles.append(clone);
       }
     }
@@ -215,39 +228,40 @@
     // We need to apply all actions we have done with the original CSSStyleSheet
     // to each new style element and to any other element that missed last
     // applied actions (e.g., it was disconnected).
-    for (const sheet of location[$adoptedStyleSheets]) {
-      const adoptedStyleElement = sheet[$constructStyleSheet].adopters.get(
-        location,
-      );
-
-      const {actions} = sheet[$constructStyleSheet];
+    for (const sheet of sheets) {
+      const {actions, adopters} = constructStyleSheetRegistry.get(sheet);
+      const adoptedStyleElement = adopters.get(location);
+      const cursor = appliedActionsCursorRegistry.get(adoptedStyleElement);
 
       if (actions.length > 0) {
-        for (
-          let i = adoptedStyleElement[$appliedActionsCursor];
-          i < actions.length;
-          i++
-        ) {
+        for (let i = cursor; i < actions.length; i++) {
           const [key, args] = actions[i];
           adoptedStyleElement.sheet[key](...args);
         }
 
-        adoptedStyleElement[$appliedActionsCursor] = actions.length - 1;
+        appliedActionsCursorRegistry.set(
+          adoptedStyleElement,
+          actions.length - 1,
+        );
       }
     }
   };
 
   const removeExcludedStyleSheets = (location, oldSheets) => {
+    const sheets = adoptedStyleSheetsRegistry.get(location);
+
     for (const sheet of oldSheets) {
-      if (location[$adoptedStyleSheets].includes(sheet)) {
+      if (sheets.includes(sheet)) {
         continue;
       }
 
-      const styleElement = sheet[$constructStyleSheet].adopters.get(location);
+      const {adopters} = constructStyleSheetRegistry.get(sheet);
+      const observer = observerRegistry.get(location);
+      const styleElement = adopters.get(location);
 
-      location[$observer].disconnect();
+      observer.disconnect();
       styleElement.remove();
-      location[$observer].observe();
+      observer.observe();
     }
   };
 
@@ -257,7 +271,7 @@
       // otherwise we can break the order of appended styles which will affect the
       // rules overriding.
       for (const removedNode of removedNodes) {
-        const location = removedNode[$location];
+        const location = locationRegistry.get(removedNode);
 
         if (location) {
           adoptStyleSheets(location);
@@ -296,13 +310,15 @@
       adoptAndRestoreStylesOnMutationCallback,
     );
 
-    location[$observer] = {
+    const observerTool = {
       observe: () =>
         observer.observe(location, {childList: true, subtree: true}),
       disconnect: () => observer.disconnect(),
     };
 
-    location[$observer].observe();
+    observerRegistry.set(location, observerTool);
+
+    observerTool.observe();
   };
 
   const adoptedStyleSheetAccessors = {
@@ -311,9 +327,7 @@
       // Technically, the real adoptedStyleSheets array is placed on the body
       // element to unify the logic with ShadowRoot. However, it is hidden under
       // the symbol, and the public interface follows the specification.
-      const location = this.body ? this.body : this;
-
-      return location[$adoptedStyleSheets] || [];
+      return adoptedStyleSheetsRegistry.get(this.body ? this.body : this) || [];
     },
     set(sheets) {
       if (!Array.isArray(sheets)) {
@@ -331,8 +345,8 @@
       const location = this.body ? this.body : this;
       const uniqueSheets = [...new Set(sheets)];
 
-      const oldSheets = location[$adoptedStyleSheets] || [];
-      location[$adoptedStyleSheets] = uniqueSheets;
+      const oldSheets = adoptedStyleSheetsRegistry.get(location) || [];
+      adoptedStyleSheetsRegistry.set(location, uniqueSheets);
 
       // Element can adopt style sheets only when it is connected
       if (location.isConnected) {
@@ -369,7 +383,7 @@
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPolyfill);
-  } else { 
+  } else {
     initPolyfill();
   }
 })(undefined);
