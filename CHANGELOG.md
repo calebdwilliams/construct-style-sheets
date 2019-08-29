@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.5](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.4...v2.2.5) (2019-08-29)
+
+
+### Bug Fixes
+
+* **polyfill:** Aligned adoptedStyleSheet set errors with Chrome and double check presence of ShadowRoot ([c753d3b](https://github.com/calebdwilliams/adoptedStyleSheets/commit/c753d3b))
+
 ### [2.2.4](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.3...v2.2.4) (2019-08-29)
 
 ### [2.2.3](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.2...v2.2.3) (2019-08-29)
