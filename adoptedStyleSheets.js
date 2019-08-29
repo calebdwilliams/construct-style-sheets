@@ -325,24 +325,25 @@
     configurable: true,
     get() {
       // Technically, the real adoptedStyleSheets array is placed on the body
-      // element to unify the logic with ShadowRoot. However, it is hidden under
-      // the symbol, and the public interface follows the specification.
+      // element to unify the logic with ShadowRoot. However, it is hidden
+      // in the WeakMap, and the public interface follows the specification.
       return adoptedStyleSheetsRegistry.get(this.body ? this.body : this) || [];
     },
     set(sheets) {
+      // If `this` is the Document, the body element should be used as a
+      // location.
+      const location = this.body ? this.body : this;
+      const locationType = location.tagName ? 'Document' : 'ShadowRoot';
       if (!Array.isArray(sheets)) {
-        throw new TypeError('Adopted style sheets must be an Array');
+        throw new TypeError(`Failed to set the 'adoptedStyleSheets' property on '${locationType}': Iterator getter is not callable.`);
       }
 
       if (!sheets.every(sheet => sheet instanceof OldCSSStyleSheet)) {
         throw new TypeError(
-          'Adopted style sheets must be of type CSSStyleSheet',
+          `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Failed to convert value to 'CSSStyleSheet'`,
         );
       }
 
-      // If `this` is the Document, the body element should be used as a
-      // location.
-      const location = this.body ? this.body : this;
       const uniqueSheets = [...new Set(sheets)];
 
       const oldSheets = adoptedStyleSheetsRegistry.get(location) || [];
@@ -359,20 +360,25 @@
 
   const oldAttachShadow = HTMLElement.prototype.attachShadow;
 
-  // Shadow root of each element should be observed to add styles to all
-  // elements added to this root.
-  HTMLElement.prototype.attachShadow = function(...args) {
-    const location = oldAttachShadow.apply(this, args);
-    createObserver(location);
+  
+  // Double check to make sure the browser supports ShadowRoot
+  if (ShadowRoot) {
+    // Shadow root of each element should be observed to add styles to all
+    // elements added to this root.
+    HTMLElement.prototype.attachShadow = function(...args) {
+      const location = oldAttachShadow.apply(this, args);
+      createObserver(location);
+  
+      return location;
+    };
 
-    return location;
-  };
+    Object.defineProperty(
+      ShadowRoot.prototype,
+      'adoptedStyleSheets',
+      adoptedStyleSheetAccessors,
+    );
+  }
 
-  Object.defineProperty(
-    ShadowRoot.prototype,
-    'adoptedStyleSheets',
-    adoptedStyleSheetAccessors,
-  );
   Object.defineProperty(
     Document.prototype,
     'adoptedStyleSheets',
