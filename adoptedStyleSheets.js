@@ -353,12 +353,10 @@
 
       const oldSheets = adoptedStyleSheetsRegistry.get(location) || [];
       adoptedStyleSheetsRegistry.set(location, uniqueSheets);
-
-      // Element can adopt style sheets only when it is connected
-      if (location.isConnected) {
-        adoptStyleSheets(location);
-        // Remove all the sheets the received array does not include.
-        removeExcludedStyleSheets(location, oldSheets);
+      // Adopt all sheets for this location
+      adoptStyleSheets(location);
+      // Remove all the sheets the received array does not include.
+      removeExcludedStyleSheets(location, oldSheets);
       }
     },
   };
