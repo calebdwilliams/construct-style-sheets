@@ -112,79 +112,78 @@
   // cannot be instantiated. The `new` operation will return the native
   // CSSStyleSheet object extracted from a style element appended to the
   // iframe.
-  function ConstructStyleSheet() {
-    // A style element to extract the native CSSStyleSheet object.
-    const basicStyleElement = document.createElement('style');
-
-    if (polyfillLoaded) {
-      // If the polyfill is ready, use the framebody
-      frameBody.appendChild(basicStyleElement);
-    } else {
-      // If the polyfill is not ready, move styles to head temporarily
-      document.head.appendChild(basicStyleElement);
-      basicStyleElement.disabled = true;
-      deferredStyleSheets.push(basicStyleElement);
+  class ConstructStyleSheet {
+    // Allows instanceof checks with the window.CSSStyleSheet.
+    static [Symbol.hasInstance](instance) {
+      return instance instanceof OldCSSStyleSheet;
     }
 
-    const nativeStyleSheet = basicStyleElement.sheet;
+    constructor() {
+      // A style element to extract the native CSSStyleSheet object.
+      const basicStyleElement = document.createElement('style');
 
-    // A support object to preserve all the polyfill data
-    constructStyleSheetRegistry.set(nativeStyleSheet, {
-      adopters: new Map(),
-      actions: [],
-      basicStyleElement,
-    });
-
-    return nativeStyleSheet;
-  }
-
-  Object.defineProperty(ConstructStyleSheet, Symbol.hasInstance, {
-    get() {
-      return function(instance) {
-        return instance instanceof OldCSSStyleSheet;
+      if (polyfillLoaded) {
+        // If the polyfill is ready, use the framebody
+        frameBody.appendChild(basicStyleElement);
+      } else {
+        // If the polyfill is not ready, move styles to head temporarily
+        document.head.appendChild(basicStyleElement);
+        basicStyleElement.disabled = true;
+        deferredStyleSheets.push(basicStyleElement);
       }
-    }
-  });
 
-  ConstructStyleSheet.prototype.replace = function(contents) {
-    return new Promise((resolve, reject) => {
+      const nativeStyleSheet = basicStyleElement.sheet;
+
+      // A support object to preserve all the polyfill data
+      constructStyleSheetRegistry.set(nativeStyleSheet, {
+        adopters: new Map(),
+        actions: [],
+        basicStyleElement,
+      });
+
+      return nativeStyleSheet;
+    }
+
+    replace(contents) {
+      return new Promise((resolve, reject) => {
+        if (constructStyleSheetRegistry.has(this)) {
+          const {basicStyleElement} = constructStyleSheetRegistry.get(this);
+
+          basicStyleElement.innerHTML = contents;
+          resolve(basicStyleElement.sheet);
+          updateAdopters(this);
+        } else {
+          reject(
+            new DOMException(
+              "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets.",
+              'NotAllowedError',
+            ),
+          );
+        }
+      });
+    }
+
+    replaceSync(contents) {
+      if (importPattern.test(contents)) {
+        throw new DOMException(
+          '@import rules are not allowed when creating stylesheet synchronously',
+          'NotAllowedError',
+        );
+      }
+
       if (constructStyleSheetRegistry.has(this)) {
         const {basicStyleElement} = constructStyleSheetRegistry.get(this);
 
         basicStyleElement.innerHTML = contents;
-        resolve(basicStyleElement.sheet);
         updateAdopters(this);
+
+        return basicStyleElement.sheet;
       } else {
-        reject(
-          new DOMException(
-            "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets.",
-            'NotAllowedError',
-          ),
+        throw new DOMException(
+          "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
+          'NotAllowedError',
         );
       }
-    });
-  }
-
-  ConstructStyleSheet.prototype.replaceSync = function(contents) {
-    if (importPattern.test(contents)) {
-      throw new DOMException(
-        '@import rules are not allowed when creating stylesheet synchronously',
-        'NotAllowedError',
-      );
-    }
-
-    if (constructStyleSheetRegistry.has(this)) {
-      const {basicStyleElement} = constructStyleSheetRegistry.get(this);
-
-      basicStyleElement.innerHTML = contents;
-      updateAdopters(this);
-
-      return basicStyleElement.sheet;
-    } else {
-      throw new DOMException(
-        "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
-        'NotAllowedError',
-      );
     }
   }
 
