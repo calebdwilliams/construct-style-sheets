@@ -1,5 +1,9 @@
 # Constructible style sheets polyfill
 
+[![Travis][build-badge]][build]
+[![construct-style-sheets][npm-badge]][npm]
+[![codecov](https://codecov.io/gh/calebdwilliams/construct-style-sheets/branch/master/graph/badge.svg)](https://codecov.io/gh/TechnionYP5777/project-name)
+
 This package is a polyfill for the [constructible style sheets/adopted style sheets specification](https://github.com/WICG/construct-stylesheets/blob/gh-pages/explainer.md). The full specificaiton is enabled by default in Google Chrome as of version 73.
 
 Currently [Mozilla is considering implementation of the feature](https://github.com/mozilla/standards-positions/issues/103), marking it as "worth prototyping" while Apple has not publically signaled, they have been active in the standards discussions surrounding it.

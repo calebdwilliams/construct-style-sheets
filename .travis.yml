@@ -10,3 +10,6 @@ addons:
 branches:
   only:
     - master
+script:
+  - npm test:coverage
+  - codecov
