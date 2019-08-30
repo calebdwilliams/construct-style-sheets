@@ -357,7 +357,6 @@
       adoptStyleSheets(location);
       // Remove all the sheets the received array does not include.
       removeExcludedStyleSheets(location, oldSheets);
-      }
     },
   };
 
