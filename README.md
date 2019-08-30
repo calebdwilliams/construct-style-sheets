@@ -18,6 +18,10 @@ This polyfill will create a new style element for every `DocumentOrShadowRoot` i
 
 No changes will occur in a browser that supports the feature by default.
 
+## Requirements
+
+This polyfill should work as-is in modern browsers, however, to support IE11, you will also need to consume a polyfill for [ECMAScript `Symbol`s](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol). One popular and well supported option is [Core-JS](https://www.npmjs.com/package/core-js) which includes polyfills for many other modern features alongside a polyfill for `Symbol`.
+
 ## Installation
 
 The package can be installed either by copying the [polyfill file](./adoptedStyleSheets.js) or by [installing using npm](https://docs.npmjs.com/getting-started/).

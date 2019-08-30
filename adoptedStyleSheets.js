@@ -39,7 +39,7 @@
     // Move style elements created before document.body
     // to the iframe along with future styles
     deferredStyleSheets.forEach(nativeStyleSheet => {
-      frameBody.append(nativeStyleSheet);
+      frameBody.appendChild(nativeStyleSheet);
       nativeStyleSheet.disabled = false;
     });
 
@@ -124,10 +124,10 @@
 
       if (polyfillLoaded) {
         // If the polyfill is ready, use the framebody
-        frameBody.append(basicStyleElement);
+        frameBody.appendChild(basicStyleElement);
       } else {
         // If the polyfill is not ready, move styles to head temporarily
-        document.head.append(basicStyleElement);
+        document.head.appendChild(basicStyleElement);
         basicStyleElement.disabled = true;
         deferredStyleSheets.push(basicStyleElement);
       }
@@ -208,7 +208,7 @@
         const observer = observerRegistry.get(location);
 
         observer.disconnect();
-        newStyles.append(adoptedStyleElement);
+        newStyles.appendChild(adoptedStyleElement);
         observer.observe();
       } else {
         const clone = basicStyleElement.cloneNode(true);
@@ -217,13 +217,18 @@
         // element (e.g., it was disconnected).
         appliedActionsCursorRegistry.set(clone, 0);
         adopters.set(location, clone);
-        newStyles.append(clone);
+        newStyles.appendChild(clone);
       }
     }
 
     // Since we already removed all elements during appending them to the
     // document fragment, we can just re-add them again.
-    location.prepend(newStyles);
+    // we do this because IE11 doesn't support ParentNode.prepend
+    if (location.firstChild) {
+      location.insertBefore(newStyles, location.firstChild);
+    } else {
+      location.appendChild(newStyles);
+    }
 
     // We need to apply all actions we have done with the original CSSStyleSheet
     // to each new style element and to any other element that missed last
