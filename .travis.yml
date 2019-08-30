@@ -11,5 +11,5 @@ branches:
   only:
     - master
 script:
-  - npm test:coverage
+  - npm run test:coverage
   - codecov
