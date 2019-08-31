@@ -9,7 +9,8 @@ const paths = {
   nodeModules: resolve(cwd, 'node_modules'),
   openWc: resolve(cwd, 'node_modules/@open-wc'),
   polyfills: resolve(cwd, 'test/polyfills.js'),
-  test: resolve(cwd, 'test/polyfill.test.js')
+  test: resolve(cwd, 'test/polyfill.test.js'),
+  wc: resolve(cwd, '../polyfills/packages/webcomponentsjs')
 };
 
 module.exports = {
@@ -47,11 +48,11 @@ module.exports = {
             }
           }
         ],
-        include: [paths.test, paths.openWc, paths.polyfills]
+        include: [paths.test, paths.openWc, paths.polyfills, paths.wc]
       }
     ].filter(Boolean)
   },
   performance: {
-    hints: false,
-  },
+    hints: false
+  }
 };

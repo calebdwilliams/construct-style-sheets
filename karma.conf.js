@@ -84,7 +84,7 @@ module.exports = function(config) {
       usePhantomJS: false,
       preferHeadless: true,
       postDetection(availableBrowsers) {
-        return availableBrowsers.filter(browser => browser !== 'IE');
+        return availableBrowsers.filter(browser => browser !== 'IE' && browser !== 'Edge');
       },
     },
 

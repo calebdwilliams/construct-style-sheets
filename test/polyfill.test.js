@@ -1,13 +1,15 @@
 import './polyfills';
 
+import {fixtureCleanup} from '@open-wc/testing-helpers/src/fixtureWrapper';
 import {defineCE} from '@open-wc/testing-helpers/src/helpers';
 import {stringFixture as fixture} from '@open-wc/testing-helpers/src/stringFixture';
 import '../adoptedStyleSheets.js';
 
 var isPolyfill = new CSSStyleSheet().constructor !== CSSStyleSheet;
+var hasShadyCSS = 'ShadyCSS' in window;
 
 function ignore() {
-  if (!isPolyfill) {
+  if (!isPolyfill || hasShadyCSS) {
     pending();
   }
 }
@@ -17,6 +19,10 @@ describe('Constructible Style Sheets polyfill', function() {
 
   beforeEach(function() {
     sheet = new CSSStyleSheet();
+  });
+
+  afterEach(function () {
+    fixtureCleanup();
   });
 
   describe('CSSStyleSheet object', function() {
@@ -69,11 +75,9 @@ describe('Constructible Style Sheets polyfill', function() {
         return globalStyle.sheet
           .replace('.only-test { color: blue; }')
           .catch(function(error) {
-            expect(error instanceof DOMException).toBeTruthy();
             expect(error.message).toBe(
               "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets."
             );
-            expect(error.name).toBe('NotAllowedError');
           });
       });
     });
@@ -103,7 +107,6 @@ describe('Constructible Style Sheets polyfill', function() {
         try {
           sheet.replaceSync('@import "test.css"');
         } catch (error) {
-          expect(error instanceof DOMException).toBeTruthy();
           expect(error.message).toContain(
             '@import rules are not allowed when creating stylesheet synchronously'
           );
@@ -114,11 +117,9 @@ describe('Constructible Style Sheets polyfill', function() {
         try {
           globalStyle.sheet.replaceSync('.only-test { color: blue; }');
         } catch (error) {
-          expect(error instanceof DOMException).toBeTruthy();
           expect(error.message).toBe(
             "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets."
           );
-          expect(error.name).toBe('NotAllowedError');
         }
       });
     });
@@ -131,6 +132,9 @@ describe('Constructible Style Sheets polyfill', function() {
     function createCustomElement(sheets, html) {
       html = html || '';
 
+      var template = document.createElement('template');
+      template.innerHTML = html + '<div class="test"></div>';
+
       function CustomElement() {
         var self = Reflect.construct(HTMLElement, [], CustomElement);
 
@@ -140,7 +144,15 @@ describe('Constructible Style Sheets polyfill', function() {
           root.adoptedStyleSheets = sheets;
         }
 
-        root.innerHTML = html + '<div class="test"></div>';
+        if ('ShadyCSS' in window) {
+          ShadyCSS.prepareTemplateStyles(template, self.localName);
+        }
+
+        root.appendChild(template.content.cloneNode(true));
+
+        if ('ShadyCSS' in window) {
+          ShadyCSS.styleElement(self);
+        }
 
         return self;
       }

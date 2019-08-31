@@ -1,15 +1,3 @@
-if (!('isConnected' in Node.prototype)) {
-  require('is-connected-node/implement')
-}
-
-if (typeof WeakMap === 'undefined') {
-  window.WeakMap = require('core-js-pure/es/weak-map');
-}
-
-if (typeof Map === 'undefined') {
-  window.Map = require('core-js-pure/es/map');
-}
-
 if (typeof Promise === 'undefined') {
   window.Promise = require('core-js-pure/es/promise');
 }
@@ -23,7 +11,8 @@ if (typeof Reflect === 'undefined') {
 }
 
 if (typeof customElements === 'undefined') {
-  require('@webcomponents/webcomponentsjs');
+  require('@babel/runtime/regenerator');
+  require('@webcomponents/webcomponentsjs/src/entrypoints/webcomponents-bundle-index');
 }
 
 if (!('assign' in Object)) {

@@ -13,7 +13,7 @@
   var polyfillLoaded = false;
 
   // Polyfill-level reference to the iframe body
-  var frameBody, frameWindow;
+  var frameBody, frameCSSStyleSheet;
 
   // Style elements that will be attached to the head
   // that need to be moved to the iframe
@@ -28,11 +28,11 @@
     document.body.appendChild(iframe);
 
     frameBody = iframe.contentWindow.document.body;
-    frameWindow = iframe.contentWindow;
+    frameCSSStyleSheet = iframe.contentWindow.CSSStyleSheet;
 
     // Since we get the sheet from iframe, we need to patch prototype of the
     // CSSStyleSheet in iframe as well.
-    updatePrototype(frameWindow.CSSStyleSheet.prototype);
+    updatePrototype(iframe.contentWindow.CSSStyleSheet.prototype);
 
     // Document body will be observed from the very start to catch all added
     // custom elements
@@ -59,6 +59,13 @@
   var appliedActionsCursorRegistry = new WeakMap();
 
   var OldCSSStyleSheet = CSSStyleSheet;
+
+  function instanceOfStyleSheet(instance) {
+    return (
+      instance instanceof OldCSSStyleSheet ||
+      instance instanceof frameCSSStyleSheet
+    );
+  }
 
   var cssStyleSheetMethods = [
     'addImport',
@@ -146,13 +153,7 @@
   // Allows instanceof checks with the window.CSSStyleSheet.
   Object.defineProperty(ConstructStyleSheet, Symbol.hasInstance, {
     configurable: true,
-    value: function(instance) {
-      return (
-        instance instanceof OldCSSStyleSheet ||
-        // Workaround for IE & Edge
-        instance instanceof frameWindow.CSSStyleSheet
-      );
-    }
+    value: instanceOfStyleSheet
   });
 
   ConstructStyleSheet.prototype.replace = function replace(contents) {
@@ -168,9 +169,8 @@
         updateAdopters(self);
       } else {
         reject(
-          new DOMException(
-            "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets.",
-            'NotAllowedError'
+          new Error(
+            "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets."
           )
         );
       }
@@ -179,9 +179,8 @@
 
   ConstructStyleSheet.prototype.replaceSync = function replaceSync(contents) {
     if (importPattern.test(contents)) {
-      throw new DOMException(
-        '@import rules are not allowed when creating stylesheet synchronously',
-        'NotAllowedError'
+      throw new Error(
+        '@import rules are not allowed when creating stylesheet synchronously'
       );
     }
 
@@ -194,9 +193,8 @@
 
       return basicStyleElement.sheet;
     } else {
-      throw new DOMException(
-        "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
-        'NotAllowedError'
+      throw new Error(
+        "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets."
       );
     }
   };
@@ -343,6 +341,30 @@
     observerTool.observe();
   }
 
+  function checkAndPrepare(sheets, location) {
+    var locationType = location.tagName ? 'Document' : 'ShadowRoot';
+
+    if (!Array.isArray(sheets)) {
+      throw new TypeError(
+        "Failed to set the 'adoptedStyleSheets' property on " +
+          locationType +
+          ': Iterator getter is not callable.'
+      );
+    }
+
+    if (!sheets.every(instanceOfStyleSheet)) {
+      throw new TypeError(
+        "Failed to set the 'adoptedStyleSheets' property on " +
+          locationType +
+          ": Failed to convert value to 'CSSStyleSheet'"
+      );
+    }
+
+    return sheets.filter(function(value, index) {
+      return sheets.indexOf(value) === index;
+    });
+  }
+
   var adoptedStyleSheetAccessors = {
     configurable: true,
     get: function() {
@@ -355,36 +377,22 @@
       // If `this` is the Document, the body element should be used as a
       // location.
       var location = this.body ? this.body : this;
-      var locationType = location.tagName ? 'Document' : 'ShadowRoot';
-      if (!Array.isArray(sheets)) {
-        throw new TypeError(
-          "Failed to set the 'adoptedStyleSheets' property on " +
-            locationType +
-            ': Iterator getter is not callable.'
-        );
-      }
 
-      if (
-        !sheets.every(function(sheet) {
-          return sheet instanceof OldCSSStyleSheet;
-        })
-      ) {
-        throw new TypeError(
-          "Failed to set the 'adoptedStyleSheets' property on " +
-            locationType +
-            ": Failed to convert value to 'CSSStyleSheet'"
-        );
-      }
-
-      var uniqueSheets = sheets.filter(function(value, index) {
-        return sheets.indexOf(value) === index;
-      });
+      var uniqueSheets = checkAndPrepare(sheets, location);
 
       var oldSheets = adoptedStyleSheetsRegistry.get(location) || [];
       adoptedStyleSheetsRegistry.set(location, uniqueSheets);
 
+      // If the browser supports web components, it definitely supports
+      // isConnected. If not, we can just check if the document contains
+      // the current location.
+      var isConnected =
+        'isConnected' in location
+          ? location.isConnected
+          : document.contains(location);
+
       // Element can adopt style sheets only when it is connected
-      if (location.isConnected) {
+      if (isConnected) {
         adoptStyleSheets(location);
         // Remove all the sheets the received array does not include.
         removeExcludedStyleSheets(location, oldSheets);
@@ -392,8 +400,29 @@
     }
   };
 
-  // Double check to make sure the browser supports ShadowRoot
-  if (typeof ShadowRoot !== 'undefined') {
+  // If the ShadyDOM is defined, the polyfill is loaded. Then, let's rely on
+  // it; otherwise, we check the existence of the ShadowRoot.
+  if ('ShadyCSS' in window && !window.ShadyCSS.nativeShadow) {
+    Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', {
+      get: function() {
+        return adoptedStyleSheetsRegistry.get(this) || [];
+      },
+      set: function(sheets) {
+        var uniqueSheets = checkAndPrepare(sheets, location);
+
+        var cssToAdopt = uniqueSheets.map(function(sheet) {
+          return constructStyleSheetRegistry.get(
+            sheet
+          ).basicStyleElement.innerHTML;
+        });
+
+        ShadyCSS.ScopingShim.prepareAdoptedCssText(
+          cssToAdopt,
+          this.host.localName
+        );
+      }
+    });
+  } else if (typeof ShadowRoot !== 'undefined') {
     var oldAttachShadow = HTMLElement.prototype.attachShadow;
 
     // Shadow root of each element should be observed to add styles to all
