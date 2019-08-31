@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.6](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.5...v2.2.6) (2019-08-31)
+
+
+### Bug Fixes
+
+* **IE11, docs:** Added potential fix for [#24](https://github.com/calebdwilliams/adoptedStyleSheets/issues/24) and [#23](https://github.com/calebdwilliams/adoptedStyleSheets/issues/23) ([0bf415e](https://github.com/calebdwilliams/adoptedStyleSheets/commit/0bf415e))
+
 ### [2.2.5](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.4...v2.2.5) (2019-08-29)
 
 
