@@ -1,6 +1,8 @@
 // Karma configuration
 // Generated on Sun Jan 20 2019 23:06:22 GMT-0600 (CST)
 
+const webpack = require('./webpack.config');
+
 const isCI = !!process.env.CI;
 const watch = !!process.argv.find(arg => arg.includes('watch')) && !isCI;
 const coverage = !!process.argv.find(arg => arg.includes('--coverage'));
@@ -15,9 +17,12 @@ module.exports = function(config) {
       require('karma-chrome-launcher'),
       require('karma-firefox-launcher'),
       require('karma-safarinative-launcher'),
+      require('karma-ie-launcher'),
+      require('karma-edge-launcher'),
       require('karma-coverage-istanbul-reporter'),
       require('karma-detect-browsers'),
-      require('@open-wc/karma-esm'),
+      require('karma-webpack'),
+      require('karma-coverage-istanbul-reporter'),
     ],
 
     browserNoActivityTimeout : 60000, //default 10000
@@ -27,17 +32,17 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine', 'esm', 'detectBrowsers'],
+    frameworks: ['jasmine', 'detectBrowsers'],
 
     // list of files / patterns to load in the browser
-    files: [{pattern: 'test/polyfill.test.js', type: 'module', watch: false}],
+    files: ['test/polyfill.test.js'],
 
     // list of files / patterns to exclude
     exclude: [],
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {},
+    preprocessors: {'test/polyfill.test.js': ['webpack']},
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
@@ -57,17 +62,16 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: watch,
 
-    esm: {
-      coverage,
-      compatibility: 'none',
-      nodeResolve: true,
-    },
-
     coverageIstanbulReporter: {
-      reports: ['html', 'lcovonly', 'text-summary'],
+      reports: ['html', 'lcovonly'],
       dir: '.coverage',
       combineBrowserReports: true,
-      skipFilesWithNoCoverage: false,
+      fixWebpackSourcePaths: true,
+      skipFilesWithNoCoverage: true,
+      'report-config': {
+        html: {subdir: 'html'},
+        lcovonly: {subdir: 'lcov'},
+      },
     },
 
     customLaunchers: {
@@ -83,6 +87,8 @@ module.exports = function(config) {
         return availableBrowsers.filter(browser => browser !== 'IE');
       },
     },
+
+    webpack,
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits

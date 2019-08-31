@@ -1,0 +1,19 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "loose": true,
+        "targets": {
+          "browsers": ["last 2 versions", "IE 11"]
+        },
+        "shippedProposals": true,
+        "useBuiltIns": false
+      }
+    ]
+  ],
+  "plugins": [
+    "@babel/plugin-transform-instanceof",
+    "babel-plugin-transform-async-to-promises"
+  ]
+}

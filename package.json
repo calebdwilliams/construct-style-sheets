@@ -13,7 +13,8 @@
     "postrelease": "git push --follow-tags origin master; npm publish",
     "pretest": "rimraf .coverage",
     "pretest:watch": "npm run pretest",
-    "pretest:coverage": "npm run pretest"
+    "pretest:coverage": "npm run pretest",
+    "webpack": "webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",
@@ -26,22 +27,35 @@
   },
   "homepage": "https://github.com/calebdwilliams/adoptedStyleSheets#readme",
   "devDependencies": {
-    "@open-wc/karma-esm": "^2.5.1",
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-instanceof": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
     "@open-wc/testing-helpers": "^1.2.1",
+    "@webcomponents/webcomponentsjs": "^2.2.10",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-transform-async-to-promises": "^0.8.14",
     "codecov": "^3.5.0",
+    "core-js-pure": "^3.2.1",
+    "is-connected-node": "^1.0.0-beta",
+    "istanbul-instrumenter-loader": "^3.0.1",
     "jasmine-core": "^3.4.0",
     "karma": "^4.2.0",
+    "karma-babel-preprocessor": "^8.0.1",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage-istanbul-reporter": "^2.1.0",
     "karma-detect-browsers": "^2.3.3",
+    "karma-edge-launcher": "^0.4.2",
     "karma-firefox-launcher": "^1.2.0",
+    "karma-ie-launcher": "^1.0.0",
     "karma-jasmine": "^2.0.1",
     "karma-safarinative-launcher": "^1.1.0",
     "karma-webpack": "^4.0.2",
+    "mdn-polyfills": "^5.18.0",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
     "standard-version": "^7.0.0",
-    "webpack": "^4.39.2"
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.7"
   },
   "keywords": [
     "CSS",
@@ -56,6 +70,5 @@
     "stylesheet",
     "polyfill",
     "CSS modules"
-  ],
-  "dependencies": {}
+  ]
 }

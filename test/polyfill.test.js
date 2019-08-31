@@ -1,3 +1,5 @@
+import './polyfills';
+
 import {defineCE} from '@open-wc/testing-helpers/src/helpers';
 import {stringFixture as fixture} from '@open-wc/testing-helpers/src/stringFixture';
 import '../adoptedStyleSheets.js';
