@@ -18,14 +18,14 @@ if (typeof Symbol === 'undefined') {
   window.Symbol = require('core-js-pure/es/symbol');
 }
 
-if (!('append' in Node.prototype)) {
-  require('mdn-polyfills/Node.prototype.append')
-}
-
-if (!('remove' in Node.prototype)) {
-  require('mdn-polyfills/Node.prototype.remove');
+if (typeof Reflect === 'undefined') {
+  window.Reflect = require('core-js-pure/es/reflect');
 }
 
 if (typeof customElements === 'undefined') {
   require('@webcomponents/webcomponentsjs');
+}
+
+if (!('assign' in Object)) {
+  Object.assign = require('core-js-pure/es/object/assign');
 }
