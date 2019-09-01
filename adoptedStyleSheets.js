@@ -5,6 +5,8 @@
     return;
   }
 
+  var hasShadyCss = 'ShadyCSS' in window;
+
   // Support for NodeList and other collections that do not have the built-in
   // forEach method.
   var forEach = Array.prototype.forEach;
@@ -57,6 +59,7 @@
   var locationRegistry = new WeakMap();
   var observerRegistry = new WeakMap();
   var appliedActionsCursorRegistry = new WeakMap();
+  var shadyCssAdoptersRegistry = hasShadyCss ? new WeakMap() : null;
 
   var OldCSSStyleSheet = CSSStyleSheet;
 
@@ -116,6 +119,14 @@
     constructStyleSheet.adopters.forEach(function(styleElement) {
       styleElement.innerHTML = constructStyleSheet.basicStyleElement.innerHTML;
     });
+
+    if (hasShadyCss && shadyCssAdoptersRegistry.has(sheet)) {
+      var root = shadyCssAdoptersRegistry.get(sheet);
+
+      // We need to call adoptedStyleSheets setter to re-assign styles
+      // to ShadyCSS.
+      root.adoptedStyleSheets = root.adoptedStyleSheets;
+    }
   }
 
   var importPattern = /@import/;
@@ -402,13 +413,14 @@
 
   // If the ShadyDOM is defined, the polyfill is loaded. Then, let's rely on
   // it; otherwise, we check the existence of the ShadowRoot.
-  if ('ShadyCSS' in window && !window.ShadyCSS.nativeShadow) {
+  if (hasShadyCss && !window.ShadyCSS.nativeShadow) {
     Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', {
       get: function() {
         return adoptedStyleSheetsRegistry.get(this) || [];
       },
       set: function(sheets) {
-        var uniqueSheets = checkAndPrepare(sheets, location);
+        var self = this;
+        var uniqueSheets = checkAndPrepare(sheets, self);
 
         var cssToAdopt = uniqueSheets.map(function(sheet) {
           return constructStyleSheetRegistry.get(
@@ -418,8 +430,12 @@
 
         ShadyCSS.ScopingShim.prepareAdoptedCssText(
           cssToAdopt,
-          this.host.localName
+          self.host.localName
         );
+
+        uniqueSheets.forEach(function (sheet) {
+          shadyCssAdoptersRegistry.set(sheet, self);
+        });
       }
     });
   } else if (typeof ShadowRoot !== 'undefined') {

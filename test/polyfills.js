@@ -12,7 +12,7 @@ if (typeof Reflect === 'undefined') {
 
 if (typeof customElements === 'undefined') {
   require('@babel/runtime/regenerator');
-  require('@webcomponents/webcomponentsjs/src/entrypoints/webcomponents-bundle-index');
+  require('@webcomponents/webcomponentsjs');
 }
 
 if (!('assign' in Object)) {

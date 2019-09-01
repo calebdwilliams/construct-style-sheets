@@ -21,10 +21,6 @@ describe('Constructible Style Sheets polyfill', function() {
     sheet = new CSSStyleSheet();
   });
 
-  afterEach(function () {
-    fixtureCleanup();
-  });
-
   describe('CSSStyleSheet object', function() {
     var globalStyle;
 
@@ -252,7 +248,7 @@ describe('Constructible Style Sheets polyfill', function() {
           var children = element.shadowRoot.children;
 
           for (var i = children.length - 1; i >= 0; i--) {
-            element.shadowRoot.removeChild(children[i]);
+            children[i].parentNode.removeChild(children[i]);
           }
 
           return element; // MutationObserver is asynchronous
@@ -529,7 +525,7 @@ describe('Constructible Style Sheets polyfill', function() {
 
         fixture('<div class="foo"></div>').then(function(element) {
           var css2 = new CSSStyleSheet();
-          css2.replaceSync('.foo { line-height: 9px }');
+          css2.replaceSync('.foo { line-height: 9px; }');
 
           document.adoptedStyleSheets = [css, css2];
 
@@ -562,11 +558,11 @@ describe('Constructible Style Sheets polyfill', function() {
         var bodyHtml = document.body.innerHTML;
 
         var css2 = new CSSStyleSheet();
-        css2.replaceSync('.foo { line-height: 9px }');
+        css2.replaceSync('.foo { line-height: 9px; }');
 
         document.adoptedStyleSheets = [css, css2];
 
-        fixture('<div class="foo"></div>')
+        return fixture('<div class="foo"></div>')
           .then(function(element) {
             document.body.innerHTML = '';
             document.body.appendChild(element);
@@ -578,7 +574,7 @@ describe('Constructible Style Sheets polyfill', function() {
               element,
               Object.assign({}, defaultChecker, {'line-height': '9px'})
             );
-            document.body.innerHTML = bodyHtml;
+            // document.body.innerHTML = bodyHtml;
           });
       });
 
