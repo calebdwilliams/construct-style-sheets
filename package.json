@@ -38,7 +38,6 @@
     "babel-plugin-transform-async-to-promises": "^0.8.14",
     "codecov": "^3.5.0",
     "core-js-pure": "^3.2.1",
-    "is-connected-node": "^1.0.0-beta",
     "istanbul-instrumenter-loader": "^3.0.1",
     "jasmine-core": "^3.4.0",
     "karma": "^4.2.0",
@@ -52,17 +51,13 @@
     "karma-jasmine": "^2.0.1",
     "karma-safarinative-launcher": "^1.1.0",
     "karma-webpack": "^4.0.2",
-    "mdn-polyfills": "^5.18.0",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
     "rollup": "^1.20.3",
     "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-iife": "^0.3.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "standard-version": "^7.0.0",
-    "webpack": "^4.39.3",
-    "webpack-cli": "^3.3.7"
+    "webpack": "^4.39.3"
   },
   "keywords": [
     "CSS",
@@ -77,15 +72,5 @@
     "stylesheet",
     "polyfill",
     "CSS modules"
-  ],
-  "@pika/pack": {
-    "pipeline": [
-      [
-        "@pika/plugin-standard-pkg"
-      ],
-      [
-        "@pika/plugin-build-web"
-      ]
-    ]
-  }
+  ]
 }
