@@ -24,7 +24,17 @@ This polyfill should work as-is in modern browsers, however, to support IE11, yo
 
 ## Installation
 
-The package can be installed either by copying the [polyfill file](./adoptedStyleSheets.js) or by [installing using npm](https://docs.npmjs.com/getting-started/).
+```bash
+npm i construct-style-sheets-polyfill
+```
+or
+```bash
+yarn add construct-style-sheets-polyfill
+```
+or
+```javascript
+import 'https://unpkg.com/construct-style-sheets-polyfill';
+```
 
 ## Usage
 

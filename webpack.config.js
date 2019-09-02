@@ -5,12 +5,11 @@ const coverage = process.argv.find(arg => arg.includes('coverage'));
 
 const paths = {
   babelrc: resolve(cwd, '.babelrc'),
-  main: resolve(cwd, 'adoptedStyleSheet.js'),
   nodeModules: resolve(cwd, 'node_modules'),
   openWc: resolve(cwd, 'node_modules/@open-wc'),
   polyfills: resolve(cwd, 'test/polyfills.js'),
+  src: resolve(cwd, 'src'),
   test: resolve(cwd, 'test/polyfill.test.js'),
-  wc: resolve(cwd, '../polyfills/packages/webcomponentsjs')
 };
 
 module.exports = {
@@ -18,7 +17,7 @@ module.exports = {
   entry: paths.test,
   mode: 'development',
   resolve: {
-    modules: ['node_modules', paths.nodeModules]
+    modules: ['node_modules', paths.nodeModules],
   },
   module: {
     strictExportPresence: true,
@@ -29,11 +28,11 @@ module.exports = {
           {
             loader: 'istanbul-instrumenter-loader',
             options: {
-              esModules: true
-            }
-          }
+              esModules: true,
+            },
+          },
         ],
-        include: [paths.main]
+        include: [paths.src],
       },
       {
         test: /\.js$/,
@@ -44,15 +43,15 @@ module.exports = {
               babelrc: false,
               cacheDirectory: true,
               cacheCompression: false,
-              extends: paths.babelrc
-            }
-          }
+              extends: paths.babelrc,
+            },
+          },
         ],
-        include: [paths.test, paths.openWc, paths.polyfills, paths.wc]
-      }
-    ].filter(Boolean)
+        include: [paths.openWc, paths.polyfills, paths.src, paths.test],
+      },
+    ].filter(Boolean),
   },
   performance: {
-    hints: false
-  }
+    hints: false,
+  },
 };
