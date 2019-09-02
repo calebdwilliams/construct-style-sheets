@@ -1,7 +1,7 @@
 import {
   constructStyleSheetRegistry,
   deferredStyleSheets,
-  frame, hasShadyCss, shadyCssAdoptersRegistry,
+  frame,
   state,
 } from './shared';
 import {instanceOfStyleSheet} from './utils';
@@ -42,14 +42,6 @@ export function updatePrototype(proto) {
           }
         });
 
-        if (hasShadyCss && shadyCssAdoptersRegistry.has(this)) {
-          const location = shadyCssAdoptersRegistry.get(this);
-
-          // We need to call adoptedStyleSheets setter to re-assign styles
-          // to ShadyCSS.
-          location.adoptedStyleSheets = location.adoptedStyleSheets;
-        }
-
         // And we also need to remember all these changes to apply them to
         // each newly adopted style element.
         actions.push([methodKey, args]);
@@ -66,14 +58,6 @@ function updateAdopters(sheet) {
   adopters.forEach(styleElement => {
     styleElement.innerHTML = basicStyleElement.innerHTML;
   });
-
-  if (hasShadyCss && shadyCssAdoptersRegistry.has(sheet)) {
-    const location = shadyCssAdoptersRegistry.get(sheet);
-
-    // We need to call adoptedStyleSheets setter to re-assign styles
-    // to ShadyCSS.
-    location.adoptedStyleSheets = location.adoptedStyleSheets;
-  }
 }
 
 // This class will be a substitute for the CSSStyleSheet class that

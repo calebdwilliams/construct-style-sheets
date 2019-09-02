@@ -5,11 +5,9 @@ import {
   adoptedStyleSheetsRegistry,
   deferredStyleSheets,
   frame,
-  hasShadyCss,
-  shadyCssAdoptersRegistry,
   state,
 } from './shared';
-import {checkAndPrepare, reduce} from './utils';
+import {checkAndPrepare} from './utils';
 
 // Initialize the polyfill — Will be called on the window's load event
 export function initPolyfill() {
@@ -84,32 +82,7 @@ export function initAdoptedStyleSheets() {
     adoptedStyleSheetAccessors,
   );
 
-  if (hasShadyCss) {
-    Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', {
-      configurable: true,
-      get() {
-        return adoptedStyleSheetsRegistry.get(this) || [];
-      },
-      set(sheets) {
-        const uniqueSheets = checkAndPrepare(sheets, this);
-
-        const cssToAdopt = uniqueSheets.map(({cssRules}) =>
-          reduce.call(cssRules, (text, {cssText}) => `${text} ${cssText}`, ''),
-        );
-
-        ShadyCSS.ScopingShim.prepareAdoptedCssText(
-          cssToAdopt,
-          this.host.localName,
-        );
-
-        uniqueSheets.forEach(sheet =>
-          shadyCssAdoptersRegistry.set(sheet, this),
-        );
-
-        ShadyCSS.styleSubtree(this.host);
-      },
-    });
-  } else if (typeof ShadowRoot !== 'undefined') {
+  if (typeof ShadowRoot !== 'undefined') {
     const oldAttachShadow = HTMLElement.prototype.attachShadow;
 
     // Shadow root of each element should be observed to add styles to all

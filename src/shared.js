@@ -1,4 +1,7 @@
-export const hasShadyCss = 'ShadyCSS' in window;
+// Even if the polyfill does not support ShadyCSS, it should be detected in
+// order to avoid errors of parallel usage.
+export const hasShadyCss =
+  'ShadyCSS' in window && !window.ShadyCSS.nativeShadow;
 
 // Style elements that will be attached to the head
 // that need to be moved to the iframe
@@ -20,9 +23,6 @@ export const observerRegistry = new WeakMap();
 // The cursor that points at the latest applied action (CSSStyleSheet method)
 // for the specific style element.
 export const appliedActionsCursorRegistry = new WeakMap();
-
-// The list of ShadowRoots for specific sheet (when ShadyCSS is enabled).
-export const shadyCssAdoptersRegistry = new WeakMap();
 
 export const state = {
   // Can we rely on document.body

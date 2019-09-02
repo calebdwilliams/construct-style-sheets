@@ -29,5 +29,3 @@ export function checkAndPrepare(sheets, location) {
 
   return uniqueSheets;
 }
-
-export const {reduce} = Array.prototype;
