@@ -1,12 +1,24 @@
 language: node_js
-node_js: lts/*
-dist: trusty
+os:
+  - windows
+  - osx
 addons:
   chrome: stable
   firefox: latest
 branches:
   only:
     - master
-script:
-  - npm run test:coverage
-  - codecov
+jobs:
+  include:
+    - stage: tests
+      node_js: lts/*
+      os: osx
+      script:
+        - npm run test:coverage
+        - codecov
+    - stage: tests
+      node_js: lts/*
+      os: windows
+      script:
+        - npm run test:coverage
+        - codecov
