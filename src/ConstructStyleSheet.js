@@ -1,7 +1,7 @@
 import {
-  constructStyleSheetRegistry,
   deferredStyleSheets,
   frame,
+  sheetMetadataRegistry,
   state,
 } from './shared';
 import {instanceOfStyleSheet} from './utils';
@@ -33,8 +33,8 @@ export function updatePrototype(proto) {
     proto[methodKey] = function(...args) {
       const result = oldMethod.apply(this, args);
 
-      if (constructStyleSheetRegistry.has(this)) {
-        const {adopters, actions} = constructStyleSheetRegistry.get(this);
+      if (sheetMetadataRegistry.has(this)) {
+        const {adopters, actions} = sheetMetadataRegistry.get(this);
 
         adopters.forEach(styleElement => {
           if (styleElement.sheet) {
@@ -53,7 +53,7 @@ export function updatePrototype(proto) {
 }
 
 function updateAdopters(sheet) {
-  const {adopters, basicStyleElement} = constructStyleSheetRegistry.get(sheet);
+  const {adopters, basicStyleElement} = sheetMetadataRegistry.get(sheet);
 
   adopters.forEach(styleElement => {
     styleElement.innerHTML = basicStyleElement.innerHTML;
@@ -82,7 +82,7 @@ export default class ConstructStyleSheet {
     const nativeStyleSheet = basicStyleElement.sheet;
 
     // A support object to preserve all the polyfill data
-    constructStyleSheetRegistry.set(nativeStyleSheet, {
+    sheetMetadataRegistry.set(nativeStyleSheet, {
       adopters: new Map(),
       actions: [],
       basicStyleElement,
@@ -93,8 +93,8 @@ export default class ConstructStyleSheet {
 
   replace(contents) {
     return new Promise((resolve, reject) => {
-      if (constructStyleSheetRegistry.has(this)) {
-        const {basicStyleElement} = constructStyleSheetRegistry.get(this);
+      if (sheetMetadataRegistry.has(this)) {
+        const {basicStyleElement} = sheetMetadataRegistry.get(this);
 
         basicStyleElement.innerHTML = contents;
         resolve(basicStyleElement.sheet);
@@ -116,8 +116,8 @@ export default class ConstructStyleSheet {
       );
     }
 
-    if (constructStyleSheetRegistry.has(this)) {
-      const {basicStyleElement} = constructStyleSheetRegistry.get(this);
+    if (sheetMetadataRegistry.has(this)) {
+      const {basicStyleElement} = sheetMetadataRegistry.get(this);
 
       basicStyleElement.innerHTML = contents;
       updateAdopters(this);

@@ -2,7 +2,7 @@ import {adoptStyleSheets, removeExcludedStyleSheets} from './adopt';
 import {updatePrototype} from './ConstructStyleSheet';
 import {createObserver} from './observer';
 import {
-  adoptedStyleSheetsRegistry,
+  adoptedSheetsRegistry,
   deferredStyleSheets,
   frame,
   state,
@@ -49,14 +49,14 @@ export function initAdoptedStyleSheets() {
       // Technically, the real adoptedStyleSheets array is placed on the body
       // element to unify the logic with ShadowRoot. However, it is hidden
       // in the WeakMap, and the public interface follows the specification.
-      return adoptedStyleSheetsRegistry.get(this.body ? this.body : this) || [];
+      return adoptedSheetsRegistry.get(this.body ? this.body : this) || [];
     },
     set(sheets) {
       // If `this` is the Document, the body element should be used as a
       // location.
       const location = this.body ? this.body : this;
 
-      const oldSheets = adoptedStyleSheetsRegistry.get(location) || [];
+      const oldSheets = adoptedSheetsRegistry.get(location) || [];
       checkAndPrepare(sheets, location);
 
       // If the browser supports web components, it definitely supports

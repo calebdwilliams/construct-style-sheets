@@ -8,10 +8,10 @@ export const hasShadyCss =
 export const deferredStyleSheets = [];
 
 // Adopted stylesheets of specific location (ShadowRoot or Document).
-export const adoptedStyleSheetsRegistry = new WeakMap();
+export const adoptedSheetsRegistry = new WeakMap();
 
 // Metadata of specific stylesheet.
-export const constructStyleSheetRegistry = new WeakMap();
+export const sheetMetadataRegistry = new WeakMap();
 
 // Location of the specific adopter (HTMLStyleElement that stylizes this
 // location).

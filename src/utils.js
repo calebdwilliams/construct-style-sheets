@@ -1,4 +1,4 @@
-import {adoptedStyleSheetsRegistry, frame, OldCSSStyleSheet} from './shared';
+import {adoptedSheetsRegistry, frame, OldCSSStyleSheet} from './shared';
 
 export function instanceOfStyleSheet(instance) {
   return (
@@ -25,7 +25,7 @@ export function checkAndPrepare(sheets, location) {
   const uniqueSheets = sheets.filter(
     (value, index) => sheets.indexOf(value) === index,
   );
-  adoptedStyleSheetsRegistry.set(location, uniqueSheets);
+  adoptedSheetsRegistry.set(location, uniqueSheets);
 
   return uniqueSheets;
 }

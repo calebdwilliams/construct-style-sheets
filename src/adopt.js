@@ -1,17 +1,17 @@
 import {
-  adoptedStyleSheetsRegistry,
+  adoptedSheetsRegistry,
   appliedActionsCursorRegistry,
-  constructStyleSheetRegistry,
   locationRegistry,
   observerRegistry,
+  sheetMetadataRegistry,
 } from './shared';
 
 export function adoptStyleSheets(location) {
   const newStyles = document.createDocumentFragment();
-  const sheets = adoptedStyleSheetsRegistry.get(location);
+  const sheets = adoptedSheetsRegistry.get(location);
 
   sheets.forEach(sheet => {
-    const {adopters, basicStyleElement} = constructStyleSheetRegistry.get(
+    const {adopters, basicStyleElement} = sheetMetadataRegistry.get(
       sheet,
     );
     const adoptedStyleElement = adopters.get(location);
@@ -48,7 +48,7 @@ export function adoptStyleSheets(location) {
   // to each new style element and to any other element that missed last
   // applied actions (e.g., it was disconnected).
   sheets.forEach(sheet => {
-    const {adopters, actions} = constructStyleSheetRegistry.get(sheet);
+    const {adopters, actions} = sheetMetadataRegistry.get(sheet);
     const adoptedStyleElement = adopters.get(location);
     const cursor = appliedActionsCursorRegistry.get(adoptedStyleElement);
 
@@ -64,14 +64,14 @@ export function adoptStyleSheets(location) {
 }
 
 export function removeExcludedStyleSheets(location, oldSheets) {
-  const sheets = adoptedStyleSheetsRegistry.get(location);
+  const sheets = adoptedSheetsRegistry.get(location);
 
   oldSheets.forEach(sheet => {
     if (sheets.indexOf(sheet) > -1) {
       return;
     }
 
-    const {adopters} = constructStyleSheetRegistry.get(sheet);
+    const {adopters} = sheetMetadataRegistry.get(sheet);
     const observer = observerRegistry.get(location);
     const styleElement = adopters.get(location);
 
