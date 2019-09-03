@@ -11,9 +11,7 @@ export function adoptStyleSheets(location) {
   const sheets = adoptedSheetsRegistry.get(location);
 
   sheets.forEach(sheet => {
-    const {adopters, basicStyleElement} = sheetMetadataRegistry.get(
-      sheet,
-    );
+    const {adopters, basicStyleElement} = sheetMetadataRegistry.get(sheet);
     const adoptedStyleElement = adopters.get(location);
 
     if (adoptedStyleElement) {
@@ -24,15 +22,28 @@ export function adoptStyleSheets(location) {
 
       observer.disconnect();
       newStyles.appendChild(adoptedStyleElement);
+
+      // Restore styles lost during MutationObserver work in IE & Edge
+      if (
+        !adoptedStyleElement.innerHTML ||
+        (adoptedStyleElement.sheet && !adoptedStyleElement.sheet.cssText)
+      ) {
+        adoptedStyleElement.innerHTML = basicStyleElement.innerHTML;
+      }
+
       observer.observe();
     } else {
-      const clone = basicStyleElement.cloneNode(true);
-      locationRegistry.set(clone, location);
+      // Simple cloneNode won't work because the style element is from the
+      // iframe.
+      const newStyleElement = document.createElement('style');
+      newStyleElement.innerHTML = basicStyleElement.innerHTML;
+
+      locationRegistry.set(newStyleElement, location);
       // The index of actions array when we stopped applying actions to the
       // element (e.g., it was disconnected).
-      appliedActionsCursorRegistry.set(clone, 0);
-      adopters.set(location, clone);
-      newStyles.appendChild(clone);
+      appliedActionsCursorRegistry.set(newStyleElement, 0);
+      adopters.set(location, newStyleElement);
+      newStyles.appendChild(newStyleElement);
     }
   });
 

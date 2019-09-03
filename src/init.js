@@ -65,7 +65,7 @@ export function initAdoptedStyleSheets() {
       const isConnected =
         'isConnected' in location
           ? location.isConnected
-          : document.contains(location);
+          : document.body.contains(location);
 
       // Element can adopt style sheets only when it is connected
       if (isConnected) {

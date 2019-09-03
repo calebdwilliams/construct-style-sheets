@@ -10,11 +10,6 @@ if (typeof Reflect === 'undefined') {
   window.Reflect = require('core-js-pure/es/reflect');
 }
 
-if (typeof customElements === 'undefined') {
-  require('@babel/runtime/regenerator');
-  require('@webcomponents/webcomponentsjs');
-}
-
 if (!('assign' in Object)) {
   Object.assign = require('core-js-pure/es/object/assign');
 }
