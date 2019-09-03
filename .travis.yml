@@ -1,26 +1,12 @@
 language: node_js
-os:
-  - windows
-  - osx
+node_js: lts/*
+dist: trusty
 addons:
   chrome: stable
   firefox: latest
 branches:
   only:
     - master
-jobs:
-  include:
-    - stage: tests
-      before_install:
-        - choco install nodejs --version 10.16.3
-      os: osx
-      script:
-        - npm run test:coverage
-        - codecov
-    - stage: tests
-      before_install:
-        - brew install node
-      os: windows
-      script:
-        - npm run test:coverage
-        - codecov
+script:
+  - npm run test:coverage
+  - codecov
