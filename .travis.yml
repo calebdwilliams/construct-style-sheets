@@ -11,15 +11,15 @@ branches:
 jobs:
   include:
     - stage: tests
-      node_js:
-        - "10"
+      before_install:
+        - choco install nodejs --version 10.16.3
       os: osx
       script:
         - npm run test:coverage
         - codecov
     - stage: tests
-      node_js:
-        - "10"
+      before_install:
+        - brew install node
       os: windows
       script:
         - npm run test:coverage
