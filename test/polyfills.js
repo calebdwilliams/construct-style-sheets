@@ -1,15 +1,20 @@
-if (typeof Promise === 'undefined') {
-  window.Promise = require('core-js-pure/es/promise');
+import Promise from 'core-js-pure/es/promise';
+import Symbol from 'core-js-pure/es/symbol';
+import Reflect from 'core-js-pure/es/reflect';
+import objectAssign from 'core-js-pure/es/object/assign';
+
+if (!('Promise' in window)) {
+  window.Promise = Promise;
 }
 
-if (typeof Symbol === 'undefined') {
-  window.Symbol = require('core-js-pure/es/symbol');
+if (!('Symbol' in window)) {
+  window.Symbol = Symbol;
 }
 
-if (typeof Reflect === 'undefined') {
-  window.Reflect = require('core-js-pure/es/reflect');
+if (!('Reflect' in window)) {
+  window.Reflect = Reflect;
 }
 
 if (!('assign' in Object)) {
-  Object.assign = require('core-js-pure/es/object/assign');
+  Object.assign = objectAssign;
 }

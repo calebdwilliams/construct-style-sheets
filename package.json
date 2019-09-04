@@ -6,7 +6,7 @@
   "module": "dist/adoptedStyleSheets.js",
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "karma start",
+    "test": "npm run build && karma start",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "npm run test -- --coverage",
     "prerelease": "npm run test:coverage",
@@ -31,10 +31,10 @@
     "@babel/core": "^7.5.5",
     "@babel/plugin-transform-instanceof": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
-    "@babel/runtime": "^7.5.5",
     "@open-wc/testing-helpers": "^1.2.1",
     "@webcomponents/webcomponentsjs": "^2.2.10",
     "babel-loader": "^8.0.6",
+    "babel-plugin-istanbul": "^5.2.0",
     "babel-plugin-transform-async-to-promises": "^0.8.14",
     "codecov": "^3.5.0",
     "core-js-pure": "^3.2.1",
@@ -49,15 +49,16 @@
     "karma-firefox-launcher": "^1.2.0",
     "karma-ie-launcher": "^1.0.0",
     "karma-jasmine": "^2.0.1",
+    "karma-rollup-preprocessor": "^7.0.2",
     "karma-safarinative-launcher": "^1.1.0",
-    "karma-webpack": "^4.0.2",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
     "rollup": "^1.20.3",
     "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-cleanup": "^3.1.1",
+    "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "standard-version": "^7.0.0",
-    "webpack": "^4.39.3"
+    "standard-version": "^7.0.0"
   },
   "keywords": [
     "CSS",
@@ -72,5 +73,6 @@
     "stylesheet",
     "polyfill",
     "CSS modules"
-  ]
+  ],
+  "dependencies": {}
 }

@@ -1,13 +1,17 @@
 // Karma configuration
 // Generated on Sun Jan 20 2019 23:06:22 GMT-0600 (CST)
-
-const webpack = require('./webpack.config');
+const {readFileSync} = require('fs');
+const {resolve} = require('path');
 
 const isCI = !!process.env.CI;
 const watch = !!process.argv.find(arg => arg.includes('watch')) && !isCI;
 const coverage = !!process.argv.find(arg => arg.includes('--coverage'));
 
-module.exports = function(config) {
+const babelrc = JSON.parse(
+  readFileSync(resolve(process.cwd(), '.babelrc'), 'utf8'),
+);
+
+module.exports = config => {
   config.set({
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
@@ -21,13 +25,13 @@ module.exports = function(config) {
       require('karma-edge-launcher'),
       require('karma-coverage-istanbul-reporter'),
       require('karma-detect-browsers'),
-      require('karma-webpack'),
-      require('karma-coverage-istanbul-reporter'),
+      require('karma-rollup-preprocessor'),
+      require('karma-babel-preprocessor'),
     ],
 
-    browserNoActivityTimeout : 60000, //default 10000
-    browserDisconnectTimeout : 10000, // default 2000
-    browserDisconnectTolerance : 1, // default 0
+    browserNoActivityTimeout: 60000, //default 10000
+    browserDisconnectTimeout: 10000, // default 2000
+    browserDisconnectTolerance: 1, // default 0
     captureTimeout: 60000,
 
     // frameworks to use
@@ -35,14 +39,22 @@ module.exports = function(config) {
     frameworks: ['jasmine', 'detectBrowsers'],
 
     // list of files / patterns to load in the browser
-    files: ['test/polyfill.test.js'],
+    files: [
+      {pattern: 'test/polyfills.js', watched: false},
+      'dist/adoptedStyleSheets.js',
+      {pattern: 'test/polyfill.test.js', watched: false},
+    ],
 
     // list of files / patterns to exclude
     exclude: [],
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {'test/polyfill.test.js': ['webpack']},
+    preprocessors: {
+      'test/polyfills.js': ['rollup'],
+      'dist/adoptedStyleSheets.js': ['babel'],
+      'test/polyfill.test.js': ['rollup'],
+    },
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
@@ -66,7 +78,6 @@ module.exports = function(config) {
       reports: ['html', 'lcovonly'],
       dir: '.coverage',
       combineBrowserReports: true,
-      fixWebpackSourcePaths: true,
       skipFilesWithNoCoverage: true,
       'report-config': {
         html: {subdir: 'html'},
@@ -85,7 +96,35 @@ module.exports = function(config) {
       preferHeadless: true,
     },
 
-    webpack,
+    rollupPreprocessor: {
+      plugins: [
+        require('rollup-plugin-commonjs')({
+          include: 'node_modules/**',
+          exclude: 'node_modules/@open-wc/**',
+        }),
+        require('rollup-plugin-node-resolve')(),
+        require('rollup-plugin-babel')({
+          babelrc: false,
+          include: ['node_modules/@open-wc/**', 'test/**'],
+          ...babelrc,
+          plugins: [
+            '@babel/plugin-transform-instanceof',
+            'babel-plugin-transform-async-to-promises',
+          ],
+        }),
+      ],
+      output: {
+        format: 'iife',
+        name: 'constructibleStyleSheetsPolyfill',
+      },
+    },
+
+    babelPreprocessor: {
+      options: {
+        plugins: ['babel-plugin-istanbul'],
+        sourceMap: 'inline',
+      },
+    },
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits

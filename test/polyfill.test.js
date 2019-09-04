@@ -1,13 +1,5 @@
-import './polyfills';
-
 import {defineCE} from '@open-wc/testing-helpers/src/helpers';
 import {stringFixture as fixture} from '@open-wc/testing-helpers/src/stringFixture';
-
-if (!('adoptedStyleSheets' in document)) {
-  // We require polyfill only for browsers without support for Constructible
-  // Style Sheets.
-  require('../src');
-}
 
 describe('Constructible Style Sheets polyfill', () => {
   describe('CSSStyleSheet object', () => {
