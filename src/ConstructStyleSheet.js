@@ -30,7 +30,8 @@ export function updatePrototype(proto) {
     // object to all adopted style element.
     const oldMethod = proto[methodKey];
 
-    proto[methodKey] = function(...args) {
+    proto[methodKey] = function() {
+      const args = arguments;
       const result = oldMethod.apply(this, args);
 
       if (sheetMetadataRegistry.has(this)) {
@@ -38,7 +39,7 @@ export function updatePrototype(proto) {
 
         adopters.forEach(styleElement => {
           if (styleElement.sheet) {
-            styleElement.sheet[methodKey](...args);
+            styleElement.sheet[methodKey].apply(styleElement.sheet, args);
           }
         });
 

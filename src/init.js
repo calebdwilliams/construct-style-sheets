@@ -87,8 +87,8 @@ export function initAdoptedStyleSheets() {
 
     // Shadow root of each element should be observed to add styles to all
     // elements added to this root.
-    HTMLElement.prototype.attachShadow = function(...args) {
-      const location = oldAttachShadow.apply(this, args);
+    HTMLElement.prototype.attachShadow = function() {
+      const location = oldAttachShadow.apply(this, arguments);
       createObserver(location);
 
       return location;

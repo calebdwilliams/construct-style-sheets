@@ -66,7 +66,7 @@ export function adoptStyleSheets(location) {
     if (actions.length > 0) {
       for (let i = cursor; i < actions.length; i++) {
         const [key, args] = actions[i];
-        adoptedStyleElement.sheet[key](...args);
+        adoptedStyleElement.sheet[key].apply(adoptedStyleElement.sheet, args);
       }
 
       appliedActionsCursorRegistry.set(adoptedStyleElement, actions.length - 1);
