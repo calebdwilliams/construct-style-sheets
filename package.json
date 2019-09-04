@@ -4,6 +4,9 @@
   "description": "Constructible style sheets/adopted style sheets polyfill",
   "main": "dist/adoptedStyleSheets.js",
   "module": "dist/adoptedStyleSheets.js",
+  "files": [
+    "dist/adoptedStyleSheets.js"
+  ],
   "scripts": {
     "build": "node scripts/build.js",
     "test": "npm run build && karma start",
