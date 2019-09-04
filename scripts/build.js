@@ -1,9 +1,10 @@
-const {writeFile} = require('fs');
-const {resolve} = require('path');
+const {mkdir, writeFile} = require('fs');
+const {dirname, resolve} = require('path');
 const {rollup} = require('rollup');
 const {promisify} = require('util');
 const config = require('../rollup.config');
 
+const mkdirAsync = promisify(mkdir);
 const writeFileAsync = promisify(writeFile);
 
 const cwd = process.cwd();
@@ -18,7 +19,10 @@ const detection = "  if ('adoptedStyleSheets' in document) { return; }";
     const [first, second, ...other] = code.split('\n');
     const result = [first, second, detection, ...other].join('\n');
 
-    await writeFileAsync(resolve(cwd, config.output.file), result, 'utf8');
+    const resultFile = resolve(cwd, config.output.file);
+
+    await mkdirAsync(dirname(resultFile), {recursive: true});
+    await writeFileAsync(resultFile, result, 'utf8');
   } catch (e) {
     console.error(e.stack);
     process.exit(1);
