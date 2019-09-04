@@ -33,10 +33,14 @@ export function initPolyfill() {
 
   // Move style elements created before document.body
   // to the iframe along with future styles
-  deferredStyleSheets.forEach(function(sheet) {
-    frame.body.appendChild(sheet);
-    sheet.disabled = false;
-  });
+  const fragment = document.createDocumentFragment();
+
+  for (let i = 0, len = deferredStyleSheets.length; i < len; i++) {
+    deferredStyleSheets[i].disabled = false;
+    fragment.appendChild(deferredStyleSheets[i]);
+  }
+
+  frame.body.appendChild(fragment);
 
   // Clear out the deferredStyleSheets array
   deferredStyleSheets.length = 0;

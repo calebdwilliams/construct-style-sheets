@@ -21,10 +21,11 @@ const cssStyleSheetMethods = [
 const cssStyleSheetNewMethods = ['replace', 'replaceSync'];
 
 export function updatePrototype(proto) {
-  cssStyleSheetNewMethods.forEach(methodKey => {
-    proto[methodKey] = ConstructStyleSheet.prototype[methodKey];
-  });
+  for (let i = 0, len = cssStyleSheetNewMethods.length; i < len; i++) {
+    proto[cssStyleSheetNewMethods[i]] = ConstructStyleSheet.prototype[cssStyleSheetNewMethods[i]];
+  }
 
+  // ForEach it because we need to preserve "methodKey" in the created function
   cssStyleSheetMethods.forEach(methodKey => {
     // Here we apply all changes we have done to the original CSSStyleSheet
     // object to all adopted style element.

@@ -10,8 +10,8 @@ export function adoptStyleSheets(location) {
   const newStyles = document.createDocumentFragment();
   const sheets = adoptedSheetsRegistry.get(location);
 
-  sheets.forEach(sheet => {
-    const {adopters, basicStyleElement} = sheetMetadataRegistry.get(sheet);
+  for (let i = 0, len = sheets.length; i < len; i++) {
+    const {adopters, basicStyleElement} = sheetMetadataRegistry.get(sheets[i]);
     const adoptedStyleElement = adopters.get(location);
 
     if (adoptedStyleElement) {
@@ -45,7 +45,7 @@ export function adoptStyleSheets(location) {
       adopters.set(location, newStyleElement);
       newStyles.appendChild(newStyleElement);
     }
-  });
+  }
 
   // Since we already removed all elements during appending them to the
   // document fragment, we can just re-add them again.
@@ -58,36 +58,36 @@ export function adoptStyleSheets(location) {
   // We need to apply all actions we have done with the original CSSStyleSheet
   // to each new style element and to any other element that missed last
   // applied actions (e.g., it was disconnected).
-  sheets.forEach(sheet => {
-    const {adopters, actions} = sheetMetadataRegistry.get(sheet);
+  for (let i = 0, len = sheets.length; i < len; i++) {
+    const {adopters, actions} = sheetMetadataRegistry.get(sheets[i]);
     const adoptedStyleElement = adopters.get(location);
     const cursor = appliedActionsCursorRegistry.get(adoptedStyleElement);
 
     if (actions.length > 0) {
-      for (let i = cursor; i < actions.length; i++) {
+      for (let i = cursor, len = actions.length; i < len; i++) {
         const [key, args] = actions[i];
         adoptedStyleElement.sheet[key].apply(adoptedStyleElement.sheet, args);
       }
 
       appliedActionsCursorRegistry.set(adoptedStyleElement, actions.length - 1);
     }
-  });
+  }
 }
 
 export function removeExcludedStyleSheets(location, oldSheets) {
   const sheets = adoptedSheetsRegistry.get(location);
 
-  oldSheets.forEach(sheet => {
-    if (sheets.indexOf(sheet) > -1) {
+  for (let i = 0, len = oldSheets.length; i < len; i++) {
+    if (sheets.indexOf(oldSheets[i]) > -1) {
       return;
     }
 
-    const {adopters} = sheetMetadataRegistry.get(sheet);
+    const {adopters} = sheetMetadataRegistry.get(oldSheets[i]);
     const observer = observerRegistry.get(location);
     const styleElement = adopters.get(location);
 
     observer.disconnect();
     styleElement.parentNode.removeChild(styleElement);
     observer.observe();
-  });
+  }
 }

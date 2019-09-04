@@ -2,11 +2,13 @@ import {adoptStyleSheets} from './adopt';
 import {hasShadyCss, locationRegistry, observerRegistry} from './shared';
 
 function adoptAndRestoreStylesOnMutationCallback(mutations) {
-  mutations.forEach(({addedNodes, removedNodes}) => {
+  for (let i = 0, len = mutations.length; i < len; i++) {
+    const {addedNodes, removedNodes} = mutations[i];
+
     // When any style is removed, we need to re-adopt all the styles because
     // otherwise we can break the order of appended styles which will affect the
     // rules overriding.
-    for (let i = 0; i < removedNodes.length; i++) {
+    for (let i = 0, len = removedNodes.length; i < len; i++) {
       const location = locationRegistry.get(removedNodes[i]);
 
       if (location) {
@@ -20,7 +22,7 @@ function adoptAndRestoreStylesOnMutationCallback(mutations) {
     // no matter how it is nested. To go through the nodes we use the
     // NodeIterator.
     if (!hasShadyCss) {
-      for (let i = 0; i < addedNodes.length; i++) {
+      for (let i = 0, len = addedNodes.length; i < len; i++) {
         const iter = document.createNodeIterator(
           addedNodes[i],
           NodeFilter.SHOW_ELEMENT,
@@ -40,7 +42,7 @@ function adoptAndRestoreStylesOnMutationCallback(mutations) {
         }
       }
     }
-  });
+  }
 }
 
 export function createObserver(location) {
