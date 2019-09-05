@@ -115,24 +115,18 @@ describe('Constructible Style Sheets polyfill', () => {
     });
 
     const createCustomElement = (sheets, html = '') => {
-      class CustomElement {
+      class CustomElement extends HTMLElement {
         constructor() {
-          const self = Reflect.construct(HTMLElement, [], CustomElement);
-
-          const root = self.attachShadow({mode: 'open'});
+          super();
+          const root = this.attachShadow({mode: 'open'});
 
           if (sheets) {
             root.adoptedStyleSheets = sheets;
           }
 
           root.innerHTML = html;
-
-          return self;
         }
       }
-
-      Object.setPrototypeOf(CustomElement.prototype, HTMLElement.prototype);
-      Object.setPrototypeOf(CustomElement, HTMLElement);
 
       return [defineCE(CustomElement), CustomElement];
     };
