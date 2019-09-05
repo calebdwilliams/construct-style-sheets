@@ -26,11 +26,17 @@ No changes will occur in a browser that supports the feature by default.
 
 ## Support
 
-This polyfill supports all modern browsers and IE 11. No additional polyfills
-required.
+This polyfill supports all modern browsers and IE 11.
 
 For browsers that do not support the web components specification (currently
-IE 11 and Edge) only the document-level style sheets adoption works. 
+IE 11 and Edge) only the document-level style sheets adoption works.
+
+### IE 11
+
+To make this polyfill work with IE 11 you need the following tools:
+- `Symbol` polyfill (with support for `Symbol.hasInstance`).
+- [@babel/plugin-transform-instanceof](https://www.npmjs.com/package/@babel/plugin-transform-instanceof)
+applied to your code that uses `instanceof` against `CSSStyleSheet`.
 
 ## Installation
 This package is available on `npm` under the name `construct-style-sheet-polyfill`
