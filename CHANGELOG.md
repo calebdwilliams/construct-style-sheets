@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.7](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.6...v2.2.7) (2019-09-06)
+
+
+### Bug Fixes
+
+* add some more fixes ([3d0d28c](https://github.com/calebdwilliams/adoptedStyleSheets/commit/3d0d28c))
+* add various fixes to make IE & ShadyCSS working ([1a462f8](https://github.com/calebdwilliams/adoptedStyleSheets/commit/1a462f8))
+* drop support for ShadyCSS ([209fe3b](https://github.com/calebdwilliams/adoptedStyleSheets/commit/209fe3b))
+* miscellaneous improvements ([2895c86](https://github.com/calebdwilliams/adoptedStyleSheets/commit/2895c86))
+
 ### [2.2.6](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.5...v2.2.6) (2019-08-31)
 
 
