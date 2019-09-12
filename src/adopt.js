@@ -49,7 +49,13 @@ export function adoptStyleSheets(location) {
 
   // Since we already removed all elements during appending them to the
   // document fragment, we can just re-add them again.
-  if (location.firstChild) {
+  if (location === document && document.readyState === 'loading') {
+    // If the styles need to be appended to document
+    // before the document is ready, put them in the head
+    // TODO: Eventually move these to the document once it has parsed
+    // to ensure proper cascade order relative to the spec
+    document.head.appendChild(newStyles);
+  } else if (location.firstChild) {
     location.insertBefore(newStyles, location.firstChild);
   } else {
     location.appendChild(newStyles);
