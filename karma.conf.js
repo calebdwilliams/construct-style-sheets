@@ -52,7 +52,7 @@ module.exports = config => {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       'test/polyfills.js': ['rollup'],
-      'dist/adoptedStyleSheets.js': ['babel'],
+      'dist/adoptedStyleSheets.js': coverage ? ['babel'] : [],
       'test/polyfill.test.js': ['rollup'],
     },
 
