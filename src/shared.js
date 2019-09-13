@@ -7,6 +7,10 @@ export const hasShadyCss =
 // that need to be moved to the iframe
 export const deferredStyleSheets = [];
 
+// Style elements adopted by document that should be moved
+// to document.body when the document is fully loaded.
+export const deferredDocumentStyleElements = [];
+
 // Adopted stylesheets of specific location (ShadowRoot or Document).
 export const adoptedSheetsRegistry = new WeakMap();
 

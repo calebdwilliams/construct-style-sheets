@@ -3,11 +3,12 @@ import {updatePrototype} from './ConstructStyleSheet';
 import {createObserver} from './observer';
 import {
   adoptedSheetsRegistry,
+  deferredDocumentStyleElements,
   deferredStyleSheets,
   frame,
   state,
 } from './shared';
-import {checkAndPrepare} from './utils';
+import {checkAndPrepare, isDocumentLoading} from './utils';
 
 // Initialize the polyfill — Will be called on the window's load event
 export function initPolyfill() {
@@ -42,26 +43,39 @@ export function initPolyfill() {
 
   frame.body.appendChild(fragment);
 
-  // Clear out the deferredStyleSheets array
+  for (let i = 0, len = deferredDocumentStyleElements.length; i < len; i++) {
+    fragment.appendChild(deferredDocumentStyleElements[i]);
+  }
+
+  document.body.insertBefore(fragment, document.body.firstChild);
+
+  // Clear out the deferredStyleSheets array.
   deferredStyleSheets.length = 0;
+
+  // Clear out the deferredDocumentStyleElements array.
+  deferredDocumentStyleElements.length = 0;
 }
 
 export function initAdoptedStyleSheets() {
   const adoptedStyleSheetAccessors = {
     configurable: true,
     get() {
-      // Technically, the real adoptedStyleSheets array is placed on the body
-      // element to unify the logic with ShadowRoot. However, it is hidden
-      // in the WeakMap, and the public interface follows the specification.
-      return adoptedSheetsRegistry.get(this.body ? this.body : this) || [];
+      return adoptedSheetsRegistry.get(this) || [];
     },
     set(sheets) {
+      const oldSheets = adoptedSheetsRegistry.get(this) || [];
+      checkAndPrepare(sheets, this);
+
       // If `this` is the Document, the body element should be used as a
       // location.
-      const location = this.body ? this.body : this;
-
-      const oldSheets = adoptedSheetsRegistry.get(location) || [];
-      checkAndPrepare(sheets, location);
+      const location =
+        this === document
+          ? // If the document is still loading the body does not exist. So the
+            // document.head will be the location for a while.
+          isDocumentLoading()
+            ? this.head
+            : this.body
+          : this;
 
       // If the browser supports web components, it definitely supports
       // isConnected. If not, we can just check if the document contains
@@ -87,12 +101,12 @@ export function initAdoptedStyleSheets() {
   );
 
   if (typeof ShadowRoot !== 'undefined') {
-    const oldAttachShadow = HTMLElement.prototype.attachShadow;
+    const {attachShadow} = HTMLElement.prototype;
 
     // Shadow root of each element should be observed to add styles to all
     // elements added to this root.
     HTMLElement.prototype.attachShadow = function() {
-      const location = oldAttachShadow.apply(this, arguments);
+      const location = attachShadow.apply(this, arguments);
       createObserver(location);
 
       return location;

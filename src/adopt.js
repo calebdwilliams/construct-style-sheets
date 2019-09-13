@@ -1,65 +1,61 @@
 import {
-  adoptedSheetsRegistry,
   appliedActionsCursorRegistry,
+  deferredDocumentStyleElements,
   locationRegistry,
   observerRegistry,
   sheetMetadataRegistry,
 } from './shared';
+import {getAdoptedStyleSheet} from './utils';
 
 export function adoptStyleSheets(location) {
   const newStyles = document.createDocumentFragment();
-  const sheets = adoptedSheetsRegistry.get(location);
+  const sheets = getAdoptedStyleSheet(location);
+  const observer = observerRegistry.get(location);
 
   for (let i = 0, len = sheets.length; i < len; i++) {
     const {adopters, basicStyleElement} = sheetMetadataRegistry.get(sheets[i]);
-    const adoptedStyleElement = adopters.get(location);
+    let elementToAdopt = adopters.get(location);
 
-    if (adoptedStyleElement) {
+    if (elementToAdopt) {
       // This operation removes the style element from the location, so we
       // need to pause watching when it happens to avoid calling
       // adoptAndRestoreStylesOnMutationCallback.
-      const observer = observerRegistry.get(location);
-
       observer.disconnect();
-      newStyles.appendChild(adoptedStyleElement);
+      newStyles.appendChild(elementToAdopt);
 
       // Restore styles lost during MutationObserver work in IE & Edge
       if (
-        !adoptedStyleElement.innerHTML ||
-        (adoptedStyleElement.sheet && !adoptedStyleElement.sheet.cssText)
+        !elementToAdopt.innerHTML ||
+        (elementToAdopt.sheet && !elementToAdopt.sheet.cssText)
       ) {
-        adoptedStyleElement.innerHTML = basicStyleElement.innerHTML;
+        elementToAdopt.innerHTML = basicStyleElement.innerHTML;
       }
 
       observer.observe();
     } else {
       // Simple cloneNode won't work because the style element is from the
       // iframe.
-      const newStyleElement = document.createElement('style');
-      newStyleElement.innerHTML = basicStyleElement.innerHTML;
+      elementToAdopt = document.createElement('style');
+      elementToAdopt.innerHTML = basicStyleElement.innerHTML;
 
-      locationRegistry.set(newStyleElement, location);
+      locationRegistry.set(elementToAdopt, location);
       // The index of actions array when we stopped applying actions to the
       // element (e.g., it was disconnected).
-      appliedActionsCursorRegistry.set(newStyleElement, 0);
-      adopters.set(location, newStyleElement);
-      newStyles.appendChild(newStyleElement);
+      appliedActionsCursorRegistry.set(elementToAdopt, 0);
+      adopters.set(location, elementToAdopt);
+      newStyles.appendChild(elementToAdopt);
+    }
+
+    // If we adopting document stylesheets while document is still loading,
+    // we need to remember them to re-adopt later.
+    if (location === document.head) {
+      deferredDocumentStyleElements.push(elementToAdopt);
     }
   }
 
   // Since we already removed all elements during appending them to the
   // document fragment, we can just re-add them again.
-  if (location === document && document.readyState === 'loading') {
-    // If the styles need to be appended to document
-    // before the document is ready, put them in the head
-    // TODO: Eventually move these to the document once it has parsed
-    // to ensure proper cascade order relative to the spec
-    document.head.appendChild(newStyles);
-  } else if (location.firstChild) {
-    location.insertBefore(newStyles, location.firstChild);
-  } else {
-    location.appendChild(newStyles);
-  }
+  location.insertBefore(newStyles, location.firstChild);
 
   // We need to apply all actions we have done with the original CSSStyleSheet
   // to each new style element and to any other element that missed last
@@ -81,7 +77,7 @@ export function adoptStyleSheets(location) {
 }
 
 export function removeExcludedStyleSheets(location, oldSheets) {
-  const sheets = adoptedSheetsRegistry.get(location);
+  const sheets = getAdoptedStyleSheet(location);
 
   for (let i = 0, len = oldSheets.length; i < len; i++) {
     if (sheets.indexOf(oldSheets[i]) > -1) {
