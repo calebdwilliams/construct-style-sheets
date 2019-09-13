@@ -7,8 +7,8 @@ export function instanceOfStyleSheet(instance) {
   );
 }
 
-export function checkAndPrepare(sheets, location) {
-  const locationType = location.tagName ? 'Document' : 'ShadowRoot';
+export function checkAndPrepare(sheets, container) {
+  const locationType = container === document ? 'Document' : 'ShadowRoot';
 
   if (!Array.isArray(sheets)) {
     throw new TypeError(
@@ -25,7 +25,19 @@ export function checkAndPrepare(sheets, location) {
   const uniqueSheets = sheets.filter(
     (value, index) => sheets.indexOf(value) === index,
   );
-  adoptedSheetsRegistry.set(location, uniqueSheets);
+  adoptedSheetsRegistry.set(container, uniqueSheets);
 
   return uniqueSheets;
+}
+
+export function isDocumentLoading() {
+  return document.readyState === 'loading';
+}
+
+export function getAdoptedStyleSheet(location) {
+  return adoptedSheetsRegistry.get(
+    location.parentNode === document.documentElement
+      ? document
+      : location,
+  );
 }
