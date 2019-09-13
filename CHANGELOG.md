@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.10](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.5...v2.2.10) (2019-09-13)
+
+
+### Bug Fixes
+
+* add some more fixes ([3d0d28c](https://github.com/calebdwilliams/adoptedStyleSheets/commit/3d0d28c))
+* add various fixes to make IE & ShadyCSS working ([1a462f8](https://github.com/calebdwilliams/adoptedStyleSheets/commit/1a462f8))
+* drop support for ShadyCSS ([209fe3b](https://github.com/calebdwilliams/adoptedStyleSheets/commit/209fe3b))
+* miscellaneous improvements ([2895c86](https://github.com/calebdwilliams/adoptedStyleSheets/commit/2895c86))
+* **adopt:** adoptStyleSheets will now allow both polyfill and script to be placed in head ([58620e6](https://github.com/calebdwilliams/adoptedStyleSheets/commit/58620e6))
+* **IE11, docs:** Added potential fix for [#24](https://github.com/calebdwilliams/adoptedStyleSheets/issues/24) and [#23](https://github.com/calebdwilliams/adoptedStyleSheets/issues/23) ([0bf415e](https://github.com/calebdwilliams/adoptedStyleSheets/commit/0bf415e))
+* move styles adopted before page is ready to body ([78da6f7](https://github.com/calebdwilliams/adoptedStyleSheets/commit/78da6f7))
+
 ### [2.2.9](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.5...v2.2.9) (2019-09-13)
 
 
