@@ -30,6 +30,16 @@ describe('Constructible Style Sheets polyfill', () => {
       expect(sheet instanceof CSSStyleSheet).toBeTruthy();
     });
 
+    it('allows overriding the CSSStyleSheet prototype methods', () => {
+      const css = '* { color: tomato; }';
+      const replaceSyncSpy = spyOn(CSSStyleSheet.prototype, 'replaceSync');
+      sheet.replaceSync(css);
+
+      expect(replaceSyncSpy).toHaveBeenCalledWith(css);
+
+      replaceSyncSpy.and.callThrough();
+    });
+
     describe('replace', () => {
       let result;
 
