@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.11](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.7...v2.2.11) (2019-10-19)
+
+
+### Bug Fixes
+
+* allow overriding the CSSStyleSheet prototype methods ([b076dab](https://github.com/calebdwilliams/adoptedStyleSheets/commit/b076dab))
+* move styles adopted before page is ready to body ([78da6f7](https://github.com/calebdwilliams/adoptedStyleSheets/commit/78da6f7))
+* **adopt:** adoptStyleSheets will now allow both polyfill and script to be placed in head ([58620e6](https://github.com/calebdwilliams/adoptedStyleSheets/commit/58620e6))
+
 ### [2.2.10](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.5...v2.2.10) (2019-09-13)
 
 
