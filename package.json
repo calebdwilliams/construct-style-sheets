@@ -4,6 +4,7 @@
   "description": "Constructible style sheets/adopted style sheets polyfill",
   "main": "dist/adoptedStyleSheets.js",
   "module": "dist/adoptedStyleSheets.js",
+  "types": "dist/adoptedStyleSheets.d.ts",
   "files": [
     "dist/adoptedStyleSheets.js"
   ],
@@ -18,7 +19,7 @@
     "pretest": "rimraf .coverage",
     "pretest:watch": "npm run pretest",
     "pretest:coverage": "npm run pretest",
-    "webpack": "webpack --config webpack.config.js"
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -61,7 +62,8 @@
     "rollup-plugin-cleanup": "^3.1.1",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "standard-version": "^7.0.0"
+    "standard-version": "^7.0.0",
+    "typescript": "^3.6.4"
   },
   "keywords": [
     "CSS",
