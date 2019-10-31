@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.11...v2.3.0) (2019-10-31)
+
+
+### Bug Fixes
+
+* add a couple of small fixes ([4363c65](https://github.com/calebdwilliams/adoptedStyleSheets/commit/4363c65))
+
+
+### Features
+
+* add typings and tests for them ([b29f1a6](https://github.com/calebdwilliams/adoptedStyleSheets/commit/b29f1a6))
+
 ### [2.2.11](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.7...v2.2.11) (2019-10-19)
 
 
