@@ -6,6 +6,7 @@ import {
   deferredDocumentStyleElements,
   deferredStyleSheets,
   frame,
+  hasShadyCss,
   state,
 } from './shared';
 import {checkAndPrepare, isDocumentLoading} from './utils';
@@ -72,7 +73,7 @@ export function initAdoptedStyleSheets() {
         this === document
           ? // If the document is still loading the body does not exist. So the
             // document.head will be the location for a while.
-          isDocumentLoading()
+            isDocumentLoading()
             ? this.head
             : this.body
           : this;
@@ -106,7 +107,9 @@ export function initAdoptedStyleSheets() {
     // Shadow root of each element should be observed to add styles to all
     // elements added to this root.
     HTMLElement.prototype.attachShadow = function() {
-      const location = attachShadow.apply(this, arguments);
+      // In case we have ShadowDOM emulation, we have to use element itself
+      // instead of the ShadowRoot
+      const location = hasShadyCss ? this : attachShadow.apply(this, arguments);
       createObserver(location);
 
       return location;
