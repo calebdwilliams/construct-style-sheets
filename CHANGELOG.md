@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.1](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.3.0...v2.3.1) (2019-11-16)
+
+
+### Bug Fixes
+
+* use element itself instead of shadow root if ShadyCSS is used ([e3fa425](https://github.com/calebdwilliams/adoptedStyleSheets/commit/e3fa425))
+
 ## [2.3.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.2.11...v2.3.0) (2019-10-31)
 
 
