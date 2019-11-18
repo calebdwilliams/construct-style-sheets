@@ -1,12 +1,32 @@
-name: Continuous Integration
+name: CI
 
 on:
   push:
     branches:
       - master
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'plugins/**'
+      - 'src/**'
+      - 'test/**'
+      - '.babelrc'
+      - 'karma.conf.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'rollup.config.js'
   pull_request:
     branches:
       - master
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'plugins/**'
+      - 'src/**'
+      - 'test/**'
+      - '.babelrc'
+      - 'karma.conf.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'rollup.config.js'
 
 jobs:
   testing:
