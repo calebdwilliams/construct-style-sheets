@@ -10,10 +10,12 @@ on:
       - 'src/**'
       - 'test/**'
       - '.babelrc'
+      - '.browserlistrc'
       - 'karma.conf.js'
       - 'package.json'
       - 'package-lock.json'
       - 'rollup.config.js'
+      - 'tsconfig.json'
   pull_request:
     branches:
       - master
@@ -23,10 +25,12 @@ on:
       - 'src/**'
       - 'test/**'
       - '.babelrc'
+      - '.browserlistrc'
       - 'karma.conf.js'
       - 'package.json'
       - 'package-lock.json'
       - 'rollup.config.js'
+      - 'tsconfig.json'
 
 jobs:
   testing:
