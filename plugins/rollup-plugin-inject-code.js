@@ -1,5 +1,5 @@
 module.exports = (options) => ({
-  name: 'inject-string',
+  name: 'inject-code',
   async generateBundle(_, assets) {
     for (const chunkName in options) {
       const chunk = assets[chunkName];

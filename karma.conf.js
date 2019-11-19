@@ -129,7 +129,7 @@ module.exports = config => {
               ...babelrc,
               plugins: [coverage && 'babel-plugin-istanbul'].filter(Boolean),
             }),
-            require('./plugins/rollup-plugin-inject-string')({
+            require('./plugins/rollup-plugin-inject-code')({
               'index.js': {
                 line: 3,
                 code: "  if ('adoptedStyleSheets' in document) { return; }\n",
