@@ -26,7 +26,6 @@ module.exports = config => {
       require('karma-coverage-istanbul-reporter'),
       require('karma-detect-browsers'),
       require('karma-rollup-preprocessor'),
-      require('karma-babel-preprocessor'),
     ],
 
     browserNoActivityTimeout: 60000, //default 10000
@@ -41,7 +40,7 @@ module.exports = config => {
     // list of files / patterns to load in the browser
     files: [
       {pattern: 'test/polyfills.js', watched: false},
-      'dist/adoptedStyleSheets.js',
+      {pattern: 'src/index.js', watched: false},
       {pattern: 'test/polyfill.test.js', watched: false},
     ],
 
@@ -52,14 +51,14 @@ module.exports = config => {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       'test/polyfills.js': ['rollup'],
-      'dist/adoptedStyleSheets.js': coverage ? ['babel'] : [],
+      'src/index.js': ['sourceRollup'],
       'test/polyfill.test.js': ['rollup'],
     },
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: coverage ? ['progress', 'coverage-istanbul'] : ['progress'],
+    reporters: ['progress', coverage && 'coverage-istanbul'].filter(Boolean),
 
     // web server port
     port: 9876,
@@ -115,14 +114,34 @@ module.exports = config => {
       ],
       output: {
         format: 'iife',
-        name: 'constructibleStyleSheetsPolyfill',
+        name: 'tests',
       },
     },
 
-    babelPreprocessor: {
-      options: {
-        plugins: ['babel-plugin-istanbul'],
-        sourceMap: 'inline',
+    customPreprocessors: {
+      sourceRollup: {
+        base: 'rollup',
+        options: {
+          plugins: [
+            require('rollup-plugin-node-resolve')(),
+            require('rollup-plugin-babel')({
+              babelrc: false,
+              ...babelrc,
+              plugins: [coverage && 'babel-plugin-istanbul'].filter(Boolean),
+            }),
+            require('./plugins/rollup-plugin-inject-code')({
+              'index.js': {
+                line: 3,
+                code: "  if ('adoptedStyleSheets' in document) { return; }\n",
+              },
+            }),
+          ],
+          output: {
+            format: 'iife',
+            name: 'tests',
+          },
+          treeshake: false,
+        },
       },
     },
 
