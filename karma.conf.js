@@ -93,6 +93,9 @@ module.exports = config => {
     detectBrowsers: {
       usePhantomJS: false,
       preferHeadless: true,
+      postDetection(availableBrowsers) {
+        return availableBrowsers.filter(browser => browser !== 'SafariTechPreview');
+      }
     },
 
     rollupPreprocessor: {

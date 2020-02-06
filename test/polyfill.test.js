@@ -1,6 +1,12 @@
 import {defineCE} from '@open-wc/testing-helpers/src/helpers';
 import {stringFixture as fixture} from '@open-wc/testing-helpers/src/stringFixture';
 
+// This is so that tests will run synchronously despite
+// the fact that requestAnimationFrame is asynchronous
+window.requestAnimationFrame = function(callback) {
+  callback();
+}
+
 describe('Constructible Style Sheets polyfill', () => {
   describe('CSSStyleSheet object', () => {
     let globalStyle;

@@ -86,12 +86,16 @@ export function initAdoptedStyleSheets() {
           ? location.isConnected
           : document.body.contains(location);
 
-      // Element can adopt style sheets only when it is connected
-      if (isConnected) {
-        adoptStyleSheets(location);
-        // Remove all the sheets the received array does not include.
-        removeExcludedStyleSheets(location, oldSheets);
-      }
+      // Request an animation frame to let nodes connect to the DOM
+      // before attempting to adopt the stylesheet(s)
+      window.requestAnimationFrame(() => {
+        // Element can adopt style sheets only when it is connected
+        if (isConnected) {
+          adoptStyleSheets(location);
+          // Remove all the sheets the received array does not include.
+          removeExcludedStyleSheets(location, oldSheets);
+        }
+      });
     },
   };
 
