@@ -58,9 +58,8 @@ describe('Constructible Style Sheets polyfill', () => {
 
         const resolved = await result;
 
-        // Equal because polyfill cannot return the same CSSStyleSheet object
-        // since it is immutable.
-        expect(resolved).toEqual(sheet);
+        // Use toBe because there should be referential integrity
+        expect(resolved).toBe(sheet);
       });
 
       it('has a rule set', async () => {
@@ -91,9 +90,8 @@ describe('Constructible Style Sheets polyfill', () => {
       });
 
       it('returns a CSSStyleSheet object itself', () => {
-        // Equal because polyfill cannot return the same CSSStyleSheet object
-        // since it is immutable.
-        expect(result).toEqual(sheet);
+        // Use toBe because there should be referential integrity
+        expect(result).toBe(sheet);
       });
 
       it('has a rule set', async () => {

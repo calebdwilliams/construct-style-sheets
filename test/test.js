@@ -10,10 +10,10 @@ headingStyles.replace(` h1 {
 });
 
 paragraphStyles.replaceSync(`p {
-  color: #1121212;
+  color: #ab2121;
   font-family: "Operator Mono", "Helvetica Neue";
 }`);
 
 setTimeout(() => {
-  headingStyles.addRule('*', 'font-family: Helvetica');
+  headingStyles.addRule('*', 'font-family: monospace');
 }, 1000);

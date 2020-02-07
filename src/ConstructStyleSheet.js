@@ -3,8 +3,9 @@ import {
   frame,
   sheetMetadataRegistry,
   state,
+  OldCSSStyleSheet
 } from './shared';
-import {instanceOfStyleSheet, rejectImports} from './utils';
+import {rejectImports} from './utils';
 
 const cssStyleSheetMethods = [
   'addImport',
@@ -21,36 +22,15 @@ const cssStyleSheetNewMethods = ['replace', 'replaceSync'];
 export function updatePrototype(proto) {
   cssStyleSheetNewMethods.forEach(methodKey => {
     proto[methodKey] = function () {
-      return ConstructStyleSheet.prototype[methodKey].apply(this, arguments);
+      /* This matches Chrome's behavior. Try running this:
+           var style = document.createElement('style');
+           document.head.appendChild(style);
+           style.sheet.replace('body { color: blue }');
+      */
+     return Promise.reject(
+       new Error(`Failed to execute '${methodKey}' on 'CSSStyleSheet': Can't call ${methodKey} on non-constructed CSSStyleSheets.`)
+     );
     }
-  });
-
-  // ForEach it because we need to preserve "methodKey" in the created function
-  cssStyleSheetMethods.forEach(methodKey => {
-    // Here we apply all changes we have done to the original CSSStyleSheet
-    // object to all adopted style element.
-    const oldMethod = proto[methodKey];
-
-    proto[methodKey] = function() {
-      const args = arguments;
-      const result = oldMethod.apply(this, args);
-
-      if (sheetMetadataRegistry.has(this)) {
-        const {adopters, actions} = sheetMetadataRegistry.get(this);
-
-        adopters.forEach(styleElement => {
-          if (styleElement.sheet) {
-            styleElement.sheet[methodKey].apply(styleElement.sheet, args);
-          }
-        });
-
-        // And we also need to remember all these changes to apply them to
-        // each newly adopted style element.
-        actions.push([methodKey, args]);
-      }
-
-      return result;
-    };
   });
 }
 
@@ -63,10 +43,8 @@ function updateAdopters(sheet) {
 }
 
 // This class will be a substitute for the CSSStyleSheet class that
-// cannot be instantiated. The `new` operation will return the native
-// CSSStyleSheet object extracted from a style element appended to the
-// iframe.
-export default class ConstructStyleSheet {
+// cannot be instantiated.
+class ConstructStyleSheet {
   constructor() {
     // A style element to extract the native CSSStyleSheet object.
     const basicStyleElement = document.createElement('style');
@@ -81,16 +59,23 @@ export default class ConstructStyleSheet {
       deferredStyleSheets.push(basicStyleElement);
     }
 
-    const nativeStyleSheet = basicStyleElement.sheet;
-
     // A support object to preserve all the polyfill data
-    sheetMetadataRegistry.set(nativeStyleSheet, {
+    sheetMetadataRegistry.set(this, {
       adopters: new Map(),
       actions: [],
       basicStyleElement,
     });
+  }
 
-    return nativeStyleSheet;
+  get cssRules() {
+    if (!sheetMetadataRegistry.has(this)) {
+      throw new Error(
+        "Cannot read 'cssRules' on non-constructed CSSStyleSheets.",
+      )
+    }
+
+    const {basicStyleElement} = sheetMetadataRegistry.get(this);
+    return basicStyleElement.sheet.cssRules;
   }
 
   replace(contents) {
@@ -98,9 +83,9 @@ export default class ConstructStyleSheet {
     return new Promise((resolve, reject) => {
       if (sheetMetadataRegistry.has(this)) {
         const {basicStyleElement} = sheetMetadataRegistry.get(this);
-
+        
         basicStyleElement.innerHTML = sanitized;
-        resolve(basicStyleElement.sheet);
+        resolve(this);
         updateAdopters(this);
       } else {
         reject(
@@ -121,7 +106,7 @@ export default class ConstructStyleSheet {
       basicStyleElement.innerHTML = sanitized;
       updateAdopters(this);
 
-      return basicStyleElement.sheet;
+      return this;
     } else {
       throw new Error(
         "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
@@ -130,7 +115,43 @@ export default class ConstructStyleSheet {
   }
 }
 
+// Implement all methods from the base CSSStyleSheet constructor as
+// a proxy to the raw style element created during construction.
+cssStyleSheetMethods.forEach(method => {
+  ConstructStyleSheet.prototype[method] = function() {
+    if (!sheetMetadataRegistry.has(this)) {
+      throw new Error(
+        `Failed to execute '${method}' on 'CSSStyleSheet': Can't call ${method} on non-constructed CSSStyleSheets.`,
+      )
+    }
+
+    const args = arguments;
+    const { adopters, actions, basicStyleElement } = sheetMetadataRegistry.get(this);
+    const result = basicStyleElement.sheet[method].apply(basicStyleElement.sheet, args);
+
+    adopters.forEach(styleElement => {
+      if (styleElement.sheet) {
+        styleElement.sheet[method].apply(styleElement.sheet, args);
+      }
+    });
+
+    actions.push([method, args]);
+
+    return result;
+  }
+});
+
+export function instanceOfStyleSheet(instance) {
+  return (
+    instance.constructor === ConstructStyleSheet ||
+    instance instanceof OldCSSStyleSheet ||
+    (frame.CSSStyleSheet && instance instanceof frame.CSSStyleSheet)
+  );
+}
+
 Object.defineProperty(ConstructStyleSheet, Symbol.hasInstance, {
   configurable: true,
   value: instanceOfStyleSheet,
 });
+
+export default ConstructStyleSheet;
