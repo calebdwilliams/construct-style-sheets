@@ -1,9 +1,9 @@
 import {
+  OldCSSStyleSheet,
   deferredStyleSheets,
   frame,
   sheetMetadataRegistry,
-  state,
-  OldCSSStyleSheet
+  state
 } from './shared';
 import {rejectImports} from './utils';
 
@@ -17,21 +17,20 @@ const cssStyleSheetMethods = [
   'removeRule',
 ];
 
-const cssStyleSheetNewMethods = ['replace', 'replaceSync'];
+const illegalInvocation = 'Illegal invocation';
 
 export function updatePrototype(proto) {
-  cssStyleSheetNewMethods.forEach(methodKey => {
-    proto[methodKey] = function () {
-      /* This matches Chrome's behavior. Try running this:
-           var style = document.createElement('style');
-           document.head.appendChild(style);
-           style.sheet.replace('body { color: blue }');
-      */
-     return Promise.reject(
-       new Error(`Failed to execute '${methodKey}' on 'CSSStyleSheet': Can't call ${methodKey} on non-constructed CSSStyleSheets.`)
-     );
-    }
-  });
+  proto.replace = function () {
+    // document.styleSheets[0].replace('body {}');
+    return Promise.reject(
+      new DOMException("Can't call replace on non-constructed CSSStyleSheets.")
+    );
+  };
+
+  proto.replaceSync = function () {
+    // document.styleSheets[0].replaceSync('body {}');
+    throw new DOMException("Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.");
+  };
 }
 
 function updateAdopters(sheet) {
@@ -69,9 +68,8 @@ class ConstructStyleSheet {
 
   get cssRules() {
     if (!sheetMetadataRegistry.has(this)) {
-      throw new Error(
-        "Cannot read 'cssRules' on non-constructed CSSStyleSheets.",
-      )
+      // CSSStyleSheet.prototype.cssRules;
+      throw new TypeError(illegalInvocation);
     }
 
     const {basicStyleElement} = sheetMetadataRegistry.get(this);
@@ -80,38 +78,34 @@ class ConstructStyleSheet {
 
   replace(contents) {
     const sanitized = rejectImports(contents);
-    return new Promise((resolve, reject) => {
-      if (sheetMetadataRegistry.has(this)) {
-        const {basicStyleElement} = sheetMetadataRegistry.get(this);
-        
-        basicStyleElement.innerHTML = sanitized;
-        resolve(this);
-        updateAdopters(this);
-      } else {
-        reject(
-          new Error(
-            "Can't call replace on non-constructed CSSStyleSheets.",
-          ),
-        );
+    try {
+      if (!sheetMetadataRegistry.has(this)) {
+        // CSSStyleSheet.prototype.replace('body {}')
+        throw new TypeError(illegalInvocation);
       }
-    });
+
+      const {basicStyleElement} = sheetMetadataRegistry.get(this);
+      basicStyleElement.innerHTML = sanitized;
+      updateAdopters(this);
+
+      return Promise.resolve(this);
+    } catch(ex) {
+      return Promise.reject(ex);
+    }
   }
 
   replaceSync(contents) {
     const sanitized = rejectImports(contents);
-
-    if (sheetMetadataRegistry.has(this)) {
-      const {basicStyleElement} = sheetMetadataRegistry.get(this);
-
-      basicStyleElement.innerHTML = sanitized;
-      updateAdopters(this);
-
-      return this;
-    } else {
-      throw new Error(
-        "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
-      );
+    if (!sheetMetadataRegistry.has(this)) {
+      // CSSStyleSheet.prototype.replaceSync('body {}')
+      throw new TypeError(illegalInvocation)
     }
+
+    const {basicStyleElement} = sheetMetadataRegistry.get(this);
+
+    basicStyleElement.innerHTML = sanitized;
+    updateAdopters(this);
+    return this;
   }
 }
 
@@ -120,9 +114,7 @@ class ConstructStyleSheet {
 cssStyleSheetMethods.forEach(method => {
   ConstructStyleSheet.prototype[method] = function() {
     if (!sheetMetadataRegistry.has(this)) {
-      throw new Error(
-        `Failed to execute '${method}' on 'CSSStyleSheet': Can't call ${method} on non-constructed CSSStyleSheets.`,
-      )
+      throw new TypeError(illegalInvocation)
     }
 
     const args = arguments;
@@ -143,9 +135,9 @@ cssStyleSheetMethods.forEach(method => {
 
 export function instanceOfStyleSheet(instance) {
   return (
-    instance.constructor === ConstructStyleSheet ||
+    (instance && instance.constructor === ConstructStyleSheet) ||
     instance instanceof OldCSSStyleSheet ||
-    (frame.CSSStyleSheet && instance instanceof frame.CSSStyleSheet)
+    instance instanceof frame.CSSStyleSheet
   );
 }
 

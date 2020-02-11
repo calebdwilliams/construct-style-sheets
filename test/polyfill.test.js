@@ -32,8 +32,12 @@ describe('Constructible Style Sheets polyfill', () => {
       expect(sheet.replaceSync).toBeDefined();
     });
 
-    it('passes instanceof check', () => {
+    it('passes instanceof checks', () => {
       expect(sheet instanceof CSSStyleSheet).toBeTruthy();
+
+      const style = document.createElement('style');
+      document.body.append(style);
+      expect(style.sheet instanceof CSSStyleSheet).toBeTruthy();
     });
 
     it('allows overriding the CSSStyleSheet prototype methods', () => {
@@ -71,7 +75,7 @@ describe('Constructible Style Sheets polyfill', () => {
         await globalStyle.sheet
           .replace('.only-test { color: blue; }')
           .catch(error => {
-            expect(error.message).toBe(
+            expect(error.message).toContain(
               "Can't call replace on non-constructed CSSStyleSheets.",
             );
           });
@@ -112,8 +116,8 @@ describe('Constructible Style Sheets polyfill', () => {
         try {
           globalStyle.sheet.replaceSync('.only-test { color: blue; }');
         } catch (error) {
-          expect(error.message).toBe(
-            "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
+          expect(error.message).toContain(
+            "Can't call replaceSync on non-constructed CSSStyleSheets.",
           );
         }
       });
