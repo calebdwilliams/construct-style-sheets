@@ -528,5 +528,22 @@ describe('Constructible Style Sheets polyfill', () => {
 
       expect(document.adoptedStyleSheets).toEqual(styleSheets);
     });
+
+    it('removes styles properly', async () => {
+      const element = await fixture('<div class="foo"></div>');
+
+      const css1 = new CSSStyleSheet();
+      css1.replaceSync('.foo { line-height: 9px }');
+
+      const css2 = new CSSStyleSheet();
+      css2.replaceSync('.foo { line-height: 10px !important }');
+
+      document.adoptedStyleSheets = [css1, css2];
+      checkGlobalCss(element, {'line-height': '10px'});
+
+      document.adoptedStyleSheets = [css1];
+      checkGlobalCss(element, {'line-height': '9px'});
+
+    });
   });
 });

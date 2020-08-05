@@ -81,7 +81,7 @@ export function removeExcludedStyleSheets(location, oldSheets) {
 
   for (let i = 0, len = oldSheets.length; i < len; i++) {
     if (sheets.indexOf(oldSheets[i]) > -1) {
-      return;
+      continue;
     }
 
     const {adopters} = sheetMetadataRegistry.get(oldSheets[i]);
