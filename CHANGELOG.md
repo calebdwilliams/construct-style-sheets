@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.3.5...v2.4.0) (2020-08-19)
+
+
+### Features
+
+* remove [@import](https://github.com/import) support per new behavior in Chrome ([8fa34a9](https://github.com/calebdwilliams/adoptedStyleSheets/commit/8fa34a99c73554e0b1818e895c4d4a6252f9e081))
+
+
+### Bug Fixes
+
+* remove styles properly ([4d5709f](https://github.com/calebdwilliams/adoptedStyleSheets/commit/4d5709ffde6aa7fb116769e798d84947d6739727))
+
 ### [2.3.5](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.3.4...v2.3.5) (2020-02-06)
 
 ### [2.3.4](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.3.3...v2.3.4) (2020-02-06)
