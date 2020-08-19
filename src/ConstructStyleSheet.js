@@ -4,9 +4,7 @@ import {
   sheetMetadataRegistry,
   state,
 } from './shared';
-import {instanceOfStyleSheet} from './utils';
-
-const importPattern = /@import/;
+import {instanceOfStyleSheet, rejectImports} from './utils';
 
 const cssStyleSheetMethods = [
   'addImport',
@@ -96,17 +94,18 @@ export default class ConstructStyleSheet {
   }
 
   replace(contents) {
+    const sanitized = rejectImports(contents);
     return new Promise((resolve, reject) => {
       if (sheetMetadataRegistry.has(this)) {
         const {basicStyleElement} = sheetMetadataRegistry.get(this);
 
-        basicStyleElement.innerHTML = contents;
+        basicStyleElement.innerHTML = sanitized;
         resolve(basicStyleElement.sheet);
         updateAdopters(this);
       } else {
         reject(
           new Error(
-            "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets.",
+            "Can't call replace on non-constructed CSSStyleSheets.",
           ),
         );
       }
@@ -114,16 +113,12 @@ export default class ConstructStyleSheet {
   }
 
   replaceSync(contents) {
-    if (importPattern.test(contents)) {
-      throw new Error(
-        '@import rules are not allowed when creating stylesheet synchronously',
-      );
-    }
+    const sanitized = rejectImports(contents);
 
     if (sheetMetadataRegistry.has(this)) {
       const {basicStyleElement} = sheetMetadataRegistry.get(this);
 
-      basicStyleElement.innerHTML = contents;
+      basicStyleElement.innerHTML = sanitized;
       updateAdopters(this);
 
       return basicStyleElement.sheet;

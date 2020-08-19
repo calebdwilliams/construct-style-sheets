@@ -1,5 +1,7 @@
 import {adoptedSheetsRegistry, frame, OldCSSStyleSheet} from './shared';
 
+const importPattern = /@import\surl(.*?);/gi;
+
 export function instanceOfStyleSheet(instance) {
   return (
     instance instanceof OldCSSStyleSheet ||
@@ -40,4 +42,18 @@ export function getAdoptedStyleSheet(location) {
       ? document
       : location,
   );
+}
+
+export function rejectImports(contents) {
+  const imports = contents.match(importPattern, '') || [];
+  let sheetContent = contents;
+  if (imports.length) {
+    console.warn(
+      '@import rules are not allowed here. See https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418'
+    );
+    imports.forEach(_import => {
+      sheetContent = sheetContent.replace(_import, '');
+    });
+  }
+  return sheetContent;
 }

@@ -78,7 +78,6 @@ export function adoptStyleSheets(location) {
 
 export function removeExcludedStyleSheets(location, oldSheets) {
   const sheets = getAdoptedStyleSheet(location);
-
   for (let i = 0, len = oldSheets.length; i < len; i++) {
     if (sheets.indexOf(oldSheets[i]) > -1) {
       continue;
@@ -86,7 +85,13 @@ export function removeExcludedStyleSheets(location, oldSheets) {
 
     const {adopters} = sheetMetadataRegistry.get(oldSheets[i]);
     const observer = observerRegistry.get(location);
-    const styleElement = adopters.get(location);
+    let styleElement = adopters.get(location);
+
+    // In case the sheet was saved to document.head
+    // before the document was ready
+    if (!styleElement) {
+      styleElement = adopters.get(document.head);
+    }
 
     observer.disconnect();
     styleElement.parentNode.removeChild(styleElement);

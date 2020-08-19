@@ -73,7 +73,7 @@ describe('Constructible Style Sheets polyfill', () => {
           .replace('.only-test { color: blue; }')
           .catch(error => {
             expect(error.message).toBe(
-              "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets.",
+              "Can't call replace on non-constructed CSSStyleSheets.",
             );
           });
       });

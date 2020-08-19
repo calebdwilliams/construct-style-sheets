@@ -102,3 +102,6 @@ from the `element.adoptedStyleSheets` array. The behavior here is supposed to
 emulate a `FrozenArray`, so modifying the array in question will have no effect
 until the value is changed using a setter.
 
+## A note about versioning
+
+This packages doesn't necessarily follow semantic versioning. As the spec is still under consideration and implementation by browser vendors, the features supported by this package will change (generally following Chrome's implementation).
