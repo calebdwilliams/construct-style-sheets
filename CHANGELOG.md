@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.1](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.0...v2.4.1) (2020-09-06)
+
+
+### Bug Fixes
+
+* remove console.log from dist ([be23440](https://github.com/calebdwilliams/adoptedStyleSheets/commit/be234402d36c6eaf17b57457ed7964f03e17a403))
+
 ## [2.4.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.3.5...v2.4.0) (2020-08-19)
 
 
