@@ -106,11 +106,11 @@ export function initAdoptedStyleSheets() {
   );
 
   if (typeof ShadowRoot !== 'undefined') {
-    const {attachShadow} = HTMLElement.prototype;
+    const {attachShadow} = Element.prototype;
 
     // Shadow root of each element should be observed to add styles to all
     // elements added to this root.
-    HTMLElement.prototype.attachShadow = function() {
+    Element.prototype.attachShadow = function() {
       // In case we have ShadowDOM emulation, we have to use element itself
       // instead of the ShadowRoot
       const location = hasShadyCss ? this : attachShadow.apply(this, arguments);
