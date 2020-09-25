@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.2](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.1...v2.4.2) (2020-09-25)
+
+
+### Bug Fixes
+
+* move attachShadow override to Element per spec ([1e11b32](https://github.com/calebdwilliams/adoptedStyleSheets/commit/1e11b329f1a937e6f73bdca05d6ccc4baad894ab))
+
 ### [2.4.1](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.0...v2.4.1) (2020-09-06)
 
 
