@@ -2,6 +2,10 @@ import {adoptStyleSheets} from './adopt';
 import {hasShadyCss, locationRegistry, observerRegistry} from './shared';
 
 function adoptAndRestoreStylesOnMutationCallback(mutations) {
+  if (!document) {
+    return;
+  }
+  
   for (let i = 0, len = mutations.length; i < len; i++) {
     const {addedNodes, removedNodes} = mutations[i];
 
