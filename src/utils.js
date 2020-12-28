@@ -1,7 +1,7 @@
 import {adoptedSheetsRegistry} from './shared';
 import {instanceOfStyleSheet} from './ConstructStyleSheet';
 
-const importPattern = /@import\surl(.*?);/gi;
+const importPattern = /@import/;
 
 export function checkAndPrepare(sheets, container) {
   const locationType = container === document ? 'Document' : 'ShadowRoot';
@@ -40,8 +40,8 @@ export function getAdoptedStyleSheet(location) {
   );
 }
 
-export function rejectImports(contents) {
-  const imports = contents.match(importPattern, '') || [];
+export function rejectImports(contents = '') {
+  const imports = contents.match(importPattern) || [];
   let sheetContent = contents;
   if (imports.length) {
     console.warn(
