@@ -6,7 +6,8 @@
   "module": "dist/adoptedStyleSheets.js",
   "types": "dist/adoptedStyleSheets.d.ts",
   "files": [
-    "dist/adoptedStyleSheets.js"
+    "dist/adoptedStyleSheets.js",
+    "dist/adoptedStyleSheets.d.ts"
   ],
   "scripts": {
     "build": "rollup -c rollup.config.js",
