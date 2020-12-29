@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.6](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.5...v2.4.6) (2020-12-29)
+
+
+### Bug Fixes
+
+* add typings to files ([d7abf3c](https://github.com/calebdwilliams/adoptedStyleSheets/commit/d7abf3cb176fa3d20311164babc6aa91bd65e8a6))
+
 ### [2.4.5](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.4...v2.4.5) (2020-12-29)
 
 ### [2.4.4](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.3...v2.4.4) (2020-12-29)
