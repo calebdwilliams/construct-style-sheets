@@ -1,10 +1,11 @@
 import {
+  OldCSSStyleSheet,
   deferredStyleSheets,
   frame,
   sheetMetadataRegistry,
-  state,
+  state
 } from './shared';
-import {instanceOfStyleSheet, rejectImports} from './utils';
+import {rejectImports} from './utils';
 
 const cssStyleSheetMethods = [
   'addImport',
@@ -16,42 +17,20 @@ const cssStyleSheetMethods = [
   'removeRule',
 ];
 
-const cssStyleSheetNewMethods = ['replace', 'replaceSync'];
+const illegalInvocation = 'Illegal invocation';
 
 export function updatePrototype(proto) {
-  cssStyleSheetNewMethods.forEach(methodKey => {
-    proto[methodKey] = function () {
-      return ConstructStyleSheet.prototype[methodKey].apply(this, arguments);
-    }
-  });
+  proto.replace = function () {
+    // document.styleSheets[0].replace('body {}');
+    return Promise.reject(
+      new DOMException("Can't call replace on non-constructed CSSStyleSheets.")
+    );
+  };
 
-  // ForEach it because we need to preserve "methodKey" in the created function
-  cssStyleSheetMethods.forEach(methodKey => {
-    // Here we apply all changes we have done to the original CSSStyleSheet
-    // object to all adopted style element.
-    const oldMethod = proto[methodKey];
-
-    proto[methodKey] = function() {
-      const args = arguments;
-      const result = oldMethod.apply(this, args);
-
-      if (sheetMetadataRegistry.has(this)) {
-        const {adopters, actions} = sheetMetadataRegistry.get(this);
-
-        adopters.forEach(styleElement => {
-          if (styleElement.sheet) {
-            styleElement.sheet[methodKey].apply(styleElement.sheet, args);
-          }
-        });
-
-        // And we also need to remember all these changes to apply them to
-        // each newly adopted style element.
-        actions.push([methodKey, args]);
-      }
-
-      return result;
-    };
-  });
+  proto.replaceSync = function () {
+    // document.styleSheets[0].replaceSync('body {}');
+    throw new DOMException("Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.");
+  };
 }
 
 function updateAdopters(sheet) {
@@ -63,10 +42,8 @@ function updateAdopters(sheet) {
 }
 
 // This class will be a substitute for the CSSStyleSheet class that
-// cannot be instantiated. The `new` operation will return the native
-// CSSStyleSheet object extracted from a style element appended to the
-// iframe.
-export default class ConstructStyleSheet {
+// cannot be instantiated.
+class ConstructStyleSheet {
   constructor() {
     // A style element to extract the native CSSStyleSheet object.
     const basicStyleElement = document.createElement('style');
@@ -81,56 +58,92 @@ export default class ConstructStyleSheet {
       deferredStyleSheets.push(basicStyleElement);
     }
 
-    const nativeStyleSheet = basicStyleElement.sheet;
-
     // A support object to preserve all the polyfill data
-    sheetMetadataRegistry.set(nativeStyleSheet, {
+    sheetMetadataRegistry.set(this, {
       adopters: new Map(),
       actions: [],
       basicStyleElement,
     });
+  }
 
-    return nativeStyleSheet;
+  get cssRules() {
+    if (!sheetMetadataRegistry.has(this)) {
+      // CSSStyleSheet.prototype.cssRules;
+      throw new TypeError(illegalInvocation);
+    }
+
+    const {basicStyleElement} = sheetMetadataRegistry.get(this);
+    return basicStyleElement.sheet.cssRules;
   }
 
   replace(contents) {
     const sanitized = rejectImports(contents);
-    return new Promise((resolve, reject) => {
-      if (sheetMetadataRegistry.has(this)) {
-        const {basicStyleElement} = sheetMetadataRegistry.get(this);
-
-        basicStyleElement.innerHTML = sanitized;
-        resolve(basicStyleElement.sheet);
-        updateAdopters(this);
-      } else {
-        reject(
-          new Error(
-            "Can't call replace on non-constructed CSSStyleSheets.",
-          ),
-        );
+    try {
+      if (!sheetMetadataRegistry.has(this)) {
+        // CSSStyleSheet.prototype.replace('body {}')
+        throw new TypeError(illegalInvocation);
       }
-    });
+
+      const {basicStyleElement} = sheetMetadataRegistry.get(this);
+      basicStyleElement.innerHTML = sanitized;
+      updateAdopters(this);
+
+      return Promise.resolve(this);
+    } catch(ex) {
+      return Promise.reject(ex);
+    }
   }
 
   replaceSync(contents) {
     const sanitized = rejectImports(contents);
-
-    if (sheetMetadataRegistry.has(this)) {
-      const {basicStyleElement} = sheetMetadataRegistry.get(this);
-
-      basicStyleElement.innerHTML = sanitized;
-      updateAdopters(this);
-
-      return basicStyleElement.sheet;
-    } else {
-      throw new Error(
-        "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
-      );
+    if (!sheetMetadataRegistry.has(this)) {
+      // CSSStyleSheet.prototype.replaceSync('body {}')
+      throw new TypeError(illegalInvocation)
     }
+
+    const {basicStyleElement} = sheetMetadataRegistry.get(this);
+
+    basicStyleElement.innerHTML = sanitized;
+    updateAdopters(this);
+    return this;
   }
+}
+
+// Implement all methods from the base CSSStyleSheet constructor as
+// a proxy to the raw style element created during construction.
+cssStyleSheetMethods.forEach(method => {
+  ConstructStyleSheet.prototype[method] = function() {
+    if (!sheetMetadataRegistry.has(this)) {
+      throw new TypeError(illegalInvocation)
+    }
+
+    const args = arguments;
+    const { adopters, actions, basicStyleElement } = sheetMetadataRegistry.get(this);
+    const result = basicStyleElement.sheet[method].apply(basicStyleElement.sheet, args);
+
+    adopters.forEach(styleElement => {
+      if (styleElement.sheet) {
+        styleElement.sheet[method].apply(styleElement.sheet, args);
+      }
+    });
+
+    actions.push([method, args]);
+
+    return result;
+  }
+});
+
+export function instanceOfStyleSheet(instance) {
+  return (
+    (instance && instance.constructor === ConstructStyleSheet) ||
+    instance instanceof OldCSSStyleSheet ||
+    instance instanceof frame.CSSStyleSheet
+  );
 }
 
 Object.defineProperty(ConstructStyleSheet, Symbol.hasInstance, {
   configurable: true,
   value: instanceOfStyleSheet,
 });
+
+export default ConstructStyleSheet;
