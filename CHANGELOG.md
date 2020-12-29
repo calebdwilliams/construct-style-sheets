@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.4](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.3...v2.4.4) (2020-12-29)
+
+
+### Bug Fixes
+
+* ensure referential integrity, match chromes behavior ([99bdde3](https://github.com/calebdwilliams/adoptedStyleSheets/commit/99bdde34548e08f3949ba817da61693a9248e731))
+* loosen import regex, update import tests and invocation tests ([c62fde6](https://github.com/calebdwilliams/adoptedStyleSheets/commit/c62fde60db9abff6ead0ba8dfb1c9fd4733d5b19))
+
 ### [2.4.3](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.2...v2.4.3) (2020-11-18)
 
 
