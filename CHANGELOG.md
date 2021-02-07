@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.9](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.6...v2.4.9) (2021-02-07)
+
+
+### Bug Fixes
+
+* add declare module to typings ([#68](https://github.com/calebdwilliams/adoptedStyleSheets/issues/68)) ([8f1e1cc](https://github.com/calebdwilliams/adoptedStyleSheets/commit/8f1e1ccde2af4102388e32e1c41c6dee0b249bc8))
+
+### [2.4.8](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.6...v2.4.8) (2021-02-07)
+
+
+### Bug Fixes
+
+* add declare module to typings ([#68](https://github.com/calebdwilliams/adoptedStyleSheets/issues/68)) ([8f1e1cc](https://github.com/calebdwilliams/adoptedStyleSheets/commit/8f1e1ccde2af4102388e32e1c41c6dee0b249bc8))
+
+### [2.4.7](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.6...v2.4.7) (2021-02-07)
+
+
+### Bug Fixes
+
+* add declare module to typings ([#68](https://github.com/calebdwilliams/adoptedStyleSheets/issues/68)) ([8f1e1cc](https://github.com/calebdwilliams/adoptedStyleSheets/commit/8f1e1ccde2af4102388e32e1c41c6dee0b249bc8))
+
 ### [2.4.6](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.5...v2.4.6) (2020-12-29)
 
 
