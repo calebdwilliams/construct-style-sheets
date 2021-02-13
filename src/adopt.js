@@ -55,7 +55,7 @@ export function adoptStyleSheets(location) {
 
   // Since we already removed all elements during appending them to the
   // document fragment, we can just re-add them again.
-  location.insertBefore(newStyles, location.firstChild);
+  location.insertBefore(newStyles, location.lastChild);
 
   // We need to apply all actions we have done with the original CSSStyleSheet
   // to each new style element and to any other element that missed last
