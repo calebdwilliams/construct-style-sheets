@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.11](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.9...v2.4.11) (2021-02-13)
+
+
+### Bug Fixes
+
+* on adopt insert after last child ([c7083ad](https://github.com/calebdwilliams/adoptedStyleSheets/commit/c7083ade7cb5862238dbc1243c5be51f7e72b275))
+
+### [2.4.10](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.9...v2.4.10) (2021-02-13)
+
+
+### Bug Fixes
+
+* on adopt insert after last child ([c7083ad](https://github.com/calebdwilliams/adoptedStyleSheets/commit/c7083ade7cb5862238dbc1243c5be51f7e72b275))
+
 ### [2.4.9](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.6...v2.4.9) (2021-02-07)
 
 
