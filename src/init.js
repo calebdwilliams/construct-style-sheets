@@ -3,6 +3,7 @@ import {updatePrototype} from './ConstructStyleSheet';
 import {createObserver} from './observer';
 import {
   adoptedSheetsRegistry,
+  deferredAdopters,
   deferredDocumentStyleElements,
   deferredStyleSheets,
   frame,
@@ -50,6 +51,13 @@ export function initPolyfill() {
 
   document.body.insertBefore(fragment, document.body.firstChild);
 
+  for (let i = 0, len = deferredAdopters.length; i < len; i++) {
+    adoptStyleSheets(deferredAdopters[i]);
+  }
+
+  // Clear out the deferredAdopters array.
+  deferredAdopters.length = 0;
+
   // Clear out the deferredStyleSheets array.
   deferredStyleSheets.length = 0;
 
@@ -86,16 +94,19 @@ export function initAdoptedStyleSheets() {
           ? location.isConnected
           : document.body.contains(location);
 
-      // Request an animation frame to let nodes connect to the DOM
-      // before attempting to adopt the stylesheet(s)
-      window.requestAnimationFrame(() => {
-        // Element can adopt style sheets only when it is connected
-        if (isConnected) {
+      // Element can adopt style sheets only when it is connected
+      if (isConnected) {
+        // Request an animation frame to let nodes connect to the DOM
+        // before attempting to adopt the stylesheet(s)
+        window.requestAnimationFrame(() => {
           adoptStyleSheets(location);
           // Remove all the sheets the received array does not include.
           removeExcludedStyleSheets(location, oldSheets);
-        }
-      });
+        });
+      } else {
+        // Element is not connected so the stylesheet must be adopted later
+        deferredAdopters.push(location);
+      }
     },
   };
 
