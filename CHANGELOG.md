@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.16](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.15...v2.4.16) (2021-02-14)
+
+
+### Bug Fixes
+
+* add support for closed shadow roots ([82ab33b](https://github.com/calebdwilliams/adoptedStyleSheets/commit/82ab33b8eaf5baf60ce5939cadf442cf3ad70e88))
+
 ### [2.4.15](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.14...v2.4.15) (2021-02-14)
 
 ### [2.4.14](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.11...v2.4.14) (2021-02-14)
