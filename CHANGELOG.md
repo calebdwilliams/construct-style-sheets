@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.14](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.11...v2.4.14) (2021-02-14)
+
+
+### Bug Fixes
+
+* apply styles to element created during document loading ([#70](https://github.com/calebdwilliams/adoptedStyleSheets/issues/70)) ([35b0236](https://github.com/calebdwilliams/adoptedStyleSheets/commit/35b02365de1b86ea2df4ff109254ef18174b4651)), closes [#67](https://github.com/calebdwilliams/adoptedStyleSheets/issues/67)
+
+### [2.4.13](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.11...v2.4.13) (2021-02-14)
+
+
+### Bug Fixes
+
+* apply styles to element created during document loading ([#70](https://github.com/calebdwilliams/adoptedStyleSheets/issues/70)) ([35b0236](https://github.com/calebdwilliams/adoptedStyleSheets/commit/35b02365de1b86ea2df4ff109254ef18174b4651)), closes [#67](https://github.com/calebdwilliams/adoptedStyleSheets/issues/67)
+
+### [2.4.12](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.11...v2.4.12) (2021-02-14)
+
+
+### Bug Fixes
+
+* apply styles to element created during document loading ([#70](https://github.com/calebdwilliams/adoptedStyleSheets/issues/70)) ([35b0236](https://github.com/calebdwilliams/adoptedStyleSheets/commit/35b02365de1b86ea2df4ff109254ef18174b4651)), closes [#67](https://github.com/calebdwilliams/adoptedStyleSheets/issues/67)
+
 ### [2.4.11](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.9...v2.4.11) (2021-02-13)
 
 
