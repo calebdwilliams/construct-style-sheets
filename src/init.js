@@ -8,6 +8,7 @@ import {
   deferredStyleSheets,
   frame,
   hasShadyCss,
+  shadowRootMap,
   state,
 } from './shared';
 import {checkAndPrepare, isDocumentLoading} from './utils';
@@ -125,6 +126,7 @@ export function initAdoptedStyleSheets() {
       // In case we have ShadowDOM emulation, we have to use element itself
       // instead of the ShadowRoot
       const location = hasShadyCss ? this : attachShadow.apply(this, arguments);
+      shadowRootMap.set(this, location);
       createObserver(location);
 
       return location;

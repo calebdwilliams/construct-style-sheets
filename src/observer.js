@@ -1,11 +1,11 @@
 import {adoptStyleSheets} from './adopt';
-import {hasShadyCss, locationRegistry, observerRegistry} from './shared';
+import {hasShadyCss, locationRegistry, observerRegistry, shadowRootMap} from './shared';
 
 function adoptAndRestoreStylesOnMutationCallback(mutations) {
   if (!document) {
     return;
   }
-  
+
   for (let i = 0, len = mutations.length; i < len; i++) {
     const {addedNodes, removedNodes} = mutations[i];
 
@@ -30,10 +30,13 @@ function adoptAndRestoreStylesOnMutationCallback(mutations) {
         const iter = document.createNodeIterator(
           addedNodes[i],
           NodeFilter.SHOW_ELEMENT,
-          node =>
-            node.shadowRoot && node.shadowRoot.adoptedStyleSheets.length > 0
+          node => {
+            const shadowRoot = shadowRootMap.get(node);
+
+            return shadowRoot && shadowRoot.adoptedStyleSheets.length > 0
               ? NodeFilter.FILTER_ACCEPT
-              : NodeFilter.FILTER_REJECT,
+              : NodeFilter.FILTER_REJECT;
+          },
           // IE createNodeIterator method accepts 5 args
           null,
           false,
@@ -42,7 +45,7 @@ function adoptAndRestoreStylesOnMutationCallback(mutations) {
         let node;
 
         while ((node = iter.nextNode())) {
-          adoptStyleSheets(node.shadowRoot);
+          adoptStyleSheets(shadowRootMap.get(node));
         }
       }
     }

@@ -24,6 +24,12 @@ export const sheetMetadataRegistry = new WeakMap();
 // location).
 export const locationRegistry = new WeakMap();
 
+/**
+ * Save a reference to all shadow roots created
+ * @type {WeakMap<Element, ShadowRoot>}
+ */
+export const shadowRootMap = new WeakMap();
+
 // MutationObserver of the specific location.
 export const observerRegistry = new WeakMap();
 

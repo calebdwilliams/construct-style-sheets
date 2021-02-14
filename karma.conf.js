@@ -48,6 +48,7 @@ module.exports = config => {
       {pattern: 'src/index.js', watched: false},
       {pattern: 'test/init-while-loading.js', watched: false},
       {pattern: 'test/polyfill.test.js', watched: false},
+      {pattern: 'test/closed-root.test.js', watched: false}
     ],
 
     // list of files / patterns to exclude
