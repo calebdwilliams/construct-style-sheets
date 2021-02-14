@@ -47,6 +47,11 @@ describe('Constructible Style Sheets polyfill', () => {
       expect(style.sheet instanceof CSSStyleSheet).toBeTruthy();
     });
 
+    it('applies to elements created during polyfill loading', () => {
+      const host = document.querySelector('#added-while-loading');
+      const span = host.shadowRoot.querySelector('span');
+      expect(getComputedStyle(span).color).toBe('rgb(0, 0, 255)');
+    });
     describe('illegal invocation', () => {
       const REG_ILLEGAL = /Illegal invocation/i;
 
