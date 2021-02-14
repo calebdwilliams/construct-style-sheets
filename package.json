@@ -1,6 +1,6 @@
 {
   "name": "construct-style-sheets-polyfill",
-  "version": "2.4.14",
+  "version": "2.4.15",
   "description": "Constructible style sheets/adopted style sheets polyfill",
   "main": "dist/adoptedStyleSheets.js",
   "module": "dist/adoptedStyleSheets.js",
