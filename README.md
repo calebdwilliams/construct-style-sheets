@@ -1,6 +1,6 @@
 # Constructible style sheets polyfill
 
-[![CI Status](https://github.com/calebdwilliams/construct-style-sheets/workflows/CI/badge.svg)](https://github.com/calebdwilliams/construct-style-sheets/actions)
+[![CI](https://github.com/calebdwilliams/construct-style-sheets/actions/workflows/ci/badge.svg)](https://github.com/calebdwilliams/construct-style-sheets/actions)
 [![npm version](https://img.shields.io/npm/v/construct-style-sheets-polyfill.svg?style=flat)](https://npmjs.org/package/construct-style-sheets-polyfill 'View this project on npm')
 [![codecov](https://codecov.io/gh/calebdwilliams/construct-style-sheets/branch/master/graph/badge.svg)](https://codecov.io/gh/calebdwilliams/construct-style-sheets)
 
