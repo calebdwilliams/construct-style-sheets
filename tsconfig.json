@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "lib": [
       "dom",
       "es2018"
@@ -13,7 +14,7 @@
   },
   "include": [
     "dist/**/*.ts",
-    "src/**/*.ts",
+    "src/**/*.{ts,js}",
     "test/**/*.ts"
   ],
   "exclude": [
