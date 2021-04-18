@@ -2,22 +2,22 @@ import {closedShadowRootRegistry} from './shared';
 
 export var defineProperty = Object.defineProperty;
 
-var importPattern = /@import(?:.+?);/g;
+var importPattern = /@import(?:.+?);?$/gm;
 
 /**
  * @param {string} contents
  * @returns {string}
  */
-export function rejectImports(contents = '') {
-  var sheetContent = contents.replace(importPattern, '');
+export function rejectImports(contents) {
+  var _contents = contents.replace(importPattern, '');
 
-  if (sheetContent !== contents) {
+  if (_contents !== contents) {
     console.warn(
       '@import rules are not allowed here. See https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418',
     );
   }
 
-  return sheetContent.trim();
+  return _contents.trim();
 }
 
 /**

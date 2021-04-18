@@ -8,7 +8,10 @@ import {closedShadowRootRegistry} from './shared';
 window.CSSStyleSheet = ConstructedStyleSheet;
 
 attachAdoptedStyleSheetProperty(Document);
-attachAdoptedStyleSheetProperty(ShadowRoot);
+
+if ('ShadowRoot' in window) {
+  attachAdoptedStyleSheetProperty(ShadowRoot);
+}
 
 if (typeof ShadowRoot !== 'undefined') {
   var proto = Element.prototype;
@@ -20,6 +23,8 @@ if (typeof ShadowRoot !== 'undefined') {
     if (init.mode === 'closed') {
       closedShadowRootRegistry.set(this, root);
     }
+
+    return root;
   };
 }
 

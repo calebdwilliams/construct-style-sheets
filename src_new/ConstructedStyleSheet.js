@@ -68,14 +68,14 @@ export function isNonConstructedStyleSheetInstance(instance) {
  *
  * @type {WeakMap<ConstructedStyleSheet, CSSStyleSheet>}
  */
-var basicStyleSheet = new WeakMap();
+var $basicStyleSheet = new WeakMap();
 
 /**
  * Contains all locations associated with the current ConstructedStyleSheet.
  *
  * @type {WeakMap<ConstructedStyleSheet, Location[]>}
  */
-var locations = new WeakMap();
+var $locations = new WeakMap();
 
 /**
  * Adopter is a `<style>` element that belongs to the document or a custom
@@ -85,7 +85,7 @@ var locations = new WeakMap();
  *
  * @type {WeakMap<ConstructedStyleSheet, WeakMap<Location, HTMLStyleElement>>}
  */
-var adoptersByLocation = new WeakMap();
+var $adoptersByLocation = new WeakMap();
 
 /*
  * Package-level control functions
@@ -98,8 +98,8 @@ var adoptersByLocation = new WeakMap();
  */
 export function addAdopterLocation(sheet, location) {
   var adopter = document.createElement('style');
-  adoptersByLocation.get(sheet).set(location, adopter);
-  locations.get(sheet).push(location);
+  $adoptersByLocation.get(sheet).set(location, adopter);
+  $locations.get(sheet).push(location);
 
   return adopter;
 }
@@ -110,7 +110,7 @@ export function addAdopterLocation(sheet, location) {
  * @return {HTMLStyleElement|undefined}
  */
 export function getAdopterByLocation(sheet, location) {
-  return adoptersByLocation.get(sheet).get(location);
+  return $adoptersByLocation.get(sheet).get(location);
 }
 
 /**
@@ -118,10 +118,10 @@ export function getAdopterByLocation(sheet, location) {
  * @param {Location} location
  */
 export function removeAdopterLocation(sheet, location) {
-  adoptersByLocation.get(sheet).delete(location);
-  locations.set(
-    this,
-    locations.get(sheet).filter(function(_location) {
+  $adoptersByLocation.get(sheet).delete(location);
+  $locations.set(
+    sheet,
+    $locations.get(sheet).filter(function(_location) {
       return _location !== location;
     }),
   );
@@ -137,7 +137,7 @@ export function removeAdopterLocation(sheet, location) {
  */
 export function restyleAdopter(sheet, adopter) {
   clearRules(adopter.sheet);
-  insertAllRules(basicStyleSheet.get(sheet), adopter.sheet);
+  insertAllRules($basicStyleSheet.get(sheet), adopter.sheet);
 }
 
 /*
@@ -145,31 +145,12 @@ export function restyleAdopter(sheet, adopter) {
  */
 
 /**
- * This method clears all stylesheet rules for all adopters and replaces them
- * with rules from the basic stylesheet.
- */
-function restyleAdopters(sheet) {
-  var basic = basicStyleSheet.get(sheet);
-  var adopterRegistry = adoptersByLocation.get(sheet);
-  var _locations = locations.get(sheet);
-
-  _locations.forEach(function(location) {
-    var adopter = adopterRegistry.get(location);
-
-    if (adopter.sheet) {
-      clearRules(adopter.sheet);
-      insertAllRules(basic, adopter.sheet);
-    }
-  });
-}
-
-/**
  * This method checks if the method of the class is called correctly using the
  * CSSStyleSheet instance. It is necessary to be sure that all private
  * properties are initialized.
  */
-function checkInvocationCorrectness(sheet) {
-  if (!basicStyleSheet.has(sheet)) {
+function checkInvocationCorrectness(self) {
+  if (!$basicStyleSheet.has(self)) {
     throw new TypeError('Illegal invocation');
   }
 }
@@ -183,9 +164,9 @@ function ConstructedStyleSheet() {
   bootstrapper.body.appendChild(style);
 
   // Init private properties
-  basicStyleSheet.set(this, style.sheet);
-  locations.set(this, []);
-  adoptersByLocation.set(this, new WeakMap());
+  $basicStyleSheet.set(this, style.sheet);
+  $locations.set(this, []);
+  $adoptersByLocation.set(this, new WeakMap());
 }
 
 var proto = ConstructedStyleSheet.prototype;
@@ -197,29 +178,38 @@ var proto = ConstructedStyleSheet.prototype;
  */
 proto.replace = function replace(contents) {
   try {
-    return Promise.resolve(this.replaceSync(contents));
+    this.replaceSync(contents);
+
+    return Promise.resolve(this);
   } catch (e) {
     return Promise.reject(e);
   }
 };
 
 /**
- *
+ * @this {ConstructedStyleSheet}
  * @param {string} contents
- * @returns {CSSStyleSheet}
  */
 proto.replaceSync = function replaceSync(contents) {
   // CSSStyleSheet.prototype.replaceSync('body {}')
   checkInvocationCorrectness(this);
 
-  var sanitized = rejectImports(contents);
-  var basic = basicStyleSheet.get(this);
-  clearRules(basic);
-  basic.insertRule(sanitized);
+  if (typeof contents === 'string') {
+    var self = this;
+    var basic = $basicStyleSheet.get(self);
+    var sanitized = rejectImports(contents);
+    clearRules(basic);
 
-  restyleAdopters(this);
+    if (sanitized) {
+      basic.insertRule(sanitized);
+    }
 
-  return this;
+    $locations.get(self).forEach(function(location) {
+      if (location.isConnected()) {
+        restyleAdopter(self, getAdopterByLocation(self, location));
+      }
+    });
+  }
 };
 
 defineProperty(proto, 'cssRules', {
@@ -229,24 +219,26 @@ defineProperty(proto, 'cssRules', {
     // CSSStyleSheet.prototype.cssRules;
     checkInvocationCorrectness(this);
 
-    return basicStyleSheet.get(this).cssRules;
+    return $basicStyleSheet.get(this).cssRules;
   },
 });
 
 cssStyleSheetMethods.forEach(function(method) {
   proto[method] = function() {
-    checkInvocationCorrectness(this);
+    var self = this;
+    checkInvocationCorrectness(self);
 
     var args = arguments;
-    var basic = basicStyleSheet.get(this);
-    var adopterRegistry = adoptersByLocation.get(this);
-    var _locations = locations.get(this);
+    var basic = $basicStyleSheet.get(self);
+    var locations = $locations.get(self);
 
     var result = basic[method].apply(basic, args);
 
-    _locations.forEach(function(location) {
-      var adopter = adopterRegistry.get(location);
-      adopter.sheet[method].apply(adopter.sheet, args);
+    locations.forEach(function(location) {
+      if (location.isConnected()) {
+        var sheet = getAdopterByLocation(self, location).sheet;
+        sheet[method].apply(sheet, args);
+      }
     });
 
     return result;

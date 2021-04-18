@@ -38,17 +38,16 @@ module.exports = config => {
     frameworks: ['jasmine', 'detectBrowsers'],
     client: {
       jasmine: {
-        random: false
-      }
+        random: false,
+      },
     },
 
     // list of files / patterns to load in the browser
     files: [
       {pattern: 'test/polyfills.js', watched: false},
-      {pattern: 'src/index.js', watched: false},
+      {pattern: 'src_new/index.js', watched: false},
       {pattern: 'test/init-while-loading.js', watched: false},
       {pattern: 'test/polyfill.test.js', watched: false},
-      {pattern: 'test/closed-root.test.js', watched: false}
     ],
 
     // list of files / patterns to exclude
@@ -58,7 +57,7 @@ module.exports = config => {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       'test/polyfills.js': ['rollup'],
-      'src/index.js': ['sourceRollup'],
+      'src_new/index.js': ['sourceRollup'],
       'test/polyfill.test.js': ['rollup'],
     },
 
@@ -101,8 +100,15 @@ module.exports = config => {
       usePhantomJS: false,
       preferHeadless: true,
       postDetection(availableBrowsers) {
-        return availableBrowsers.filter(browser => browser !== 'SafariTechPreview');
-      }
+        return availableBrowsers.filter(
+          browser =>
+            browser !== 'SafariTechPreview' &&
+            browser !== 'Edge' &&
+            browser !== 'IE',
+          // !browser.includes('Firefox') &&
+          // !browser.includes('Chrome'),
+        );
+      },
     },
 
     rollupPreprocessor: {

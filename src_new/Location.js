@@ -44,27 +44,6 @@ export function getAssociatedLocation(element) {
 }
 
 /**
- * @param {Node} node
- * @return {NodeIterator}
- */
-function createWebComponentIterator(node) {
-  return document.createNodeIterator(
-    node,
-    NodeFilter.SHOW_ELEMENT,
-    function(foundNode) {
-      var root = getShadowRoot(foundNode);
-
-      return root && root.adoptedStyleSheets.length > 0
-        ? NodeFilter.FILTER_ACCEPT
-        : NodeFilter.FILTER_REJECT;
-    },
-    // IE createNodeIterator method accepts 5 args
-    null,
-    false,
-  );
-}
-
-/**
  *
  * @param {typeof Document|typeof ShadowRoot} constructor
  * @return {ReadonlyArray<ConstructedStyleSheet>}
@@ -87,21 +66,132 @@ export function attachAdoptedStyleSheetProperty(constructor) {
 }
 
 /**
+ * @param {Node} node
+ * @param {function(node: ShadowRoot): void} callback
+ * @return {NodeIterator}
+ */
+function traverseWebComponents(node, callback) {
+  var iter = document.createNodeIterator(
+    node,
+    NodeFilter.SHOW_ELEMENT,
+    function(foundNode) {
+      return getShadowRoot(foundNode)
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT;
+    },
+    // IE createNodeIterator method accepts 5 args
+    null,
+    false,
+  );
+
+  for (var next; (next = iter.nextNode()); ) {
+    callback(getShadowRoot(next));
+  }
+}
+
+/*
+ * Private properties
+ */
+
+/**
+ * A root element (either ShadowRoot or Document) that has the
+ * `adoptedStyleSheets` property set.
+ *
+ * @type {WeakMap<Location, ShadowRoot|Document>}
+ */
+var $element = new WeakMap();
+
+/**
+ * A result of [...new Set(...this.sheets)] operation.
+ *
+ * @type {WeakMap<Location, ReadonlyArray<ConstructedStyleSheet>>}
+ * @private
+ */
+var $uniqueSheets = new WeakMap();
+
+/**
+ * An observer that adds and restores `<style>` adopters to the location
+ * element. It also runs a `connect` for a location associated with the added
+ * element, and a `disconnect` function for a location of removed element.
+ *
+ * @type {WeakMap<Location, MutationObserver>}
+ */
+var $observer = new WeakMap();
+
+/*
+ * Private methods
+ */
+/**
+ * Checks if the element is an adopter that presents in the current set of
+ * constructed style sheets.
+ *
+ * @param {Location} self
+ * @param {Node} element
+ * @return {boolean}
+ */
+function isExistingAdopter(self, element) {
+  return (
+    element instanceof HTMLStyleElement &&
+    $uniqueSheets.get(self).some(function(sheet) {
+      return getAdopterByLocation(sheet, self);
+    })
+  );
+}
+
+/**
+ * Gets an element that serves as a container for `<style>` adopters. For
+ * Document, it is `document.body`, for ShadowRoot - the ShadowRoot itself.
+ *
+ * @param {Location} self
+ */
+function getAdopterContainer(self) {
+  var element = $element.get(self);
+
+  return element instanceof Document ? element.body : element;
+}
+
+/**
+ * Runs the adoption algorithm: re-adds all the `<style>` adopters to the
+ * location.
+ *
+ * @param {Location} self
+ */
+function adopt(self) {
+  var styleList = document.createDocumentFragment();
+  var sheets = $uniqueSheets.get(self);
+  var observer = $observer.get(self);
+  var container = getAdopterContainer(self);
+
+  // The operation of adding a `<style>` element to document fragment removes
+  // that element from the location, so we need to pause watching when it
+  // happens to avoid calling observer callback.
+  observer.disconnect();
+
+  sheets.forEach(function(sheet) {
+    styleList.appendChild(
+      getAdopterByLocation(sheet, self) || addAdopterLocation(sheet, self),
+    );
+  });
+
+  // Inserting in the end of the location
+  container.insertBefore(styleList, null);
+
+  observer.observe(container, defaultObserverOptions);
+
+  // Now we have all the sheets of `<style>` elements available (because
+  // `adopt` is not supposed to run while location is disconnected).
+  sheets.forEach(function(sheet) {
+    restyleAdopter(sheet, getAdopterByLocation(sheet, self));
+  });
+}
+
+/**
  * @constructor
  * @param {ShadowRoot|Document} element
  * @private
  */
 function Location(element) {
-  var _this = this;
-
-  /**
-   * A root element (either ShadowRoot or Document) that has the
-   * `adoptedStyleSheets` property set.
-   *
-   * @type {ShadowRoot|Document}
-   * @private
-   */
-  _this._element = element;
+  var self = this;
 
   /**
    * A list of constructable style sheets added to the current location via
@@ -109,59 +199,58 @@ function Location(element) {
    *
    * @type {ReadonlyArray<ConstructedStyleSheet>}
    */
-  _this.sheets = [];
+  self.sheets = [];
+  self.element = element;
 
-  /**
-   * A result of [...new Set(...this.sheets)] operation.
-   *
-   * @type {ReadonlyArray<ConstructedStyleSheet>}
-   * @private
-   */
-  _this._uniqueSheets = [];
-
-  /**
-   * An observer that adds and restores `<style>` adopters to the location
-   * element. It also runs a `connect` for a location associated with the added
-   * element, and a `disconnect` function for a location of removed element.
-   *
-   * @type {MutationObserver}
-   * @private
-   */
-  _this._observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (!hasShadyCss) {
-        // When the new custom element is added to the observing location, we
-        // need to adopt its style sheets. However, since any added node may
-        // contain deeply nested custom elements we need to explore the whole
-        // tree.
-        mutation.addedNodes.forEach(function(node) {
-          var iter = createWebComponentIterator(node);
-
-          for (var next; (next = iter.nextNode()); ) {
-            getAssociatedLocation(next).connect();
-          }
-        });
+  // Initialize private properties
+  $element.set(self, element);
+  $uniqueSheets.set(self, []);
+  $observer.set(
+    self,
+    new MutationObserver(function(mutations, observer) {
+      // Workaround for https://github.com/calebdwilliams/construct-style-sheets/pull/63
+      if (!document) {
+        observer.disconnect();
+        return;
       }
 
-      // When any `<style>` adopter is removed, we need to re-adopt all the
-      // styles because otherwise we can break the order of appended styles
-      // which affects the rules overriding.
-      mutation.removedNodes.forEach(function(node) {
-        if (_this._isExistingAdopter(node)) {
-          _this._adopt();
+      mutations.forEach(function(mutation) {
+        if (!hasShadyCss) {
+          // When the new custom element is added to the observing location, we
+          // need to adopt its style sheets. However, since any added node may
+          // contain deeply nested custom elements we need to explore the whole
+          // tree.
+          // NOTE: `mutation.addedNodes` is not an array; that's why for loop is
+          // used.
+          for (var i = 0; i < mutation.addedNodes.length; i++) {
+            traverseWebComponents(mutation.addedNodes[i], function(root) {
+              getAssociatedLocation(root).connect();
+            });
+          }
         }
 
-        // We have to stop observers for disconnected nodes.
-        if (!hasShadyCss) {
-          var iter = createWebComponentIterator(node);
+        // When any `<style>` adopter is removed, we need to re-adopt all the
+        // styles because otherwise we can break the order of appended styles
+        // which affects the rules overriding.
+        // NOTE: `mutation.removedNodes` is not an array; that's why for loop is
+        // used.
+        for (i = 0; i < mutation.removedNodes.length; i++) {
+          var node = mutation.removedNodes[i];
 
-          for (var next; (next = iter.nextNode()); ) {
-            getAssociatedLocation(next).disconnect();
+          if (isExistingAdopter(self, node)) {
+            adopt(self);
+          }
+
+          // We have to stop observers for disconnected nodes.
+          if (!hasShadyCss) {
+            traverseWebComponents(node, function(root) {
+              getAssociatedLocation(root).disconnect();
+            });
           }
         }
       });
-    });
-  });
+    }),
+  );
 }
 
 var proto = Location.prototype;
@@ -172,9 +261,11 @@ var proto = Location.prototype;
  * @returns {boolean}
  */
 proto.isConnected = function isConnected() {
-  return this._element instanceof Document
-    ? this._element.readyState !== 'loading'
-    : isElementConnected(this._element.activeElement);
+  var element = $element.get(this);
+
+  return element instanceof Document
+    ? element.readyState !== 'loading'
+    : isElementConnected(element.host);
 };
 
 /**
@@ -182,7 +273,17 @@ proto.isConnected = function isConnected() {
  * connected to the DOM.
  */
 proto.connect = function connect() {
-  this._adopt();
+  var container = getAdopterContainer(this);
+
+  $observer.get(this).observe(container, defaultObserverOptions);
+
+  if ($uniqueSheets.get(this).length > 0) {
+    adopt(this);
+  }
+
+  traverseWebComponents(container, function(root) {
+    getAssociatedLocation(root).connect();
+  });
 };
 
 /**
@@ -190,7 +291,7 @@ proto.connect = function connect() {
  * disconnected from the DOM.
  */
 proto.disconnect = function disconnect() {
-  this._observer.disconnect();
+  $observer.get(this).disconnect();
 };
 
 /**
@@ -200,8 +301,9 @@ proto.disconnect = function disconnect() {
  * @param {ReadonlyArray<ConstructedStyleSheet>} sheets
  */
 proto.update = function update(sheets) {
-  var _this = this;
-  var locationType = _this._element === document ? 'Document' : 'ShadowRoot';
+  var self = this;
+  var locationType =
+    $element.get(self) === document ? 'Document' : 'ShadowRoot';
 
   if (!Array.isArray(sheets)) {
     // document.adoptedStyleSheets = new CSSStyleSheet();
@@ -224,7 +326,8 @@ proto.update = function update(sheets) {
     );
   }
 
-  var oldUniqueSheets = _this._uniqueSheets;
+  self.sheets = sheets;
+  var oldUniqueSheets = $uniqueSheets.get(self);
   var uniqueSheets = unique(sheets);
 
   // Style sheets that existed in the old sheet list but was excluded in the
@@ -232,69 +335,15 @@ proto.update = function update(sheets) {
   var removedSheets = diff(oldUniqueSheets, uniqueSheets);
 
   removedSheets.forEach(function(sheet) {
-    removeNode(getAdopterByLocation(sheet, _this));
-    removeAdopterLocation(sheet, _this);
+    removeNode(getAdopterByLocation(sheet, self));
+    removeAdopterLocation(sheet, self);
   });
 
-  _this._uniqueSheets = uniqueSheets;
+  $uniqueSheets.set(self, uniqueSheets);
 
-  if (_this.isConnected()) {
-    _this._adopt();
+  if (self.isConnected() && uniqueSheets.length > 0) {
+    adopt(self);
   }
-};
-
-/**
- * Runs the adoption algorithm: re-adds all the `<style>` adopters to the
- * location.
- */
-proto._adopt = function _adopt() {
-  var _this = this;
-  var styleList = document.createDocumentFragment();
-  var sheets = _this._uniqueSheets;
-  var observer = _this._observer;
-  var element =
-    _this._element instanceof Document ? document.body : _this._element;
-
-  // The operation of adding a `<style>` element to document fragment removes
-  // that element from the location, so we need to pause watching when it
-  // happens to avoid calling observer callback.
-  observer.disconnect();
-
-  sheets.forEach(function(sheet) {
-    styleList.appendChild(
-      getAdopterByLocation(sheet, _this) || addAdopterLocation(sheet, _this),
-    );
-  });
-
-  // Inserting in the end of the location
-  element.insertBefore(styleList, null);
-
-  observer.observe(element, defaultObserverOptions);
-
-  // Now we have all the sheets of `<style>` elements available (because
-  // `_adopt` is not supposed to run while location is disconnected).
-  sheets.forEach(function(sheet) {
-    restyleAdopter(sheet, getAdopterByLocation(sheet, _this));
-  });
-};
-
-/**
- * Checks if the element is an adopter that presents in the current set of
- * constructed style sheets.
- *
- * @param {Node} element
- * @return {boolean}
- * @private
- */
-proto._isExistingAdopter = function _isExistingAdopter(element) {
-  var _this = this;
-
-  return (
-    element instanceof HTMLStyleElement &&
-    this._uniqueSheets.some(function(sheet) {
-      return getAdopterByLocation(sheet, _this);
-    })
-  );
 };
 
 export default Location;
