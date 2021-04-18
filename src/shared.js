@@ -1,54 +1,26 @@
-// Even if the polyfill does not support ShadyCSS, it should be detected in
-// order to avoid errors of parallel usage.
-export const hasShadyCss =
-  'ShadyCSS' in window && !window.ShadyCSS.nativeShadow;
-
-// Style elements that will be attached to the head
-// that need to be moved to the iframe
-export const deferredStyleSheets = [];
-
-// Style elements adopted by document that should be moved
-// to document.body when the document is fully loaded.
-export const deferredDocumentStyleElements = [];
-
-// Shadow roots that have adopted styles before the polyfill was initialized
-export const deferredAdopters = [];
-
-// Adopted stylesheets of specific location (ShadowRoot or Document).
-export const adoptedSheetsRegistry = new WeakMap();
-
-// Metadata of specific stylesheet.
-export const sheetMetadataRegistry = new WeakMap();
-
-// Location of the specific adopter (HTMLStyleElement that stylizes this
-// location).
-export const locationRegistry = new WeakMap();
+/**
+ * Even if the polyfill does not support ShadyCSS, it should be detected in
+ * order to avoid errors of parallel usage.
+ * @type {boolean}
+ */
+export var hasShadyCss = 'ShadyCSS' in window && !window.ShadyCSS.nativeShadow;
 
 /**
- * Save a reference to all shadow roots created
+ * The in-memory HTMLDocument that is necessary to get the internal
+ * CSSStyleSheet of a basic `<style>` element.
+ * @type {Document}
+ */
+export var bootstrapper = document.implementation.createHTMLDocument('boot');
+
+/**
+ * Since ShadowRoots with the closed mode are not available via
+ * element.shadowRoot, we need to preserve their roots in the registry to get
+ * an ability to support their constructed style sheets as well.
+ *
  * @type {WeakMap<Element, ShadowRoot>}
  */
-export const shadowRootMap = new WeakMap();
+export var closedShadowRootRegistry = new WeakMap();
 
-// MutationObserver of the specific location.
-export const observerRegistry = new WeakMap();
-
-// The cursor that points at the latest applied action (CSSStyleSheet method)
-// for the specific style element.
-export const appliedActionsCursorRegistry = new WeakMap();
-
-export const state = {
-  // Can we rely on document.body
-  loaded: false,
-};
-
-export const frame = {
-  // Polyfill-level reference to the iframe body
-  body: null,
-
-  // Reference to a iframe CSSStyleSheet class. In IE and Edge it is different
-  // from the main window class.
-  CSSStyleSheet: null,
-};
-
-export const OldCSSStyleSheet = CSSStyleSheet;
+// Workaround for IE that does not support the DOMException constructor
+export var _DOMException =
+  typeof DOMException === 'object' ? Error : DOMException;

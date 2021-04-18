@@ -68,7 +68,6 @@ export function attachAdoptedStyleSheetProperty(constructor) {
 /**
  * @param {Node} node
  * @param {function(node: ShadowRoot): void} callback
- * @return {NodeIterator}
  */
 function traverseWebComponents(node, callback) {
   var iter = document.createNodeIterator(
@@ -223,7 +222,13 @@ function Location(element) {
           // NOTE: `mutation.addedNodes` is not an array; that's why for loop is
           // used.
           for (var i = 0; i < mutation.addedNodes.length; i++) {
-            traverseWebComponents(mutation.addedNodes[i], function(root) {
+            var node = mutation.addedNodes[i];
+
+            if (!(node instanceof Element)) {
+              continue;
+            }
+
+            traverseWebComponents(node, function(root) {
               getAssociatedLocation(root).connect();
             });
           }
@@ -235,7 +240,11 @@ function Location(element) {
         // NOTE: `mutation.removedNodes` is not an array; that's why for loop is
         // used.
         for (i = 0; i < mutation.removedNodes.length; i++) {
-          var node = mutation.removedNodes[i];
+          node = mutation.removedNodes[i];
+
+          if (!(node instanceof Element)) {
+            continue;
+          }
 
           if (isExistingAdopter(self, node)) {
             adopt(self);

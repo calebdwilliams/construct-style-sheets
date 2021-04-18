@@ -1,10 +1,11 @@
+const babel = require('rollup-plugin-babel');
 const cleanup = require('rollup-plugin-cleanup');
 const copy = require('rollup-plugin-copy');
 const nodeResolve = require('rollup-plugin-node-resolve');
 const injectCode = require('./plugins/rollup-plugin-inject-code');
 
 module.exports = {
-  input: 'src_new/index.js',
+  input: 'src/index.js',
   output: {
     file: 'dist/adoptedStyleSheets.js',
     format: 'iife',
@@ -12,6 +13,7 @@ module.exports = {
   },
   plugins: [
     nodeResolve(),
+    babel(),
     cleanup({
       comments: 'none',
     }),

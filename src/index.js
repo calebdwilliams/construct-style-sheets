@@ -1,16 +1,38 @@
-import ConstructStyleSheet, {updatePrototype} from './ConstructStyleSheet';
-import {initAdoptedStyleSheets, initPolyfill} from './init';
-import {OldCSSStyleSheet} from './shared';
-import {isDocumentLoading} from './utils';
+import ConstructedStyleSheet from './ConstructedStyleSheet';
+import {
+  attachAdoptedStyleSheetProperty,
+  getAssociatedLocation,
+} from './Location';
+import {closedShadowRootRegistry} from './shared';
 
-updatePrototype(OldCSSStyleSheet.prototype);
+window.CSSStyleSheet = ConstructedStyleSheet;
 
-window.CSSStyleSheet = ConstructStyleSheet;
+attachAdoptedStyleSheetProperty(Document);
 
-initAdoptedStyleSheets();
+if ('ShadowRoot' in window) {
+  attachAdoptedStyleSheetProperty(ShadowRoot);
 
-if (isDocumentLoading()) {
-  document.addEventListener('DOMContentLoaded', initPolyfill);
+  var proto = Element.prototype;
+  var attach = proto.attachShadow;
+
+  proto.attachShadow = function attachShadow(init) {
+    var root = attach.call(this, init);
+
+    if (init.mode === 'closed') {
+      closedShadowRootRegistry.set(this, root);
+    }
+
+    return root;
+  };
+}
+
+var documentLocation = getAssociatedLocation(document);
+
+if (documentLocation.isConnected()) {
+  documentLocation.connect();
 } else {
-  initPolyfill();
+  document.addEventListener(
+    'DOMContentLoaded',
+    documentLocation.connect.bind(documentLocation),
+  );
 }

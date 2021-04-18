@@ -101,12 +101,7 @@ module.exports = config => {
       preferHeadless: true,
       postDetection(availableBrowsers) {
         return availableBrowsers.filter(
-          browser =>
-            browser !== 'SafariTechPreview' &&
-            browser !== 'Edge' &&
-            browser !== 'IE',
-          // !browser.includes('Firefox') &&
-          // !browser.includes('Chrome'),
+          browser => browser !== 'SafariTechPreview' && browser !== 'Edge',
         );
       },
     },
@@ -154,7 +149,7 @@ module.exports = config => {
           ],
           output: {
             format: 'iife',
-            name: 'tests',
+            name: 'source',
           },
           treeshake: false,
         },

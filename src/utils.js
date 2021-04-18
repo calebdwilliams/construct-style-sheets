@@ -1,55 +1,94 @@
-import {adoptedSheetsRegistry} from './shared';
-import {instanceOfStyleSheet} from './ConstructStyleSheet';
+import {closedShadowRootRegistry} from './shared';
 
-const importPattern = /@import/;
+export var defineProperty = Object.defineProperty;
 
-export function checkAndPrepare(sheets, container) {
-  const locationType = container === document ? 'Document' : 'ShadowRoot';
+var importPattern = /@import(?:.+?);?$/gm;
 
-  if (!Array.isArray(sheets)) {
-    // document.adoptedStyleSheets = new CSSStyleSheet();
-    throw new TypeError(
-      `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Iterator getter is not callable.`,
-    );
-  }
+/**
+ * @param {string} contents
+ * @returns {string}
+ */
+export function rejectImports(contents) {
+  var _contents = contents.replace(importPattern, '');
 
-  if (!sheets.every(instanceOfStyleSheet)) {
-    // document.adoptedStyleSheets = [document.styleSheets[0]];
-    throw new TypeError(
-      `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Failed to convert value to 'CSSStyleSheet'`,
-    );
-  }
-
-  const uniqueSheets = sheets.filter(
-    (value, index) => sheets.indexOf(value) === index,
-  );
-  adoptedSheetsRegistry.set(container, uniqueSheets);
-
-  return uniqueSheets;
-}
-
-export function isDocumentLoading() {
-  return document.readyState === 'loading';
-}
-
-export function getAdoptedStyleSheet(location) {
-  return adoptedSheetsRegistry.get(
-    location.parentNode === document.documentElement
-      ? document
-      : location,
-  );
-}
-
-export function rejectImports(contents = '') {
-  const imports = contents.match(importPattern) || [];
-  let sheetContent = contents;
-  if (imports.length) {
+  if (_contents !== contents) {
     console.warn(
-      '@import rules are not allowed here. See https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418'
+      '@import rules are not allowed here. See https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418',
     );
-    imports.forEach(_import => {
-      sheetContent = sheetContent.replace(_import, '');
-    });
   }
-  return sheetContent;
+
+  return _contents.trim();
+}
+
+/**
+ * @param {CSSStyleSheet} sheet
+ */
+export function clearRules(sheet) {
+  while (sheet.cssRules.length > 0) {
+    sheet.deleteRule(0);
+  }
+}
+
+/**
+ * @param {CSSStyleSheet} from
+ * @param {CSSStyleSheet} to
+ */
+export function insertAllRules(from, to) {
+  for (var i = 0; i < from.cssRules.length; i++) {
+    to.insertRule(from.cssRules[i].cssText, i);
+  }
+}
+
+/**
+ * Cross-platform check for the element to be connected to the DOM
+ *
+ * @param {Element} element
+ */
+export function isElementConnected(element) {
+  // If the browser supports web components, it definitely supports
+  // isConnected. If not, we can just check if the document contains
+  // the current location.
+  return 'isConnected' in element
+    ? element.isConnected
+    : document.contains(element);
+}
+
+/**
+ * Emulates [...new Set(arr)] for older browsers.
+ *
+ * @template T
+ * @param {ReadonlyArray<T>} arr
+ * @return ReadonlyArray<T>
+ */
+export function unique(arr) {
+  return arr.filter(function(value, index) {
+    return arr.indexOf(value) === index;
+  });
+}
+
+/**
+ * @template T
+ * @param {ReadonlyArray<T>} arr1
+ * @param {ReadonlyArray<T>} arr2
+ * @return {ReadonlyArray<T>}
+ */
+export function diff(arr1, arr2) {
+  return arr1.filter(function(value) {
+    return arr2.indexOf(value) === -1;
+  });
+}
+
+/**
+ * @param {Node} node
+ */
+export function removeNode(node) {
+  node.parentNode.removeChild(node);
+}
+
+/**
+ * @param {Element} element
+ * @return {ShadowRoot|undefined}
+ */
+export function getShadowRoot(element) {
+  return element.shadowRoot || closedShadowRootRegistry.get(element);
 }

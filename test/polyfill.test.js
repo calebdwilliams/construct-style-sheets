@@ -1,6 +1,10 @@
 import {defineCE} from '@open-wc/testing-helpers/src/helpers';
 import {stringFixture as fixture} from '@open-wc/testing-helpers/src/stringFixture';
 
+// Workaround for IE that does not support the DOMException constructor
+export var _DOMException =
+  typeof DOMException === 'object' ? Error : DOMException;
+
 describe('Constructible Style Sheets polyfill', () => {
   describe('CSSStyleSheet object', () => {
     const importPatterns = [
@@ -108,7 +112,9 @@ describe('Constructible Style Sheets polyfill', () => {
         await expectAsync(
           globalStyle.sheet.replace('.only-test { color: blue; }'),
         ).toBeRejectedWith(
-          new Error("Can't call replace on non-constructed CSSStyleSheets."),
+          new _DOMException(
+            "Can't call replace on non-constructed CSSStyleSheets.",
+          ),
         );
       });
 
@@ -133,14 +139,13 @@ describe('Constructible Style Sheets polyfill', () => {
       });
 
       it('throws an error if it is called not from a CSSStyleSheet', () => {
-        try {
+        expect(() => {
           globalStyle.sheet.replaceSync('.only-test { color: blue; }');
-          expect(true).toBe(false); // should not hit this
-        } catch (error) {
-          expect(error.message).toContain(
-            "Can't call replaceSync on non-constructed CSSStyleSheets.",
-          );
-        }
+        }).toThrow(
+          new _DOMException(
+            "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
+          ),
+        );
       });
 
       it('removes @import statements', () => {

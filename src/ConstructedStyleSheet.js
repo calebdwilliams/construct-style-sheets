@@ -1,4 +1,4 @@
-import {bootstrapper} from './shared';
+import {_DOMException, bootstrapper} from './shared';
 import {
   clearRules,
   defineProperty,
@@ -22,13 +22,13 @@ var nonConstructedProto = NonConstructedStyleSheet.prototype;
 nonConstructedProto.replace = function() {
   // document.styleSheets[0].replace('body {}');
   return Promise.reject(
-    new DOMException("Can't call replace on non-constructed CSSStyleSheets."),
+    new _DOMException("Can't call replace on non-constructed CSSStyleSheets."),
   );
 };
 
 nonConstructedProto.replaceSync = function() {
   // document.styleSheets[0].replaceSync('body {}');
-  throw new DOMException(
+  throw new _DOMException(
     "Failed to execute 'replaceSync' on 'CSSStyleSheet': Can't call replaceSync on non-constructed CSSStyleSheets.",
   );
 };
@@ -201,7 +201,7 @@ proto.replaceSync = function replaceSync(contents) {
     clearRules(basic);
 
     if (sanitized) {
-      basic.insertRule(sanitized);
+      basic.insertRule(sanitized, 0);
     }
 
     $locations.get(self).forEach(function(location) {
@@ -249,7 +249,5 @@ defineProperty(ConstructedStyleSheet, Symbol.hasInstance, {
   configurable: true,
   value: isCSSStyleSheetInstance,
 });
-
-window.CSSStyleSheet = ConstructedStyleSheet;
 
 export default ConstructedStyleSheet;
