@@ -1,8 +1,8 @@
 declare module 'construct-style-sheets-polyfill';
 
 interface CSSStyleSheet {
-  replace(text: string): Promise<CSSStyleSheet>;
-  replaceSync(text: string): void;
+  replace(contents: string): Promise<CSSStyleSheet>;
+  replaceSync(contents: string): void;
 }
 
 interface Document {

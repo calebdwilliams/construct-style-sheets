@@ -5,6 +5,8 @@ import {
 } from './Location';
 import {closedShadowRootRegistry} from './shared';
 
+// @ts-expect-error: we need to replace the default CSSStyleSheet class with
+// the emulation.
 window.CSSStyleSheet = ConstructedStyleSheet;
 
 attachAdoptedStyleSheetProperty(Document);

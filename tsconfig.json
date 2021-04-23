@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "allowJs": true,
+    "importsNotUsedAsValues": "error",
     "lib": [
       "dom",
-      "es2018"
+      "es5"
     ],
     "moduleResolution": "node",
     "noImplicitAny": false,
@@ -14,7 +14,7 @@
   },
   "include": [
     "dist/**/*.ts",
-    "src/**/*.{ts,js}",
+    "src/**/*.ts",
     "test/**/*.ts"
   ],
   "exclude": [

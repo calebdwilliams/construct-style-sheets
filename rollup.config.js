@@ -5,7 +5,7 @@ const nodeResolve = require('rollup-plugin-node-resolve');
 const injectCode = require('./plugins/rollup-plugin-inject-code');
 
 module.exports = {
-  input: 'src/index.js',
+  input: 'src/index.ts',
   output: {
     file: 'dist/adoptedStyleSheets.js',
     format: 'iife',
@@ -20,7 +20,7 @@ module.exports = {
     copy({
       targets: [
         {
-          src: 'src/index.d.ts',
+          src: 'src/typings.d.ts',
           dest: 'dist',
           rename: 'adoptedStyleSheets.d.ts',
         },

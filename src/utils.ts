@@ -3,13 +3,9 @@ import {closedShadowRootRegistry} from './shared';
 export var defineProperty = Object.defineProperty;
 export var forEach = Array.prototype.forEach;
 
-var importPattern = /@import(?:.+?);?$/gm;
+var importPattern = /@import.+?;?$/gm;
 
-/**
- * @param {string} contents
- * @returns {string}
- */
-export function rejectImports(contents) {
+export function rejectImports(contents: string): string {
   var _contents = contents.replace(importPattern, '');
 
   if (_contents !== contents) {
@@ -21,31 +17,22 @@ export function rejectImports(contents) {
   return _contents.trim();
 }
 
-/**
- * @param {CSSStyleSheet} sheet
- */
-export function clearRules(sheet) {
+export function clearRules(sheet: CSSStyleSheet): void {
   while (sheet.cssRules.length > 0) {
     sheet.deleteRule(0);
   }
 }
 
-/**
- * @param {CSSStyleSheet} from
- * @param {CSSStyleSheet} to
- */
-export function insertAllRules(from, to) {
-  forEach.call(from.cssRules, function(rule, i) {
+export function insertAllRules(from: CSSStyleSheet, to: CSSStyleSheet): void {
+  forEach.call(from.cssRules, function (rule, i) {
     to.insertRule(rule.cssText, i);
   });
 }
 
 /**
  * Cross-platform check for the element to be connected to the DOM
- *
- * @param {Element} element
  */
-export function isElementConnected(element) {
+export function isElementConnected(element: Element): boolean {
   // If the browser supports web components, it definitely supports
   // isConnected. If not, we can just check if the document contains
   // the current location.
@@ -56,40 +43,23 @@ export function isElementConnected(element) {
 
 /**
  * Emulates [...new Set(arr)] for older browsers.
- *
- * @template T
- * @param {ReadonlyArray<T>} arr
- * @return ReadonlyArray<T>
  */
-export function unique(arr) {
-  return arr.filter(function(value, index) {
+export function unique<T>(arr: readonly T[]): readonly T[] {
+  return arr.filter(function (value, index) {
     return arr.indexOf(value) === index;
   });
 }
 
-/**
- * @template T
- * @param {ReadonlyArray<T>} arr1
- * @param {ReadonlyArray<T>} arr2
- * @return {ReadonlyArray<T>}
- */
-export function diff(arr1, arr2) {
-  return arr1.filter(function(value) {
+export function diff<T>(arr1: readonly T[], arr2: readonly T[]): readonly T[] {
+  return arr1.filter(function (value) {
     return arr2.indexOf(value) === -1;
   });
 }
 
-/**
- * @param {Node} node
- */
-export function removeNode(node) {
-  node.parentNode.removeChild(node);
+export function removeNode(node: Node): void {
+  node.parentNode!.removeChild(node);
 }
 
-/**
- * @param {Element} element
- * @return {ShadowRoot|undefined}
- */
-export function getShadowRoot(element) {
+export function getShadowRoot(element: Element): ShadowRoot | undefined {
   return element.shadowRoot || closedShadowRootRegistry.get(element);
 }
