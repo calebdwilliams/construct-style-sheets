@@ -1,6 +1,7 @@
 import {closedShadowRootRegistry} from './shared';
 
 export var defineProperty = Object.defineProperty;
+export var forEach = Array.prototype.forEach;
 
 var importPattern = /@import(?:.+?);?$/gm;
 
@@ -34,9 +35,9 @@ export function clearRules(sheet) {
  * @param {CSSStyleSheet} to
  */
 export function insertAllRules(from, to) {
-  for (var i = 0; i < from.cssRules.length; i++) {
-    to.insertRule(from.cssRules[i].cssText, i);
-  }
+  forEach.call(from.cssRules, function(rule, i) {
+    to.insertRule(rule.cssText, i);
+  });
 }
 
 /**

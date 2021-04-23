@@ -10,6 +10,7 @@ import {hasShadyCss} from './shared';
 import {
   defineProperty,
   diff,
+  forEach,
   getShadowRoot,
   isElementConnected,
   removeNode,
@@ -219,31 +220,23 @@ function Location(element) {
           // need to adopt its style sheets. However, since any added node may
           // contain deeply nested custom elements we need to explore the whole
           // tree.
-          // NOTE: `mutation.addedNodes` is not an array; that's why for loop is
-          // used.
-          for (var i = 0; i < mutation.addedNodes.length; i++) {
-            var node = mutation.addedNodes[i];
-
+          forEach.call(mutation.addedNodes, function(node) {
             if (!(node instanceof Element)) {
-              continue;
+              return;
             }
 
             traverseWebComponents(node, function(root) {
               getAssociatedLocation(root).connect();
             });
-          }
+          });
         }
 
         // When any `<style>` adopter is removed, we need to re-adopt all the
         // styles because otherwise we can break the order of appended styles
         // which affects the rules overriding.
-        // NOTE: `mutation.removedNodes` is not an array; that's why for loop is
-        // used.
-        for (i = 0; i < mutation.removedNodes.length; i++) {
-          node = mutation.removedNodes[i];
-
+        forEach.call(mutation.addedNodes, function(node) {
           if (!(node instanceof Element)) {
-            continue;
+            return;
           }
 
           if (isExistingAdopter(self, node)) {
@@ -256,7 +249,7 @@ function Location(element) {
               getAssociatedLocation(root).disconnect();
             });
           }
-        }
+        });
       });
     }),
   );
