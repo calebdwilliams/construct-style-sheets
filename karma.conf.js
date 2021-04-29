@@ -1,17 +1,17 @@
 // Karma configuration
 // Generated on Sun Jan 20 2019 23:06:22 GMT-0600 (CST)
-const {readFileSync} = require('fs');
-const {resolve} = require('path');
+const rollupCommonjs = require('@rollup/plugin-commonjs');
+const rollupNodeResolve = require('@rollup/plugin-node-resolve').default;
+const rollupPluginBabel = require('@rollup/plugin-babel').default;
+const rollupPluginTypescript = require('@rollup/plugin-typescript');
 
 const isCI = !!process.env.CI;
-const watch = !!process.argv.find(arg => arg.includes('watch')) && !isCI;
-const coverage = !!process.argv.find(arg => arg.includes('--coverage'));
+const watch = !!process.argv.find((arg) => arg.includes('watch')) && !isCI;
+const coverage = !!process.argv.find((arg) => arg.includes('--coverage'));
 
-const babelrc = JSON.parse(
-  readFileSync(resolve(process.cwd(), '.babelrc'), 'utf8'),
-);
+const extensions = ['.ts', '.js'];
 
-module.exports = config => {
+module.exports = (config) => {
   config.set({
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
@@ -45,9 +45,9 @@ module.exports = config => {
     // list of files / patterns to load in the browser
     files: [
       {pattern: 'test/polyfills.js', watched: false},
-      {pattern: 'src_new/index.js', watched: false},
+      {pattern: 'src/index.ts', watched: false},
       {pattern: 'test/init-while-loading.js', watched: false},
-      {pattern: 'test/polyfill.test.js', watched: false},
+      {pattern: 'test/polyfill.test.ts', watched: false},
     ],
 
     // list of files / patterns to exclude
@@ -57,8 +57,8 @@ module.exports = config => {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       'test/polyfills.js': ['rollup'],
-      'src_new/index.js': ['sourceRollup'],
-      'test/polyfill.test.js': ['rollup'],
+      'src/index.ts': ['sourceRollup'],
+      'test/polyfill.test.ts': ['rollup'],
     },
 
     // test results reporter to use
@@ -101,22 +101,44 @@ module.exports = config => {
       preferHeadless: true,
       postDetection(availableBrowsers) {
         return availableBrowsers.filter(
-          browser => browser !== 'SafariTechPreview' && browser !== 'Edge',
+          (browser) => browser !== 'SafariTechPreview' && browser !== 'Edge',
         );
       },
     },
 
     rollupPreprocessor: {
       plugins: [
-        require('rollup-plugin-commonjs')({
+        rollupCommonjs({
           include: 'node_modules/**',
           exclude: 'node_modules/@open-wc/**',
         }),
-        require('rollup-plugin-node-resolve')(),
-        require('rollup-plugin-babel')({
+        rollupNodeResolve({
+          extensions,
+        }),
+        rollupPluginBabel({
+          babelHelpers: 'bundled',
           babelrc: false,
-          include: ['node_modules/@open-wc/**', 'test/**'],
-          ...babelrc,
+          extensions,
+          include: [
+            'node_modules/@open-wc/**',
+            'node_modules/lit-element/**',
+            'node_modules/lit-html/**',
+            'test/**',
+          ],
+          presets: [
+            '@babel/preset-typescript',
+            [
+              '@babel/preset-env',
+              {
+                loose: true,
+                targets: {
+                  browsers: ['last 2 versions', 'IE 11'],
+                },
+                shippedProposals: true,
+                useBuiltIns: false,
+              },
+            ],
+          ],
           plugins: [
             '@babel/plugin-transform-instanceof',
             'babel-plugin-transform-async-to-promises',
@@ -127,6 +149,7 @@ module.exports = config => {
         format: 'iife',
         name: 'tests',
       },
+      treeshake: true,
     },
 
     customPreprocessors: {
@@ -134,16 +157,23 @@ module.exports = config => {
         base: 'rollup',
         options: {
           plugins: [
-            require('rollup-plugin-node-resolve')(),
-            require('rollup-plugin-babel')({
+            rollupNodeResolve({
+              extensions,
+            }),
+            rollupPluginTypescript({
+              isolatedModules: true,
+              tsconfig: require.resolve('./tsconfig.build.json'),
+            }),
+            rollupPluginBabel({
+              babelHelpers: 'bundled',
               babelrc: false,
-              ...babelrc,
+              extensions,
               plugins: [coverage && 'babel-plugin-istanbul'].filter(Boolean),
             }),
             require('./plugins/rollup-plugin-inject-code')({
               'index.js': {
                 line: 3,
-                code: "  if ('adoptedStyleSheets' in document) { return; }\n",
+                code: "    if ('adoptedStyleSheets' in document) { return; }\n",
               },
             }),
           ],

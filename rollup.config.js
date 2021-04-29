@@ -1,8 +1,10 @@
-const babel = require('rollup-plugin-babel');
+const tsc = require('@rollup/plugin-typescript');
 const cleanup = require('rollup-plugin-cleanup');
 const copy = require('rollup-plugin-copy');
-const nodeResolve = require('rollup-plugin-node-resolve');
+const nodeResolve = require('@rollup/plugin-node-resolve').default;
 const injectCode = require('./plugins/rollup-plugin-inject-code');
+
+const extensions = ['.ts', '.js'];
 
 module.exports = {
   input: 'src/index.ts',
@@ -12,10 +14,16 @@ module.exports = {
     name: 'adoptedStyleSheets',
   },
   plugins: [
-    nodeResolve(),
-    babel(),
+    nodeResolve({
+      extensions,
+    }),
+    tsc({
+      isolatedModules: true,
+      tsconfig: require.resolve('./tsconfig.build.json'),
+    }),
     cleanup({
-      comments: 'none',
+      comments: [/#__INLINE__/, /#__PURE__/],
+      extensions,
     }),
     copy({
       targets: [
@@ -29,7 +37,7 @@ module.exports = {
     injectCode({
       'adoptedStyleSheets.js': {
         line: 3,
-        code: "  if ('adoptedStyleSheets' in document) { return; }\n",
+        code: "    if ('adoptedStyleSheets' in document) { return; }\n",
       },
     }),
   ],
