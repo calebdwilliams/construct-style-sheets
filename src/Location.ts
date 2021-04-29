@@ -55,8 +55,7 @@ export function attachAdoptedStyleSheetProperty(
       return getAssociatedLocation(this).sheets;
     },
     set(sheets: readonly ConstructedStyleSheet[]) {
-      var location = getAssociatedLocation(this);
-      location.update(sheets);
+      getAssociatedLocation(this).update(sheets);
     },
   });
 }
@@ -83,7 +82,7 @@ function traverseWebComponents(
   );
 
   for (var next: Node | null; (next = iter.nextNode()); ) {
-    // Note: we already checked for ShadowRoot above
+    // Type Note: we already checked for ShadowRoot above
     callback(getShadowRoot(next as Element)!);
   }
 }
@@ -146,9 +145,9 @@ function adopt(self: Location): void {
   var observer = $observer.get(self)!;
   var container = getAdopterContainer(self);
 
-  // The operation of adding a `<style>` element to document fragment removes
-  // that element from the location, so we need to pause watching when it
-  // happens to avoid calling observer callback.
+  // Adding a `<style>` element to document fragment removes that element from
+  // the location, so we need to pause watching when it happens to avoid calling
+  // observer callback.
   observer.disconnect();
 
   sheets.forEach(function (sheet) {
@@ -246,7 +245,7 @@ function Location(this: Location, element: Document | ShadowRoot) {
         // When any `<style>` adopter is removed, we need to re-adopt all the
         // styles because otherwise we can break the order of appended styles
         // which affects the rules overriding.
-        forEach.call(mutation.addedNodes, function (node: Node) {
+        forEach.call(mutation.removedNodes, function (node: Node) {
           if (!(node instanceof Element)) {
             return;
           }
@@ -323,16 +322,16 @@ proto.update = function update(sheets: readonly ConstructedStyleSheet[]) {
 
   self.sheets = sheets;
   var oldUniqueSheets = $uniqueSheets.get(self)!;
-  var uniqueSheets = unique(sheets);
+  var uniqueSheets = /*#__INLINE__*/ unique(sheets);
 
   // Style sheets that existed in the old sheet list but was excluded in the
   // new one.
-  var removedSheets = diff(oldUniqueSheets, uniqueSheets);
+  var removedSheets = /*#__INLINE__*/ diff(oldUniqueSheets, uniqueSheets);
 
   removedSheets.forEach(function (sheet) {
-    // Note: any removed sheet is already initialized, so there
-    // cannot be missing adopter for this location.
-    removeNode(getAdopterByLocation(sheet, self)!);
+    // Type Note: any removed sheet is already initialized, so there cannot be
+    // missing adopter for this location.
+    /*#__INLINE__*/ removeNode(getAdopterByLocation(sheet, self)!);
     removeAdopterLocation(sheet, self);
   });
 

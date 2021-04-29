@@ -120,7 +120,7 @@ export function restyleAdopter(
   adopter: HTMLStyleElement,
 ): void {
   clearRules(adopter.sheet!);
-  insertAllRules($basicStyleSheet.get(sheet)!, adopter.sheet!);
+  /*#__INLINE__*/ insertAllRules($basicStyleSheet.get(sheet)!, adopter.sheet!);
 }
 
 /*
@@ -142,7 +142,7 @@ function checkInvocationCorrectness(self: ConstructedStyleSheet) {
  * A replacement for CSSStyleSheet class which is not actually constructable in
  * any browser that does not support Constructable Style Sheet proposal. To
  * fulfil the Constructable Style Sheet specification, it preserves a separate
- * HTMLStyleElement that behaves as a backup for all the assigned styles.
+ * HTMLStyleElement that behaves as a backup for all the `<style>` adopters.
  */
 declare class ConstructedStyleSheet extends CSSStyleSheet {
   replace(text: string): Promise<ConstructedStyleSheet>;
@@ -190,7 +190,7 @@ proto.replaceSync = function replaceSync(contents) {
 
     $locations.get(self)!.forEach(function (location) {
       if (location.isConnected()) {
-        // Note: if location is connected, adopter is already created.
+        // Type Note: if location is connected, adopter is already created.
         restyleAdopter(self, getAdopterByLocation(self, location)!);
       }
     });
@@ -221,8 +221,8 @@ cssStyleSheetMethods.forEach(function (method) {
 
     locations.forEach(function (location) {
       if (location.isConnected()) {
-        // Note: If location is connected, adopter is already created; and since
-        // it is connected to DOM, the sheet cannot be null.
+        // Type Note: If location is connected, adopter is already created; and
+        // since it is connected to DOM, the sheet cannot be null.
         var sheet = getAdopterByLocation(self, location)!.sheet!;
         sheet[method].apply(sheet, args);
       }
