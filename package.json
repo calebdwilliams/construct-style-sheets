@@ -76,6 +76,7 @@
     "simple-git-hooks": "^2.4.1",
     "size-limit": "^4.10.2",
     "standard-version": "^9.2.0",
+    "tslib": "^2.2.0",
     "typescript": "^4.2.4"
   },
   "keywords": [
