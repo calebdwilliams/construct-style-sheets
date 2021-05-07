@@ -1,10 +1,14 @@
 import {defineCE, fixture, waitForMutationObserver} from './helpers';
 
 // Workaround for IE that does not support the DOMException constructor
-export var _DOMException =
+export const _DOMException =
   typeof DOMException === 'object' ? Error : DOMException;
 
 type ShadowCSSChecker = Record<string, string>;
+
+// @ts-expect-error: requestAnimationFrame is hard to await, so we just replace
+// it with instant function call.
+window.requestAnimationFrame = (callback) => callback();
 
 describe('Constructible Style Sheets polyfill', () => {
   describe('CSSStyleSheet object', () => {

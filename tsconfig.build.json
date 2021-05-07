@@ -5,6 +5,7 @@
       "dom",
       "es5"
     ],
+    "target": "ES5",
     "moduleResolution": "node",
     "noImplicitAny": false,
     "noImplicitReturns": true,

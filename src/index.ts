@@ -14,11 +14,11 @@ attachAdoptedStyleSheetProperty(Document);
 if ('ShadowRoot' in window) {
   attachAdoptedStyleSheetProperty(ShadowRoot);
 
-  var proto = Element.prototype;
-  var attach = proto.attachShadow;
+  const proto = Element.prototype;
+  const attach = proto.attachShadow;
 
   proto.attachShadow = function attachShadow(init) {
-    var root = attach.call(this, init);
+    const root = attach.call(this, init);
 
     if (init.mode === 'closed') {
       closedShadowRootRegistry.set(this, root);
@@ -28,7 +28,7 @@ if ('ShadowRoot' in window) {
   };
 }
 
-var documentLocation = getAssociatedLocation(document);
+const documentLocation = getAssociatedLocation(document);
 
 if (documentLocation.isConnected()) {
   documentLocation.connect();
