@@ -75,11 +75,9 @@ describe('Constructible Style Sheets polyfill', () => {
 
       describe('occurs for async methods when they are improperly invoked', () => {
         it('replace', async () => {
-          try {
-            await CSSStyleSheet.prototype.replace('');
-          } catch (error) {
-            expect(error.message).toMatch(illegalPattern);
-          }
+          await expectAsync(
+            CSSStyleSheet.prototype.replace(''),
+          ).toBeRejectedWithError(illegalPattern);
         });
       });
 
@@ -132,6 +130,15 @@ describe('Constructible Style Sheets polyfill', () => {
           ),
         );
       });
+
+      it('correctly replaces multi-rule styles', async () => {
+        await expectAsync(
+          sheet.replace(`
+              h1 { color: tomato; }
+              h2 { color: tomato; }
+            `),
+        ).not.toBeRejected();
+      });
     });
 
     describe('replaceSync', () => {
@@ -158,6 +165,15 @@ describe('Constructible Style Sheets polyfill', () => {
           sheet.replaceSync(pattern);
           expect(sheet.cssRules.length).toBe(0);
         });
+      });
+
+      it('correctly replaces multi-rule styles', async () => {
+        await expect(() =>
+          sheet.replaceSync(`
+            h1 { color: tomato; }
+            h2 { color: tomato; }
+          `),
+        ).not.toThrowError();
       });
     });
   });
@@ -362,7 +378,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
       it('does not re-create style element on removing the sibling node', async () => {
         const [tag] = createCustomElement([css], {
-          html: `<div></div><div id="foo"></div><div></div>`,
+          html: `<div></div><div id='foo'></div><div></div>`,
         });
         const element = await fixture(`<${tag}></${tag}>`);
 
@@ -443,7 +459,7 @@ describe('Constructible Style Sheets polyfill', () => {
       it('applies performed updates to all new elements', async () => {
         const [tag] = createCustomElement([css]);
         const [tag2] = createCustomElement([css]);
-        const wrapper = await fixture(`<div id="wrapper"></div>`);
+        const wrapper = await fixture(`<div id='wrapper'></div>`);
 
         css.insertRule('.test { line-height: 41px }');
 
