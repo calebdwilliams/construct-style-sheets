@@ -153,13 +153,14 @@ declare class ConstructedStyleSheet extends CSSStyleSheet {
 }
 
 function ConstructedStyleSheet(this: ConstructedStyleSheet) {
+  const self = this;
   const style = document.createElement('style');
   bootstrapper.body.appendChild(style);
 
   // Init private properties
-  $basicStyleSheet.set(this, style.sheet!);
-  $locations.set(this, []);
-  $adoptersByLocation.set(this, new WeakMap());
+  $basicStyleSheet.set(self, style.sheet!);
+  $locations.set(self, []);
+  $adoptersByLocation.set(self, new WeakMap());
 }
 
 const proto = ConstructedStyleSheet.prototype;
@@ -185,7 +186,7 @@ proto.replaceSync = function replaceSync(contents) {
 
     const style = $basicStyleSheet.get(self)!.ownerNode as HTMLStyleElement;
     style.textContent = rejectImports(contents);
-    $basicStyleSheet.set(this, style.sheet!);
+    $basicStyleSheet.set(self, style.sheet!);
 
     $locations.get(self)!.forEach((location) => {
       if (location.isConnected()) {
