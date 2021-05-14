@@ -119,10 +119,7 @@ export function restyleAdopter(
 ): void {
   requestAnimationFrame(() => {
     clearRules(adopter.sheet!);
-    /*#__INLINE__*/ insertAllRules(
-      $basicStyleSheet.get(sheet)!,
-      adopter.sheet!,
-    );
+    insertAllRules($basicStyleSheet.get(sheet)!, adopter.sheet!);
   });
 }
 

@@ -320,16 +320,15 @@ proto.update = function update(sheets: readonly ConstructedStyleSheet[]) {
 
   self.sheets = sheets;
   const oldUniqueSheets = $uniqueSheets.get(self)!;
-  const uniqueSheets = /*#__INLINE__*/ unique(sheets);
+  const uniqueSheets = unique(sheets);
 
   // Style sheets that existed in the old sheet list but was excluded in the
   // new one.
-  const removedSheets = /*#__INLINE__*/ diff(oldUniqueSheets, uniqueSheets);
+  const removedSheets = diff(oldUniqueSheets, uniqueSheets);
 
   removedSheets.forEach((sheet) => {
     // Type Note: any removed sheet is already initialized, so there cannot be
     // missing adopter for this location.
-    /*#__INLINE__*/
     removeNode(getAdopterByLocation(sheet, self)!);
     removeAdopterLocation(sheet, self);
   });
