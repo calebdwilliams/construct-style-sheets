@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [$default-branch]
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'plugins/**'
+      - 'src/**'
+      - 'test/**'
+      - '.babelrc'
+      - '.browserslistrc'
+      - '.prettierrc'
+      - 'karma.conf.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'rollup.config.js'
+      - 'tsconfig.json'
+  pull_request:
+    branches: [$default-branch]
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'plugins/**'
+      - 'src/**'
+      - 'test/**'
+      - '.babelrc'
+      - '.browserslistrc'
+      - '.prettierrc'
+      - 'karma.conf.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'rollup.config.js'
+      - 'tsconfig.json'
+
+jobs:
+  testing:
+    name: 'Testing on OS: ${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+        os: [windows-latest, macOS-latest]
+
+    steps:
+      - name: Checkout project code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Installation
+        run: npm ci
+      - name: Linting & Typechecking
+        run: npm run typecheck
+      - name: Testing
+        run: npm run test:coverage
+        env:
+          CI: true
