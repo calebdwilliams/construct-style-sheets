@@ -1,22 +1,8 @@
 {
-  "compilerOptions": {
-    "lib": [
-      "dom",
-      "es2018"
-    ],
-    "moduleResolution": "node",
-    "noImplicitAny": false,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "strict": true
-  },
+  "extends": "./tsconfig.build.json",
   "include": [
     "dist/**/*.ts",
     "src/**/*.ts",
     "test/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }
