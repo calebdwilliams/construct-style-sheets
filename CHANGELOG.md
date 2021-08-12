@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v3.0.0-0...v3.0.0) (2021-08-12)
+
 ## [3.0.0-0](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v2.4.16...v3.0.0-0) (2021-06-18)
 
 
