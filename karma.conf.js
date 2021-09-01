@@ -80,14 +80,10 @@ module.exports = (config) => {
     autoWatch: watch,
 
     coverageIstanbulReporter: {
-      reports: ['html', 'lcovonly'],
+      reports: isCI ? ['lcovonly'] : ['html'],
       dir: '.coverage',
       combineBrowserReports: true,
       skipFilesWithNoCoverage: true,
-      'report-config': {
-        html: {subdir: 'html'},
-        lcovonly: {subdir: 'lcov'},
-      },
     },
 
     customLaunchers: {
