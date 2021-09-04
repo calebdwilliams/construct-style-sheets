@@ -12,8 +12,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
-    "inlineSourceMap": true,
-    "inlineSources": true,
     "strict": true
   },
   "include": [

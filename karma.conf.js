@@ -161,7 +161,7 @@ module.exports = (config) => {
             }),
             rollupPluginTypescript({
               isolatedModules: true,
-              tsconfig: require.resolve('./tsconfig.build.json'),
+              tsconfig: require.resolve('./tsconfig.test.json'),
             }),
             rollupPluginInstrumentTsCode(),
             rollupPluginInjectCode({
