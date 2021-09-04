@@ -2,8 +2,10 @@
 // Generated on Sun Jan 20 2019 23:06:22 GMT-0600 (CST)
 const rollupCommonjs = require('@rollup/plugin-commonjs');
 const rollupNodeResolve = require('@rollup/plugin-node-resolve').default;
-const rollupPluginBabel = require('@rollup/plugin-babel').default;
 const rollupPluginTypescript = require('@rollup/plugin-typescript');
+const rollupPluginBabel = require('@rollup/plugin-babel').default;
+const rollupPluginInstrumentTsCode = require('./plugins/rollup-plugin-instrument-ts-code');
+const rollupPluginInjectCode = require('./plugins/rollup-plugin-inject-code');
 
 const isCI = !!process.env.CI;
 const watch = !!process.argv.find((arg) => arg.includes('watch')) && !isCI;
@@ -82,6 +84,7 @@ module.exports = (config) => {
     coverageIstanbulReporter: {
       reports: isCI ? ['lcovonly'] : ['html'],
       dir: '.coverage',
+      includeAllSources: true,
       combineBrowserReports: true,
       skipFilesWithNoCoverage: true,
     },
@@ -157,16 +160,13 @@ module.exports = (config) => {
               extensions,
             }),
             rollupPluginTypescript({
+              inlineSourceMap: true,
+              inlineSources: true,
               isolatedModules: true,
               tsconfig: require.resolve('./tsconfig.build.json'),
             }),
-            rollupPluginBabel({
-              babelHelpers: 'bundled',
-              babelrc: false,
-              extensions,
-              plugins: [coverage && 'babel-plugin-istanbul'].filter(Boolean),
-            }),
-            require('./plugins/rollup-plugin-inject-code')({
+            rollupPluginInstrumentTsCode(),
+            rollupPluginInjectCode({
               'index.js': {
                 line: 3,
                 code: "    if ('adoptedStyleSheets' in document) { return; }\n",
@@ -176,6 +176,7 @@ module.exports = (config) => {
           output: {
             format: 'iife',
             name: 'source',
+            sourcemap: 'inline',
           },
           treeshake: false,
         },
