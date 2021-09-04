@@ -1,11 +1,5 @@
 import {defineCE, fixture, waitForMutationObserver} from './helpers';
 
-// if (!('adoptedStyleSheets' in document)) {
-//   // @ts-expect-error: TS complains because it is a new version feature but
-//   // this part is erased by Rollup during tests so it's ok.
-//   await import('../src/index');
-// }
-
 // Workaround for IE that does not support the DOMException constructor
 export const _DOMException =
   typeof DOMException === 'object' ? Error : DOMException;

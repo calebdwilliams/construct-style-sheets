@@ -160,8 +160,6 @@ module.exports = (config) => {
               extensions,
             }),
             rollupPluginTypescript({
-              inlineSourceMap: true,
-              inlineSources: true,
               isolatedModules: true,
               tsconfig: require.resolve('./tsconfig.build.json'),
             }),
