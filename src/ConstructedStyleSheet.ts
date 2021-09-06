@@ -218,8 +218,14 @@ cssStyleSheetMethods.forEach((method) => {
 
     const result = basic[method].apply(basic, args);
 
-    if (isSafari && method === 'insertRule') {
-      fixSafariBrokenRules(basic, args[0]);
+    if (isSafari) {
+      if (method === 'insertRule') {
+        fixSafariBrokenRules(basic, args[0]);
+      }
+
+      if (method === 'addRule') {
+        fixSafariBrokenRules(basic, `${args[0]}{${args[1]}}`);
+      }
     }
 
     locations.forEach((location) => {
