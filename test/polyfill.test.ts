@@ -11,6 +11,14 @@ type ShadowCSSChecker = Record<string, string>;
 window.requestAnimationFrame = (callback) => callback();
 
 describe('Constructible Style Sheets polyfill', () => {
+  const checkGlobalCss = (element, checker) => {
+    const computed = getComputedStyle(element, null);
+
+    for (const property in checker) {
+      expect(computed.getPropertyValue(property)).toBe(checker[property]);
+    }
+  };
+
   describe('CSSStyleSheet object', () => {
     const importPatterns = [
       "@import 'foo.css'",
@@ -174,6 +182,36 @@ describe('Constructible Style Sheets polyfill', () => {
             h2 { color: tomato; }
           `),
         ).not.toThrowError();
+      });
+    });
+
+    describe('CSSStyleSheet dynamic methods', () => {
+      it('insertRule', () => {
+        sheet.insertRule('.only-test { color: yellow; }');
+        expect((sheet.cssRules[0] as CSSStyleRule).selectorText).toBe(
+          '.only-test',
+        );
+        expect((sheet.cssRules[0] as CSSStyleRule).style.color).toBe('yellow');
+      });
+
+      it('addRule', () => {
+        sheet.addRule('.only-test', 'color: yellow');
+        expect((sheet.cssRules[0] as CSSStyleRule).selectorText).toBe(
+          '.only-test',
+        );
+        expect((sheet.cssRules[0] as CSSStyleRule).style.color).toBe('yellow');
+      });
+
+      it('deleteRule', () => {
+        sheet.replaceSync('.test { color: yellow; }');
+        sheet.deleteRule(0);
+        expect(sheet.cssRules.length).toBe(0);
+      });
+
+      it('removeRule', () => {
+        sheet.replaceSync('.test { color: yellow; }');
+        sheet.removeRule(0);
+        expect(sheet.cssRules.length).toBe(0);
       });
     });
   });
@@ -555,14 +593,6 @@ describe('Constructible Style Sheets polyfill', () => {
     let css: CSSStyleSheet;
     let defaultChecker: ShadowCSSChecker;
 
-    const checkGlobalCss = (element, checker) => {
-      const computed = getComputedStyle(element, null);
-
-      for (const property in checker) {
-        expect(computed.getPropertyValue(property)).toBe(checker[property]);
-      }
-    };
-
     beforeEach(() => {
       css = new CSSStyleSheet();
       css.replaceSync('.foo { width: 20px; height: 82px; }');
@@ -652,6 +682,36 @@ describe('Constructible Style Sheets polyfill', () => {
 
       document.adoptedStyleSheets = [css1];
       checkGlobalCss(element, {'line-height': '9px'});
+    });
+  });
+
+  describe('Cross-browser work', () => {
+    describe('"content" rule', () => {
+      let css: CSSStyleSheet;
+      let element: HTMLElement;
+
+      const checkContent = () => checkGlobalCss(element, {content: 'bar'});
+
+      beforeEach(async () => {
+        css = new CSSStyleSheet();
+        document.adoptedStyleSheets = [css];
+        element = await fixture('<div class="foo"></div>');
+      });
+
+      it('handles rule on replace', () => {
+        css.replaceSync('.foo { content: "bar"; }');
+        checkContent();
+      });
+
+      it('handles rule on insertRule', () => {
+        css.insertRule('.foo { content: "bar"; }');
+        checkContent();
+      });
+
+      it('handles rule on addRule', () => {
+        css.addRule('.foo', 'content: "bar"');
+        checkContent();
+      });
     });
   });
 });
