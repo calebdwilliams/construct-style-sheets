@@ -1,8 +1,9 @@
 import type Location from './Location';
-import {_DOMException, bootstrapper} from './shared';
+import {_DOMException, bootstrapper, isSafari} from './shared';
 import {
   clearRules,
   defineProperty,
+  fixSafariBrokenRules,
   insertAllRules,
   rejectImports,
 } from './utils';
@@ -185,6 +186,10 @@ proto.replaceSync = function replaceSync(contents) {
     style.textContent = rejectImports(contents);
     $basicStyleSheet.set(self, style.sheet!);
 
+    if (isSafari) {
+      fixSafariBrokenRules(style.sheet!, style.textContent!);
+    }
+
     $locations.get(self)!.forEach((location) => {
       if (location.isConnected()) {
         // Type Note: if location is connected, adopter is already created.
@@ -215,6 +220,10 @@ cssStyleSheetMethods.forEach((method) => {
     const locations = $locations.get(self)!;
 
     const result = basic[method].apply(basic, args);
+
+    if (isSafari && method === 'insertRule') {
+      fixSafariBrokenRules(basic, args[0]);
+    }
 
     locations.forEach((location) => {
       if (location.isConnected()) {

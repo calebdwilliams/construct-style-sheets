@@ -21,3 +21,11 @@ export const closedShadowRootRegistry = new WeakMap<Element, ShadowRoot>();
 // Workaround for IE that does not support the DOMException constructor
 export const _DOMException =
   typeof DOMException === 'object' ? Error : DOMException;
+
+export const isSafari =
+  // https://github.com/hgoebl/mobile-detect.js/blob/master/mobile-detect.js#L191
+  /Version((?!\bEdgiOS\b).)*Mobile.*Safari|Safari.*Mobile|MobileSafari/.test(
+    navigator.userAgent,
+  );
+
+export const safariBrokenRules = ['content'];
