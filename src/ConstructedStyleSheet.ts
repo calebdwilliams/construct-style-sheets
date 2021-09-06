@@ -9,12 +9,9 @@ import {
 } from './utils';
 
 const cssStyleSheetMethods = [
-  'addImport',
-  'addPageRule',
   'addRule',
   'deleteRule',
   'insertRule',
-  'removeImport',
   'removeRule',
 ];
 
