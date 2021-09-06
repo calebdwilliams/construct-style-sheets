@@ -11,8 +11,12 @@ type ShadowCSSChecker = Record<string, string>;
 window.requestAnimationFrame = (callback) => callback();
 
 describe('Constructible Style Sheets polyfill', () => {
-  const checkGlobalCss = (element, checker) => {
-    const computed = getComputedStyle(element, null);
+  const checkGlobalCss = (
+    element: Element,
+    checker: Record<string, string>,
+    pseudoEl: string | null = null,
+  ) => {
+    const computed = getComputedStyle(element, pseudoEl);
 
     for (const property in checker) {
       expect(computed.getPropertyValue(property)).toBe(checker[property]);
@@ -187,7 +191,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
     describe('CSSStyleSheet dynamic methods', () => {
       it('insertRule', () => {
-        sheet.insertRule('.only-test { color: yellow; }');
+        sheet.insertRule('.only-test { color: yellow; }', 0);
         expect((sheet.cssRules[0] as CSSStyleRule).selectorText).toBe(
           '.only-test',
         );
@@ -195,7 +199,7 @@ describe('Constructible Style Sheets polyfill', () => {
       });
 
       it('addRule', () => {
-        sheet.addRule('.only-test', 'color: yellow');
+        sheet.addRule('.only-test', 'color: yellow', 0);
         expect((sheet.cssRules[0] as CSSStyleRule).selectorText).toBe(
           '.only-test',
         );
@@ -690,7 +694,8 @@ describe('Constructible Style Sheets polyfill', () => {
       let css: CSSStyleSheet;
       let element: HTMLElement;
 
-      const checkContent = () => checkGlobalCss(element, {content: 'bar'});
+      const checkContent = () =>
+        checkGlobalCss(element, {content: '"bar"'}, '::before');
 
       beforeEach(async () => {
         css = new CSSStyleSheet();
@@ -699,17 +704,17 @@ describe('Constructible Style Sheets polyfill', () => {
       });
 
       it('handles rule on replace', () => {
-        css.replaceSync('.foo { content: "bar"; }');
+        css.replaceSync('.foo::before { content: "bar"; }');
         checkContent();
       });
 
       it('handles rule on insertRule', () => {
-        css.insertRule('.foo { content: "bar"; }');
+        css.insertRule('.foo::before { content: "bar"; }', 0);
         checkContent();
       });
 
       it('handles rule on addRule', () => {
-        css.addRule('.foo', 'content: "bar"');
+        css.addRule('.foo::before', 'content: "bar"', 0);
         checkContent();
       });
     });
