@@ -1,12 +1,7 @@
 import type Location from './Location';
-import {_DOMException, bootstrapper, isSafari} from './shared';
-import {
-  clearRules,
-  defineProperty,
-  fixSafariBrokenRules,
-  insertAllRules,
-  rejectImports,
-} from './utils';
+import {fixSafariBrokenRules} from './safari';
+import {_DOMException, bootstrapper, defineProperty, isSafari} from './shared';
+import {clearRules, insertAllRules, rejectImports} from './utils';
 
 const cssStyleSheetMethods = [
   'addRule',
@@ -224,7 +219,7 @@ cssStyleSheetMethods.forEach((method) => {
       }
 
       if (method === 'addRule') {
-        fixSafariBrokenRules(basic, `${args[0]}{${args[1]}}`);
+        fixSafariBrokenRules(basic, args[1]);
       }
     }
 

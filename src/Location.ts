@@ -7,11 +7,9 @@ import {
   removeAdopterLocation,
   restyleAdopter,
 } from './ConstructedStyleSheet';
-import {hasShadyCss} from './shared';
+import {defineProperty, forEach, hasShadyCss} from './shared';
 import {
-  defineProperty,
   diff,
-  forEach,
   getShadowRoot,
   isElementConnected,
   removeNode,
