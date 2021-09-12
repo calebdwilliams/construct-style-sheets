@@ -22,7 +22,6 @@ module.exports = {
       tsconfig: require.resolve('./tsconfig.build.json'),
     }),
     cleanup({
-      comments: [/#__INLINE__/, /#__PURE__/],
       extensions,
     }),
     copy({
@@ -37,7 +36,8 @@ module.exports = {
     injectCode({
       'adoptedStyleSheets.js': {
         line: 3,
-        code: "    if (typeof document === 'undefined' || 'adoptedStyleSheets' in document) { return; }\n",
+        code:
+          "    if (typeof document === 'undefined' || 'adoptedStyleSheets' in document) { return; }\n",
       },
     }),
   ],

@@ -71,7 +71,7 @@ function traverseWebComponents(
   const iter = document.createNodeIterator(
     node,
     NodeFilter.SHOW_ELEMENT,
-    (foundNode) =>
+    (foundNode: Element) =>
       getShadowRoot(foundNode)
         ? NodeFilter.FILTER_ACCEPT
         : NodeFilter.FILTER_REJECT,
