@@ -29,12 +29,16 @@ export function fixBrokenRules(content: string): string {
   );
 }
 
-const placeholderPattern = /(["'])%%%/gm;
+const placeholderPatterns = [/(content:\s*["'])%%%/gm];
 
 /**
  * Removes the placeholder added by `fixBrokenRules` function from the received
  * rule string.
  */
 export const getCssText = hasBrokenRules
-  ? (rule: CSSRule) => rule.cssText.replace(placeholderPattern, '$1')
+  ? (rule: CSSRule) =>
+      placeholderPatterns.reduce(
+        (acc, pattern) => acc.replace(pattern, '$1'),
+        rule.cssText,
+      )
   : (rule: CSSRule) => rule.cssText;
