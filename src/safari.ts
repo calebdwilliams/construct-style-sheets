@@ -15,12 +15,12 @@ const brokenRules = ['content'];
 export function fixBrokenRules(content: string): string {
   return brokenRules.reduce(
     (acc, ruleName) =>
-      acc.replace(new RegExp(`${ruleName}:\\s*["']`, 'gm'), '$0%_FIX_%'),
+      acc.replace(new RegExp(`${ruleName}:\\s*["']`, 'gm'), '$&%%%'),
     content,
   );
 }
 
-const fixTokenPattern = /%_FIX_%/gm;
+const fixTokenPattern = /%%%/gm;
 
 export const getCssText = hasBrokenRules
   ? (rule: CSSRule) => rule.cssText.replace(fixTokenPattern, '')
