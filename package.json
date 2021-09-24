@@ -20,7 +20,7 @@
     "pretest": "rimraf .coverage",
     "pretest:watch": "npm run pretest",
     "pretest:coverage": "npm run pretest",
-    "size": "size-limit",
+    "size": "npm run build && size-limit",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
