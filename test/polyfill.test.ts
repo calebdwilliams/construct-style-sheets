@@ -13,13 +13,13 @@ window.requestAnimationFrame = (callback) => callback();
 describe('Constructible Style Sheets polyfill', () => {
   const checkGlobalCss = (
     element: Element,
-    checker: Record<string, string>,
+    checker: Record<string, string | RegExp>,
     pseudoEl: string | null = null,
   ) => {
     const computed = getComputedStyle(element, pseudoEl);
 
     for (const property in checker) {
-      expect(computed.getPropertyValue(property)).toBe(checker[property]);
+      expect(computed.getPropertyValue(property)).toMatch(checker[property]);
     }
   };
 
@@ -695,7 +695,7 @@ describe('Constructible Style Sheets polyfill', () => {
       let element: HTMLElement;
 
       const checkContent = () =>
-        checkGlobalCss(element, {content: '"bar"'}, '::before');
+        checkGlobalCss(element, {content: /"?bar"?/}, '::before');
 
       beforeEach(async () => {
         css = new CSSStyleSheet();
