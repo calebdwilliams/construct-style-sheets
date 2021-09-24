@@ -22,9 +22,5 @@ export const closedShadowRootRegistry = new WeakMap<Element, ShadowRoot>();
 export const _DOMException =
   typeof DOMException === 'object' ? Error : DOMException;
 
-export const isSafari =
-  /Safari\//.test(navigator.userAgent) &&
-  !/Chrom(e|ium)\//.test(navigator.userAgent);
-
 export const defineProperty = Object.defineProperty;
 export const forEach = Array.prototype.forEach;
