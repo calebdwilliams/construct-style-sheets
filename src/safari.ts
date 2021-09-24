@@ -10,18 +10,31 @@ export const hasBrokenRules = (function () {
   );
 })();
 
-const brokenRules = ['content'];
+const brokenRulePatterns = [/content:\s*["']/gm];
 
+/**
+ * Adds a special symbol "%" to the broken rule that forces the internal Safari
+ * CSS property string converter to add quotes around the value. This function
+ * should be only used for the internal basic stylesheet hidden in the
+ * bootstrapper because it pollutes the user content with the placeholder
+ * symbols. Use the `getCssText` function to remove the placeholder from the
+ * CSS string.
+ *
+ * @param content
+ */
 export function fixBrokenRules(content: string): string {
-  return brokenRules.reduce(
-    (acc, ruleName) =>
-      acc.replace(new RegExp(`${ruleName}:\\s*["']`, 'gm'), '$&%%%'),
+  return brokenRulePatterns.reduce(
+    (acc, pattern) => acc.replace(pattern, '$&%%%'),
     content,
   );
 }
 
-const fixTokenPattern = /%%%/gm;
+const placeholderPattern = /(["'])%%%/gm;
 
+/**
+ * Removes the placeholder added by `fixBrokenRules` function from the received
+ * rule string.
+ */
 export const getCssText = hasBrokenRules
-  ? (rule: CSSRule) => rule.cssText.replace(fixTokenPattern, '')
+  ? (rule: CSSRule) => rule.cssText.replace(placeholderPattern, '$1')
   : (rule: CSSRule) => rule.cssText;
