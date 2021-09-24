@@ -23,9 +23,5 @@ export function fixBrokenRules(content: string): string {
 const fixTokenPattern = /%_FIX_%/gm;
 
 export const getCssText = hasBrokenRules
-  ? function (rule: CSSRule) {
-      return rule.cssText.replace(fixTokenPattern, '');
-    }
-  : function (rule: CSSRule) {
-      return rule.cssText;
-    };
+  ? (rule: CSSRule) => rule.cssText.replace(fixTokenPattern, '')
+  : (rule: CSSRule) => rule.cssText;
