@@ -207,8 +207,15 @@ cssStyleSheetMethods.forEach((method) => {
     checkInvocationCorrectness(self);
 
     const args = arguments;
-    const basic = $basicStyleSheet.get(self)!;
-    const locations = $locations.get(self)!;
+
+    $locations.get(self)!.forEach((location) => {
+      if (location.isConnected()) {
+        // Type Note: If location is connected, adopter is already created; and
+        // since it is connected to DOM, the sheet cannot be null.
+        const sheet = getAdopterByLocation(self, location)!.sheet!;
+        sheet[method].apply(sheet, args);
+      }
+    });
 
     if (hasBrokenRules) {
       if (method === 'insertRule') {
@@ -220,18 +227,9 @@ cssStyleSheetMethods.forEach((method) => {
       }
     }
 
-    const result = basic[method].apply(basic, args);
+    const basic = $basicStyleSheet.get(self)!;
 
-    locations.forEach((location) => {
-      if (location.isConnected()) {
-        // Type Note: If location is connected, adopter is already created; and
-        // since it is connected to DOM, the sheet cannot be null.
-        const sheet = getAdopterByLocation(self, location)!.sheet!;
-        sheet[method].apply(sheet, args);
-      }
-    });
-
-    return result;
+    return basic[method].apply(basic, args);
   };
 });
 
