@@ -1,6 +1,6 @@
 import type Location from './Location';
-import {fixSafariBrokenRules} from './safari';
-import {_DOMException, bootstrapper, defineProperty, isSafari} from './shared';
+import {fixBrokenRules, hasBrokenRules} from './safari';
+import {_DOMException, bootstrapper, defineProperty} from './shared';
 import {clearRules, insertAllRules, rejectImports} from './utils';
 
 const cssStyleSheetMethods = [
@@ -139,6 +139,7 @@ function checkInvocationCorrectness(self: ConstructedStyleSheet) {
  */
 declare class ConstructedStyleSheet extends CSSStyleSheet {
   replace(text: string): Promise<ConstructedStyleSheet>;
+
   replaceSync(text: string): void;
 }
 
@@ -175,12 +176,10 @@ proto.replaceSync = function replaceSync(contents) {
     const self = this;
 
     const style = $basicStyleSheet.get(self)!.ownerNode as HTMLStyleElement;
-    style.textContent = rejectImports(contents);
+    style.textContent = hasBrokenRules
+      ? fixBrokenRules(rejectImports(contents))
+      : rejectImports(contents);
     $basicStyleSheet.set(self, style.sheet!);
-
-    if (isSafari) {
-      fixSafariBrokenRules(style.sheet!, style.textContent!);
-    }
 
     $locations.get(self)!.forEach((location) => {
       if (location.isConnected()) {
@@ -211,17 +210,17 @@ cssStyleSheetMethods.forEach((method) => {
     const basic = $basicStyleSheet.get(self)!;
     const locations = $locations.get(self)!;
 
-    const result = basic[method].apply(basic, args);
-
-    if (isSafari) {
+    if (hasBrokenRules) {
       if (method === 'insertRule') {
-        fixSafariBrokenRules(basic, args[0]);
+        args[0] = fixBrokenRules(args[0]);
       }
 
       if (method === 'addRule') {
-        fixSafariBrokenRules(basic, args[1]);
+        args[1] = fixBrokenRules(args[1]);
       }
     }
+
+    const result = basic[method].apply(basic, args);
 
     locations.forEach((location) => {
       if (location.isConnected()) {

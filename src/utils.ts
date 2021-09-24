@@ -1,5 +1,5 @@
-import {removeSafariPlaceholder} from './safari';
-import {closedShadowRootRegistry, forEach, isSafari} from './shared';
+import {getCssText} from './safari';
+import {closedShadowRootRegistry, forEach} from './shared';
 
 const importPattern = /@import.+?;?$/gm;
 
@@ -23,10 +23,7 @@ export function clearRules(sheet: CSSStyleSheet): void {
 
 export function insertAllRules(from: CSSStyleSheet, to: CSSStyleSheet): void {
   forEach.call(from.cssRules, (rule, i) => {
-    to.insertRule(
-      isSafari ? removeSafariPlaceholder(rule.cssText) : rule.cssText,
-      i,
-    );
+    to.insertRule(getCssText(rule), i);
   });
 }
 

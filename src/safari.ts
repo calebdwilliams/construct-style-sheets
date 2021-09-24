@@ -1,38 +1,31 @@
-import {forEach} from './shared';
+import {bootstrapper} from './shared';
 
-export function escapeRegexString(str: string): string {
-  return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&').replace(/-/g, '\\x2d');
+export const hasBrokenRules = (function () {
+  const style = bootstrapper.createElement('style');
+  style.textContent = '.test{content:"something"}';
+  bootstrapper.body.appendChild(style);
+
+  return (
+    (style.sheet!.cssRules[0] as CSSStyleRule).style.content !== '"something"'
+  );
+})();
+
+const brokenRules = ['content'];
+
+export function fixBrokenRules(content: string): string {
+  return brokenRules.reduce(
+    (acc, ruleName) =>
+      acc.replace(new RegExp(`${ruleName}:\\s*["']`, 'gm'), '$0%_FIX_%'),
+    content,
+  );
 }
 
-const safariBrokenRules = ['content'];
+const fixTokenPattern = /%_FIX_%/gm;
 
-export function fixSafariBrokenRules(
-  sheet: CSSStyleSheet,
-  originalRule: string,
-) {
-  safariBrokenRules.forEach((ruleName) => {
-    forEach.call(sheet.cssRules, (rule: CSSRule) => {
-      if (!(rule instanceof CSSStyleRule) || rule.style.content === '') {
-        return;
-      }
-
-      const content = rule.style.content;
-
-      if (
-        !/^["']/.test(content) &&
-        new RegExp(
-          ruleName + ':\\s*["\']' + escapeRegexString(content),
-          'm',
-        ).test(originalRule)
-      ) {
-        rule.style.setProperty('content', '"%%%' + content + '"');
-      }
-    });
-  });
-}
-
-const safariBrokenRulePlaceholderPattern = /%%%/gm;
-
-export function removeSafariPlaceholder(rule: string): string {
-  return rule.replace(safariBrokenRulePlaceholderPattern, '');
-}
+export const getCssText = hasBrokenRules
+  ? function (rule: CSSRule) {
+      return rule.cssText.replace(fixTokenPattern, '');
+    }
+  : function (rule: CSSRule) {
+      return rule.cssText;
+    };
