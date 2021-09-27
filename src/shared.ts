@@ -9,7 +9,7 @@ export const hasShadyCss = 'ShadyCSS' in window && !ShadyCSS.nativeShadow;
  * The in-memory HTMLDocument that is necessary to get the internal
  * CSSStyleSheet of a basic `<style>` element.
  */
-export const bootstrapper = document.implementation.createHTMLDocument('boot');
+export const bootstrapper = document.implementation.createHTMLDocument('');
 
 /**
  * Since ShadowRoots with the closed mode are not available via

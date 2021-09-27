@@ -2,12 +2,10 @@ import {bootstrapper} from './shared';
 
 export const hasBrokenRules = (function () {
   const style = bootstrapper.createElement('style');
-  style.textContent = '.test{content:"something"}';
+  style.textContent = '.x{content:"y"}';
   bootstrapper.body.appendChild(style);
 
-  return (
-    (style.sheet!.cssRules[0] as CSSStyleRule).style.content !== '"something"'
-  );
+  return (style.sheet!.cssRules[0] as CSSStyleRule).style.content !== '"y"';
 })();
 
 const brokenRulePatterns = [/content:\s*["']/gm];
