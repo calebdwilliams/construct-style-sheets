@@ -7,11 +7,9 @@ import {
   removeAdopterLocation,
   restyleAdopter,
 } from './ConstructedStyleSheet';
-import {hasShadyCss} from './shared';
+import {defineProperty, forEach, hasShadyCss} from './shared';
 import {
-  defineProperty,
   diff,
-  forEach,
   getShadowRoot,
   isElementConnected,
   removeNode,
@@ -264,80 +262,78 @@ function Location(this: Location, element: Document | ShadowRoot) {
   );
 }
 
-const proto = Location.prototype;
+// @ts-expect-error: too generic for TypeScript
+Location.prototype = {
+  isConnected() {
+    const element = $element.get(this)!;
 
-proto.isConnected = function isConnected() {
-  const element = $element.get(this)!;
+    return element instanceof Document
+      ? element.readyState !== 'loading'
+      : isElementConnected(element.host);
+  },
+  connect() {
+    const container = getAdopterContainer(this);
 
-  return element instanceof Document
-    ? element.readyState !== 'loading'
-    : isElementConnected(element.host);
-};
+    $observer.get(this)!.observe(container, defaultObserverOptions);
 
-proto.connect = function connect() {
-  const container = getAdopterContainer(this);
+    if ($uniqueSheets.get(this)!.length > 0) {
+      adopt(this);
+    }
 
-  $observer.get(this)!.observe(container, defaultObserverOptions);
+    traverseWebComponents(container, (root) => {
+      getAssociatedLocation(root).connect();
+    });
+  },
+  disconnect() {
+    $observer.get(this)!.disconnect();
+  },
+  update(sheets: readonly ConstructedStyleSheet[]) {
+    const self = this;
+    const locationType =
+      $element.get(self) === document ? 'Document' : 'ShadowRoot';
 
-  if ($uniqueSheets.get(this)!.length > 0) {
-    adopt(this);
-  }
+    if (!Array.isArray(sheets)) {
+      // document.adoptedStyleSheets = new CSSStyleSheet();
+      throw new TypeError(
+        `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Iterator getter is not callable.`,
+      );
+    }
 
-  traverseWebComponents(container, (root) => {
-    getAssociatedLocation(root).connect();
-  });
-};
+    if (!sheets.every(isCSSStyleSheetInstance)) {
+      // document.adoptedStyleSheets = ['non-CSSStyleSheet value'];
+      throw new TypeError(
+        `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Failed to convert value to 'CSSStyleSheet'`,
+      );
+    }
 
-proto.disconnect = function disconnect() {
-  $observer.get(this)!.disconnect();
-};
+    if (sheets.some(isNonConstructedStyleSheetInstance)) {
+      // document.adoptedStyleSheets = [document.styleSheets[0]];
+      throw new TypeError(
+        `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Can't adopt non-constructed stylesheets`,
+      );
+    }
 
-proto.update = function update(sheets: readonly ConstructedStyleSheet[]) {
-  const self = this;
-  const locationType =
-    $element.get(self) === document ? 'Document' : 'ShadowRoot';
+    self.sheets = sheets;
+    const oldUniqueSheets = $uniqueSheets.get(self)!;
+    const uniqueSheets = unique(sheets);
 
-  if (!Array.isArray(sheets)) {
-    // document.adoptedStyleSheets = new CSSStyleSheet();
-    throw new TypeError(
-      `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Iterator getter is not callable.`,
-    );
-  }
+    // Style sheets that existed in the old sheet list but was excluded in the
+    // new one.
+    const removedSheets = diff(oldUniqueSheets, uniqueSheets);
 
-  if (!sheets.every(isCSSStyleSheetInstance)) {
-    // document.adoptedStyleSheets = ['non-CSSStyleSheet value'];
-    throw new TypeError(
-      `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Failed to convert value to 'CSSStyleSheet'`,
-    );
-  }
+    removedSheets.forEach((sheet) => {
+      // Type Note: any removed sheet is already initialized, so there cannot be
+      // missing adopter for this location.
+      removeNode(getAdopterByLocation(sheet, self)!);
+      removeAdopterLocation(sheet, self);
+    });
 
-  if (sheets.some(isNonConstructedStyleSheetInstance)) {
-    // document.adoptedStyleSheets = [document.styleSheets[0]];
-    throw new TypeError(
-      `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Can't adopt non-constructed stylesheets`,
-    );
-  }
+    $uniqueSheets.set(self, uniqueSheets);
 
-  self.sheets = sheets;
-  const oldUniqueSheets = $uniqueSheets.get(self)!;
-  const uniqueSheets = unique(sheets);
-
-  // Style sheets that existed in the old sheet list but was excluded in the
-  // new one.
-  const removedSheets = diff(oldUniqueSheets, uniqueSheets);
-
-  removedSheets.forEach((sheet) => {
-    // Type Note: any removed sheet is already initialized, so there cannot be
-    // missing adopter for this location.
-    removeNode(getAdopterByLocation(sheet, self)!);
-    removeAdopterLocation(sheet, self);
-  });
-
-  $uniqueSheets.set(self, uniqueSheets);
-
-  if (self.isConnected() && uniqueSheets.length > 0) {
-    adopt(self);
-  }
+    if (self.isConnected() && uniqueSheets.length > 0) {
+      adopt(self);
+    }
+  },
 };
 
 export default Location;

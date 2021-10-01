@@ -9,7 +9,7 @@ export const hasShadyCss = 'ShadyCSS' in window && !ShadyCSS.nativeShadow;
  * The in-memory HTMLDocument that is necessary to get the internal
  * CSSStyleSheet of a basic `<style>` element.
  */
-export const bootstrapper = document.implementation.createHTMLDocument('boot');
+export const bootstrapper = document.implementation.createHTMLDocument('');
 
 /**
  * Since ShadowRoots with the closed mode are not available via
@@ -21,3 +21,6 @@ export const closedShadowRootRegistry = new WeakMap<Element, ShadowRoot>();
 // Workaround for IE that does not support the DOMException constructor
 export const _DOMException =
   typeof DOMException === 'object' ? Error : DOMException;
+
+export const defineProperty = Object.defineProperty;
+export const forEach = Array.prototype.forEach;

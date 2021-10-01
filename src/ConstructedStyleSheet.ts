@@ -1,19 +1,12 @@
 import type Location from './Location';
-import {_DOMException, bootstrapper} from './shared';
-import {
-  clearRules,
-  defineProperty,
-  insertAllRules,
-  rejectImports,
-} from './utils';
+import {fixBrokenRules, hasBrokenRules} from './safari';
+import {_DOMException, bootstrapper, defineProperty} from './shared';
+import {clearRules, insertAllRules, rejectImports} from './utils';
 
 const cssStyleSheetMethods = [
-  'addImport',
-  'addPageRule',
   'addRule',
   'deleteRule',
   'insertRule',
-  'removeImport',
   'removeRule',
 ];
 
@@ -146,6 +139,7 @@ function checkInvocationCorrectness(self: ConstructedStyleSheet) {
  */
 declare class ConstructedStyleSheet extends CSSStyleSheet {
   replace(text: string): Promise<ConstructedStyleSheet>;
+
   replaceSync(text: string): void;
 }
 
@@ -182,7 +176,9 @@ proto.replaceSync = function replaceSync(contents) {
     const self = this;
 
     const style = $basicStyleSheet.get(self)!.ownerNode as HTMLStyleElement;
-    style.textContent = rejectImports(contents);
+    style.textContent = hasBrokenRules
+      ? fixBrokenRules(rejectImports(contents))
+      : rejectImports(contents);
     $basicStyleSheet.set(self, style.sheet!);
 
     $locations.get(self)!.forEach((location) => {
@@ -211,12 +207,8 @@ cssStyleSheetMethods.forEach((method) => {
     checkInvocationCorrectness(self);
 
     const args = arguments;
-    const basic = $basicStyleSheet.get(self)!;
-    const locations = $locations.get(self)!;
 
-    const result = basic[method].apply(basic, args);
-
-    locations.forEach((location) => {
+    $locations.get(self)!.forEach((location) => {
       if (location.isConnected()) {
         // Type Note: If location is connected, adopter is already created; and
         // since it is connected to DOM, the sheet cannot be null.
@@ -225,7 +217,19 @@ cssStyleSheetMethods.forEach((method) => {
       }
     });
 
-    return result;
+    if (hasBrokenRules) {
+      if (method === 'insertRule') {
+        args[0] = fixBrokenRules(args[0]);
+      }
+
+      if (method === 'addRule') {
+        args[1] = fixBrokenRules(args[1]);
+      }
+    }
+
+    const basic = $basicStyleSheet.get(self)!;
+
+    return basic[method].apply(basic, args);
   };
 });
 
