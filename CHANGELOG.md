@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.2](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v3.0.0-0...v3.0.2) (2021-10-01)
+
+
+### Bug Fixes
+
+* resolve issue with broken coverage & update dependencies ([dde9152](https://github.com/calebdwilliams/adoptedStyleSheets/commit/dde9152cba224817dcaa4029cca618ece675caa4))
+* update Typescript code ([d49fabb](https://github.com/calebdwilliams/adoptedStyleSheets/commit/d49fabb1c9e185ab3a9dd342f625c5fe6ff26c5a))
+
 ### [3.0.1](https://github.com/calebdwilliams/adoptedStyleSheets/compare/v3.0.0-0...v3.0.1) (2021-09-12)
 
 
