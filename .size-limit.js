@@ -1,6 +1,6 @@
 module.exports = [
   {
     path: 'dist/adoptedStyleSheets.js',
-    limit: '2.5 kB',
+    limit: '2 kB',
   },
 ];
