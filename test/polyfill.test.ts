@@ -745,8 +745,6 @@ describe('Constructible Style Sheets polyfill', () => {
       });
 
       it('handles rule on addRule', () => {
-        css.addRule('.foo::before', 'content: "bar"', 0);
-
         css.addRule('.foo', 'background: none !important', 0);
         css.addRule('.foo', 'background: blue', 1);
         checkContent();
