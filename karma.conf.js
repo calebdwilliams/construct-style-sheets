@@ -163,14 +163,14 @@ module.exports = (config) => {
               isolatedModules: true,
               tsconfig: require.resolve('./tsconfig.test.json'),
             }),
-            rollupPluginInstrumentTsCode(),
+            coverage && rollupPluginInstrumentTsCode(),
             rollupPluginInjectCode({
               'index.js': {
                 line: 3,
                 code: "    if ('adoptedStyleSheets' in document) { return; }\n",
               },
             }),
-          ],
+          ].filter(Boolean),
           output: {
             format: 'iife',
             name: 'source',

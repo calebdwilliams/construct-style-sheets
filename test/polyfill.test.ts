@@ -718,5 +718,39 @@ describe('Constructible Style Sheets polyfill', () => {
         checkContent();
       });
     });
+
+    describe('"background" rule', () => {
+      let css: CSSStyleSheet;
+      let element: HTMLElement;
+
+      const checkContent = () => checkGlobalCss(element, {background: ''});
+
+      beforeEach(async () => {
+        css = new CSSStyleSheet();
+        document.adoptedStyleSheets = [css];
+        element = await fixture('<div class="foo"></div>');
+      });
+
+      it('handles rule on replace', () => {
+        css.replaceSync(
+          '.foo { background: none !important; } .foo { background: blue; }',
+        );
+        checkContent();
+      });
+
+      it('handles rule on insertRule', () => {
+        css.insertRule('.foo { background: none !important; }', 0);
+        css.insertRule('.foo { background: blue; }', 1);
+        checkContent();
+      });
+
+      it('handles rule on addRule', () => {
+        css.addRule('.foo::before', 'content: "bar"', 0);
+
+        css.addRule('.foo', 'background: none !important', 0);
+        css.addRule('.foo', 'background: blue', 1);
+        checkContent();
+      });
+    });
   });
 });

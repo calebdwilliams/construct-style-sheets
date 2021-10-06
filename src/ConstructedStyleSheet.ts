@@ -1,7 +1,6 @@
 import type Location from './Location';
-import {fixBrokenRules, hasBrokenRules} from './safari';
 import {_DOMException, bootstrapper, defineProperty} from './shared';
-import {clearRules, insertAllRules, rejectImports} from './utils';
+import {rejectImports} from './utils';
 
 const cssStyleSheetMethods = [
   'addRule',
@@ -45,12 +44,15 @@ export function isNonConstructedStyleSheetInstance(instance: object): boolean {
  */
 
 /**
- * Basic stylesheet is an sample stylesheet that contains all the CSS rules of
- * the current constructable stylesheet. The document or custom elements can
- * adopt constructable stylesheet; in this case, basic stylesheet's CSS rules
- * are reflected in document/custom element internal <style> elements.
+ * Basic style element is a sample element that contains all the CSS of the
+ * current constructable stylesheet. The document or custom elements can
+ * adopt constructable stylesheet; in this case, basic stylesheet's CSS is
+ * reflected in document/custom element internal <style> elements.
  */
-const $basicStyleSheet = new WeakMap<ConstructedStyleSheet, CSSStyleSheet>();
+const $basicStyleElement = new WeakMap<
+  ConstructedStyleSheet,
+  HTMLStyleElement
+>();
 
 /**
  * Contains all locations associated with the current ConstructedStyleSheet.
@@ -66,6 +68,20 @@ const $locations = new WeakMap<ConstructedStyleSheet, Location[]>();
 const $adoptersByLocation = new WeakMap<
   ConstructedStyleSheet,
   WeakMap<Location, HTMLStyleElement>
+>();
+
+type CSSStyleSheetMethodMeta = Readonly<{
+  args: IArguments;
+  method: string;
+}>;
+
+/**
+ * Contains all the methods called for the constructable style sheet. Used to
+ * reflect these methods in created or restyled `<style>` adopters.
+ */
+const $appliedMethods = new WeakMap<
+  ConstructedStyleSheet,
+  Array<CSSStyleSheetMethodMeta>
 >();
 
 /*
@@ -111,8 +127,12 @@ export function restyleAdopter(
   adopter: HTMLStyleElement,
 ): void {
   requestAnimationFrame(() => {
-    clearRules(adopter.sheet!);
-    insertAllRules($basicStyleSheet.get(sheet)!, adopter.sheet!);
+    adopter.textContent = $basicStyleElement.get(sheet)!.textContent;
+    $appliedMethods
+      .get(sheet)!
+      .forEach((command) =>
+        adopter.sheet![command.method].apply(adopter.sheet!, command.args),
+      );
   });
 }
 
@@ -126,7 +146,7 @@ export function restyleAdopter(
  * properties are initialized.
  */
 function checkInvocationCorrectness(self: ConstructedStyleSheet) {
-  if (!$basicStyleSheet.has(self)) {
+  if (!$basicStyleElement.has(self)) {
     throw new TypeError('Illegal invocation');
   }
 }
@@ -149,9 +169,10 @@ function ConstructedStyleSheet(this: ConstructedStyleSheet) {
   bootstrapper.body.appendChild(style);
 
   // Init private properties
-  $basicStyleSheet.set(self, style.sheet!);
+  $basicStyleElement.set(self, style);
   $locations.set(self, []);
   $adoptersByLocation.set(self, new WeakMap());
+  $appliedMethods.set(self, []);
 }
 
 const proto = ConstructedStyleSheet.prototype;
@@ -175,11 +196,8 @@ proto.replaceSync = function replaceSync(contents) {
   if (typeof contents === 'string') {
     const self = this;
 
-    const style = $basicStyleSheet.get(self)!.ownerNode as HTMLStyleElement;
-    style.textContent = hasBrokenRules
-      ? fixBrokenRules(rejectImports(contents))
-      : rejectImports(contents);
-    $basicStyleSheet.set(self, style.sheet!);
+    $basicStyleElement.get(self)!.textContent = rejectImports(contents);
+    $appliedMethods.set(self, []);
 
     $locations.get(self)!.forEach((location) => {
       if (location.isConnected()) {
@@ -197,7 +215,7 @@ defineProperty(proto, 'cssRules', {
     // CSSStyleSheet.prototype.cssRules;
     checkInvocationCorrectness(this);
 
-    return $basicStyleSheet.get(this)!.cssRules;
+    return $basicStyleElement.get(this)!.sheet!.cssRules;
   },
 });
 
@@ -208,6 +226,8 @@ cssStyleSheetMethods.forEach((method) => {
 
     const args = arguments;
 
+    $appliedMethods.get(self)!.push({method, args});
+
     $locations.get(self)!.forEach((location) => {
       if (location.isConnected()) {
         // Type Note: If location is connected, adopter is already created; and
@@ -217,19 +237,9 @@ cssStyleSheetMethods.forEach((method) => {
       }
     });
 
-    if (hasBrokenRules) {
-      if (method === 'insertRule') {
-        args[0] = fixBrokenRules(args[0]);
-      }
+    const basicSheet = $basicStyleElement.get(self)!.sheet!;
 
-      if (method === 'addRule') {
-        args[1] = fixBrokenRules(args[1]);
-      }
-    }
-
-    const basic = $basicStyleSheet.get(self)!;
-
-    return basic[method].apply(basic, args);
+    return basicSheet[method].apply(basicSheet, args);
   };
 });
 
