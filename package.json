@@ -28,7 +28,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/calebdwilliams/adoptedStyleSheets.git"
+    "url": "git+https://github.com/calebdwilliams/construct-style-sheets.git"
   },
   "contributors": [
     "Caleb D. Williams <caleb.d.williams@gmail.com>",
@@ -36,9 +36,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/calebdwilliams/adoptedStyleSheets/issues"
+    "url": "https://github.com/calebdwilliams/construct-style-sheets/issues"
   },
-  "homepage": "https://github.com/calebdwilliams/adoptedStyleSheets#readme",
+  "homepage": "https://github.com/calebdwilliams/construct-style-sheets#readme",
   "devDependencies": {
     "@babel/core": "^7.15.5",
     "@babel/plugin-transform-instanceof": "^7.14.5",
