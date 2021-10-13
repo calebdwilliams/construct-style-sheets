@@ -1,5 +1,4 @@
-import {getCssText} from './safari';
-import {closedShadowRootRegistry, forEach} from './shared';
+import {closedShadowRootRegistry} from './shared';
 
 const importPattern = /@import.+?;?$/gm;
 
@@ -13,18 +12,6 @@ export function rejectImports(contents: string): string {
   }
 
   return _contents.trim();
-}
-
-export function clearRules(sheet: CSSStyleSheet): void {
-  for (let i = 0; i < sheet.cssRules.length; i++) {
-    sheet.deleteRule(0);
-  }
-}
-
-export function insertAllRules(from: CSSStyleSheet, to: CSSStyleSheet): void {
-  forEach.call(from.cssRules, (rule, i) => {
-    to.insertRule(getCssText(rule), i);
-  });
 }
 
 /**
