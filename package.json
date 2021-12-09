@@ -94,5 +94,6 @@
   ],
   "simple-git-hooks": {
     "commit-msg": "npx commitlint --edit $1"
-  }
+  },
+  "sideEffects": true
 }
