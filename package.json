@@ -9,9 +9,6 @@
     "dist/adoptedStyleSheets.js",
     "dist/adoptedStyleSheets.d.ts"
   ],
-  "engines": {
-    "npm": ">=7"
-  },
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "test": "karma start",
