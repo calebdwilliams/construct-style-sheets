@@ -219,6 +219,17 @@ defineProperty(proto, 'cssRules', {
   },
 });
 
+defineProperty(proto, 'media', {
+  configurable: true,
+  enumerable: true,
+  get: function media() {
+    // CSSStyleSheet.prototype.media;
+    checkInvocationCorrectness(this);
+
+    return $basicStyleElement.get(this)!.sheet!.media;
+  },
+});
+
 cssStyleSheetMethods.forEach((method) => {
   proto[method] = function () {
     const self = this;

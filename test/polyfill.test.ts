@@ -51,6 +51,7 @@ describe('Constructible Style Sheets polyfill', () => {
     describe('basic', () => {
       it('has replace and replaceSync methods', () => {
         expect(sheet.cssRules).toBeDefined();
+        expect(sheet.media).toBeDefined();
         expect(sheet.replace).toBeDefined();
         expect(sheet.replaceSync).toBeDefined();
       });
@@ -96,6 +97,12 @@ describe('Constructible Style Sheets polyfill', () => {
       describe('occurs for accessor methods when they are improperly invoked', () => {
         it('cssRules', () => {
           expect(() => CSSStyleSheet.prototype.cssRules).toThrowError(
+            illegalPattern,
+          );
+        });
+
+        it('media', () => {
+          expect(() => CSSStyleSheet.prototype.media).toThrowError(
             illegalPattern,
           );
         });
