@@ -3,7 +3,7 @@
   "version": "3.0.6",
   "description": "Constructible style sheets/adopted style sheets polyfill",
   "main": "dist/adoptedStyleSheets.js",
-  "module": "dist/adoptedStyleSheets.js",
+  "module": "dist/adoptedStyleSheets.mjs",
   "types": "dist/adoptedStyleSheets.d.ts",
   "files": [
     "dist/adoptedStyleSheets.js",
