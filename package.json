@@ -3,12 +3,20 @@
   "version": "3.0.6",
   "description": "Constructible style sheets/adopted style sheets polyfill",
   "main": "dist/adoptedStyleSheets.js",
-  "module": "dist/adoptedStyleSheets.js",
+  "module": "dist/adoptedStyleSheets.mjs",
   "types": "dist/adoptedStyleSheets.d.ts",
   "files": [
     "dist/adoptedStyleSheets.js",
-    "dist/adoptedStyleSheets.d.ts"
+    "dist/adoptedStyleSheets.d.ts",
+    "dist/adoptedStyleSheets.mjs"
   ],
+  "exports": {
+    ".": {
+      "import": "dist/adoptedStyleSheets.mjs",
+      "require": "dist/adoptedStyleSheets.js",
+      "types": "dist/adoptedStyleSheets.d.ts"
+    }
+  },
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "test": "karma start",

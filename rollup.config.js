@@ -8,11 +8,48 @@ const extensions = ['.ts', '.js'];
 
 module.exports = {
   input: 'src/index.ts',
-  output: {
-    file: 'dist/adoptedStyleSheets.js',
-    format: 'iife',
-    name: 'adoptedStyleSheets',
-  },
+  output: [
+    {
+      file: 'dist/adoptedStyleSheets.js',
+      format: 'iife',
+      name: 'adoptedStyleSheets',
+      plugins: [
+        injectCode({
+          insertions: {
+            'adoptedStyleSheets.js': [
+              {
+                line: 3,
+                code: "    if (typeof document === 'undefined' || 'adoptedStyleSheets' in document) { return; }\n",
+              },
+            ],
+          },
+        }),
+      ],
+    },
+    {
+      file: 'dist/adoptedStyleSheets.mjs',
+      format: 'esm',
+      plugins: [
+        injectCode({
+          insertions: {
+            'adoptedStyleSheets.mjs': [
+              {
+                line: -Infinity,
+                code: "if (typeof document === 'undefined' || 'adoptedStyleSheets' in document) {\n",
+              },
+              {
+                line: Infinity,
+                code: '}',
+              },
+            ],
+          },
+          processLine(line) {
+            return `    ${line}`;
+          },
+        }),
+      ],
+    },
+  ],
   plugins: [
     nodeResolve({
       extensions,
@@ -32,13 +69,6 @@ module.exports = {
           rename: 'adoptedStyleSheets.d.ts',
         },
       ],
-    }),
-    injectCode({
-      'adoptedStyleSheets.js': {
-        line: 3,
-        code:
-          "    if (typeof document === 'undefined' || 'adoptedStyleSheets' in document) { return; }\n",
-      },
     }),
   ],
 };
