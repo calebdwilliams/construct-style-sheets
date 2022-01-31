@@ -1,10 +1,10 @@
-module.exports = ({insertions, lineProcessor = (line) => line}) => ({
+module.exports = ({insertions, processLine = (line) => line}) => ({
   name: 'inject-code',
   async generateBundle(_, assets) {
     Object.entries(insertions).forEach(([chunkName, chunkInsertions]) => {
       const chunk = assets[chunkName];
 
-      const lines = chunk.code.split('\n').map(lineProcessor);
+      const lines = chunk.code.split('\n').map(processLine);
 
       for (const {line, code} of chunkInsertions) {
         switch (line) {

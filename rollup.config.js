@@ -43,7 +43,7 @@ module.exports = {
               },
             ],
           },
-          lineProcessor(line) {
+          processLine(line) {
             return `    ${line}`;
           },
         }),
