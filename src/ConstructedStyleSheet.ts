@@ -120,13 +120,15 @@ export function removeAdopterLocation(
 /**
  * Re-styles a single `<style>` adopter according to the basic style sheet.
  *
- * NOTE: don't use it for disconnected adopters. It will throw an error.
+ * NOTE: don't use it for disconnected adopters
  */
 export function restyleAdopter(
   sheet: ConstructedStyleSheet,
   adopter: HTMLStyleElement,
 ): void {
   requestAnimationFrame(() => {
+    // The adopter could have disconnected in between animation frames, so we recheck if it's still connected
+    if (!adopter.isConnected) return;
     adopter.textContent = $basicStyleElement.get(sheet)!.textContent;
     $appliedMethods
       .get(sheet)!
