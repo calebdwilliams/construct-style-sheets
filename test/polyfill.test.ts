@@ -135,7 +135,7 @@ describe('Constructible Style Sheets polyfill', () => {
           globalStyle.sheet!.replace('.only-test { color: blue; }'),
         ).toBeRejectedWith(
           new _DOMException(
-            "Can't call replace on non-constructed CSSStyleSheets.",
+            "Failed to execute 'replace' on 'CSSStyleSheet': Can't call replace on non-constructed CSSStyleSheets.",
           ),
         );
       });
