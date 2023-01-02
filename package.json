@@ -46,7 +46,7 @@
     "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-typescript": "^8.2.5",
-    "@size-limit/preset-small-lib": "^5.0.3",
+    "@size-limit/preset-small-lib": "^8.1.0",
     "@types/jasmine": "^3.9.0",
     "babel-plugin-transform-async-to-promises": "^0.8.15",
     "codecov": "^3.8.3",
