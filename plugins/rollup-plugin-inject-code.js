@@ -1,13 +1,17 @@
-module.exports = (options) => ({
-  name: 'inject-code',
-  async generateBundle(_, assets) {
-    for (const chunkName in options) {
-      const chunk = assets[chunkName];
-      const {line, code} = options[chunkName];
+/* eslint-disable @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call */
+export default function rollupPluginInjectCode(options) {
+  return {
+    name: 'inject-code',
+    async renderChunk(code, { fileName }) {
+      const _options = options[fileName];
 
-      const lines = chunk.code.split('\n');
-      lines.splice(line, 0, code);
-      chunk.code = lines.join('\n');
-    }
-  }
-});
+      if (_options) {
+        const lines = code.split('\n');
+        lines.splice(_options.line, 0, _options.code);
+        return lines.join('\n');
+      }
+
+      return code;
+    },
+  };
+}

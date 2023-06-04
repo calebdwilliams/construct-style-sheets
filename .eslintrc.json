@@ -4,6 +4,10 @@
     "vaadin/imports-typescript",
     "vaadin/prettier"
   ],
+  "env": {
+    "browser": true,
+    "node": true
+  },
   "rules": {
     "@typescript-eslint/no-use-before-define": "off",
     "@typescript-eslint/prefer-includes": "off",

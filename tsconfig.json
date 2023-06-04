@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "lib": [
-      "dom",
-      "es5"
-    ],
+    "lib": ["dom", "es5"],
     "jsx": "react-jsx",
     "inlineSources": true,
     "module": "esNext",
@@ -23,11 +23,15 @@
     "noUnusedParameters": false,
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": true
   },
   "include": [
     "plugins",
     "src/**/*.ts",
-    "test/**/*.ts"
+    "test/**/*.ts",
+    ".size-limit.cjs",
+    "commitlint.config.cjs",
+    "karma.conf.cjs",
+    "rollup.config.js"
   ]
 }

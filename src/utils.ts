@@ -1,4 +1,4 @@
-import { closedShadowRootRegistry } from './shared';
+import { closedShadowRootRegistry } from './shared.js';
 
 const importPattern = /@import.+?;?$/gmu;
 

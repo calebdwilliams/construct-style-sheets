@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-require-imports,import/unambiguous */
 // Karma configuration
 // Generated on Sun Jan 20 2019 23:06:22 GMT-0600 (CST)
 const rollupCommonjs = require('@rollup/plugin-commonjs');
 const rollupNodeResolve = require('@rollup/plugin-node-resolve').default;
-const rollupPluginTypescript = require('@rollup/plugin-typescript');
 const rollupPluginBabel = require('@rollup/plugin-babel').default;
-const rollupPluginInstrumentTsCode = require('./plugins/rollup-plugin-instrument-ts-code');
-const rollupPluginInjectCode = require('./plugins/rollup-plugin-inject-code');
+const rollupPluginInstrumentTsCode = require('./plugins/rollup-plugin-instrument-ts-code.js');
+const rollupPluginInjectCode = require('./plugins/rollup-plugin-inject-code.js');
+const babelConfig = require('./babel.config.json');
 
 const isCI = !!process.env.CI;
 const watch = !!process.argv.find((arg) => arg.includes('watch')) && !isCI;
@@ -46,10 +47,10 @@ module.exports = (config) => {
 
     // list of files / patterns to load in the browser
     files: [
-      {pattern: 'test/polyfills.js', watched: false},
-      {pattern: 'src/index.ts', watched: false},
-      {pattern: 'test/init-while-loading.js', watched: false},
-      {pattern: 'test/polyfill.test.ts', watched: false},
+      { pattern: 'test/polyfills.js', watched: false },
+      { pattern: 'src/index.ts', watched: false },
+      { pattern: 'test/init-while-loading.js', watched: false },
+      { pattern: 'test/polyfill.test.ts', watched: false },
     ],
 
     // list of files / patterns to exclude
@@ -115,6 +116,7 @@ module.exports = (config) => {
           extensions,
         }),
         rollupPluginBabel({
+          assumptions: babelConfig.assumptions,
           babelHelpers: 'bundled',
           babelrc: false,
           extensions,
@@ -124,20 +126,7 @@ module.exports = (config) => {
             'node_modules/lit-html/**',
             'test/**',
           ],
-          presets: [
-            '@babel/preset-typescript',
-            [
-              '@babel/preset-env',
-              {
-                loose: true,
-                targets: {
-                  browsers: ['last 2 versions', 'IE 11'],
-                },
-                shippedProposals: true,
-                useBuiltIns: false,
-              },
-            ],
-          ],
+          presets: babelConfig.presets,
           plugins: [
             '@babel/plugin-transform-instanceof',
             'babel-plugin-transform-async-to-promises',
@@ -159,7 +148,7 @@ module.exports = (config) => {
             rollupNodeResolve({
               extensions,
             }),
-            rollupPluginTypescript({
+            rollupPluginBabel({
               isolatedModules: true,
               tsconfig: require.resolve('./tsconfig.test.json'),
             }),

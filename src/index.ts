@@ -1,9 +1,9 @@
-import ConstructedStyleSheet from './ConstructedStyleSheet';
+import ConstructedStyleSheet from './ConstructedStyleSheet.js';
 import {
   attachAdoptedStyleSheetProperty,
   getAssociatedLocation,
-} from './Location';
-import { closedShadowRootRegistry } from './shared';
+} from './Location.js';
+import { closedShadowRootRegistry } from './shared.js';
 
 window.CSSStyleSheet = ConstructedStyleSheet;
 

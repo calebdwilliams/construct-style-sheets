@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/unambiguous
 declare module 'construct-style-sheets-polyfill';
 
 interface CSSStyleSheet {

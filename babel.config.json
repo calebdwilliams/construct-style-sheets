@@ -1,0 +1,36 @@
+{
+  "assumptions": {
+    "constantReexports": true,
+    "constantSuper": true,
+    "enumerableModuleMeta": true,
+    "ignoreFunctionLength": true,
+    "ignoreToPrimitiveHint": true,
+    "iterableIsArray": true,
+    "mutableTemplateObject": true,
+    "noClassCalls": true,
+    "noDocumentAll": true,
+    "noIncompleteNsImportDetection": true,
+    "noNewArrows": true,
+    "objectRestNoSymbols": true,
+    "privateFieldsAsSymbols": true,
+    "pureGetters": true,
+    "setClassMethods": true,
+    "setComputedProperties": true,
+    "setPublicClassFields": true,
+    "setSpreadProperties": true,
+    "superIsCallableConstructor": true
+  },
+  "presets": [
+    "@babel/preset-typescript",
+    [
+      "@babel/preset-env",
+      {
+        "exclude": [
+          "@babel/plugin-transform-typeof-symbol"
+        ],
+        "shippedProposals": true,
+        "useBuiltIns": false
+      }
+    ]
+  ]
+}

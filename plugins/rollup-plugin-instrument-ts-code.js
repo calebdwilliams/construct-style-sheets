@@ -1,13 +1,14 @@
-const {createInstrumenter} = require('istanbul-lib-instrument');
+/* eslint-disable @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call */
+import { createInstrumenter } from 'istanbul-lib-instrument';
 
-module.exports = function () {
+export default function rollupPluginInstrumentTsCode() {
   return {
     name: 'istanbul',
     async transform(code, filename) {
       const instrumenter = createInstrumenter({
-        produceSourceMap: true,
+        codeGenerationOptions: { sourceMap: filename, sourceMapWithCode: true },
         esModules: true,
-        codeGenerationOptions: {sourceMap: filename, sourceMapWithCode: true},
+        produceSourceMap: true,
       });
 
       return {

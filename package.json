@@ -9,6 +9,7 @@
     "dist/adoptedStyleSheets.js",
     "dist/adoptedStyleSheets.d.ts"
   ],
+  "type": "module",
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "test": "karma start",
@@ -45,7 +46,7 @@
     "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.1.0",
-    "@rollup/plugin-typescript": "^11.1.1",
+    "@rollup/plugin-terser": "^0.4.3",
     "@size-limit/preset-small-lib": "^8.2.4",
     "@types/jasmine": "^4.3.2",
     "babel-plugin-transform-async-to-promises": "^0.8.18",

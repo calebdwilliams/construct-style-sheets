@@ -2,7 +2,8 @@
  * Even if the polyfill does not support ShadyCSS, it should be detected in
  * order to avoid errors of parallel usage.
  */
-  // @ts-expect-error: ShadyCSS is not a standard Window property.
+// @ts-expect-error: ShadyCSS is not a standard Window property.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export const hasShadyCss = 'ShadyCSS' in window && !ShadyCSS.nativeShadow;
 
 /**
@@ -22,5 +23,8 @@ export const closedShadowRootRegistry = new WeakMap<Element, ShadowRoot>();
 export const _DOMException =
   typeof DOMException === 'object' ? Error : DOMException;
 
-export const defineProperty = Object.defineProperty;
-export const forEach = Array.prototype.forEach;
+export const {
+  defineProperty,
+  prototype: { isPrototypeOf },
+} = Object;
+export const { forEach } = Array.prototype;
