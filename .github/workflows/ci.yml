@@ -40,7 +40,7 @@ jobs:
     strategy:
       matrix:
         node-version: [14.x]
-        os: [windows-latest, macOS-latest]
+        os: [windows-2019, macOS-11]
 
     steps:
       - name: Checkout Project Code
