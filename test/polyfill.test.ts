@@ -1,8 +1,7 @@
-import {defineCE, fixture, waitForMutationObserver} from './helpers';
+import { defineCE, fixture, waitForMutationObserver } from './helpers';
 
 // Workaround for IE that does not support the DOMException constructor
-export const _DOMException =
-  typeof DOMException === 'object' ? Error : DOMException;
+const _DOMException = typeof DOMException === 'object' ? Error : DOMException;
 
 type ShadowCSSChecker = Record<string, string>;
 
@@ -13,14 +12,13 @@ window.requestAnimationFrame = (callback) => callback();
 describe('Constructible Style Sheets polyfill', () => {
   const checkGlobalCss = (
     element: Element,
-    checker: Record<string, string | RegExp>,
+    checker: Record<string, RegExp | string>,
     pseudoEl: string | null = null,
   ) => {
     const computed = getComputedStyle(element, pseudoEl);
-
-    for (const property in checker) {
+    Object.keys(checker).forEach((property) => {
       expect(computed.getPropertyValue(property)).toMatch(checker[property]);
-    }
+    });
   };
 
   describe('CSSStyleSheet object', () => {
@@ -66,9 +64,9 @@ describe('Constructible Style Sheets polyfill', () => {
     });
 
     describe('illegal invocation', () => {
-      const illegalPattern = /Illegal invocation/i;
+      const illegalPattern = /Illegal invocation/iu;
 
-      const checkIllegalInvocation = (method) => {
+      const checkIllegalInvocation = (method: keyof CSSStyleSheet) => {
         expect(CSSStyleSheet.prototype[method]).toThrowError(illegalPattern);
       };
 
@@ -140,15 +138,14 @@ describe('Constructible Style Sheets polyfill', () => {
         );
       });
 
-      it('removes @import statements', async () => {
-        return await Promise.all(
+      it('removes @import statements', async () =>
+        Promise.all(
           importPatterns.map((pattern) =>
             sheet.replace(pattern).then(() => {
               expect(sheet.cssRules.length).toBe(0);
             }),
           ),
-        );
-      });
+        ));
 
       it('correctly replaces multi-rule styles', async () => {
         await expectAsync(
@@ -186,8 +183,8 @@ describe('Constructible Style Sheets polyfill', () => {
         });
       });
 
-      it('correctly replaces multi-rule styles', async () => {
-        await expect(() =>
+      it('correctly replaces multi-rule styles', () => {
+        expect(() =>
           sheet.replaceSync(`
             h1 { color: tomato; }
             h2 { color: tomato; }
@@ -245,16 +242,16 @@ describe('Constructible Style Sheets polyfill', () => {
 
     const createCustomElement = (
       sheets?: readonly CSSStyleSheet[],
-      {html = '', mode = 'open'}: CustomElementOptions = {},
+      { html = '', mode = 'open' }: CustomElementOptions = {},
     ): [tag: string, klass: object] => {
       class CustomElement extends HTMLElement {
         constructor() {
           super();
-          const root = this.attachShadow({mode});
+          const root = this.attachShadow({ mode });
           shadowRootRegistry.set(this, root);
 
           if (sheets) {
-            root.adoptedStyleSheets = sheets;
+            root.adoptedStyleSheets.push(...sheets);
           }
 
           root.innerHTML = html;
@@ -275,17 +272,17 @@ describe('Constructible Style Sheets polyfill', () => {
 
       const computed = getComputedStyle(test, null);
 
-      for (const property in positiveChecker) {
+      Object.keys(positiveChecker ?? {}).forEach((property) => {
         expect(computed.getPropertyValue(property)).toBe(
-          positiveChecker[property],
+          positiveChecker![property],
         );
-      }
+      });
 
-      for (const property in negativeChecker) {
-        expect(computed.getPropertyValue(property)).not.toBe(
-          negativeChecker[property],
+      Object.keys(negativeChecker ?? {}).forEach((property) => {
+        expect(computed.getPropertyValue(property)).toBe(
+          negativeChecker![property],
         );
-      }
+      });
     };
 
     let css: CSSStyleSheet;
@@ -294,7 +291,7 @@ describe('Constructible Style Sheets polyfill', () => {
     beforeEach(() => {
       css = new CSSStyleSheet();
       css.replaceSync('.test { width: 53px; height: 91px; }');
-      defaultChecker = {width: '53px', height: '91px'};
+      defaultChecker = { height: '91px', width: '53px' };
     });
 
     it('applies styling to web component', async () => {
@@ -309,7 +306,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
       const [tag] = createCustomElement([css, css2]);
       const element = await fixture(`<${tag}></${tag}>`);
-      checkShadowCss(element, {...defaultChecker, 'line-height': '35px'});
+      checkShadowCss(element, { ...defaultChecker, 'line-height': '35px' });
     });
 
     it('handles rules overriding properly', async () => {
@@ -318,7 +315,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
       const [tag] = createCustomElement([css, css2]);
       const element = await fixture(`<${tag}></${tag}>`);
-      checkShadowCss(element, {...defaultChecker, height: '82px'});
+      checkShadowCss(element, { ...defaultChecker, height: '82px' });
     });
 
     it('restores styles if innerHTML is cleared', async () => {
@@ -339,7 +336,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
       const [tag] = createCustomElement([css, css2]);
       const element = await fixture(`<${tag}></${tag}>`);
-      const {children} = element.shadowRoot!;
+      const { children } = element.shadowRoot!;
 
       for (let i = children.length - 1; i >= 0; i--) {
         children[i].parentNode!.removeChild(children[i]);
@@ -347,7 +344,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
       await waitForMutationObserver();
 
-      checkShadowCss(element, {...defaultChecker, height: '82px'});
+      checkShadowCss(element, { ...defaultChecker, height: '82px' });
     });
 
     it('applies to elements created during polyfill loading', () => {
@@ -449,7 +446,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
         expect(element.shadowRoot!.querySelectorAll('style').length).toBe(2);
 
-        element.shadowRoot!.adoptedStyleSheets = [css2, css];
+        element.shadowRoot!.adoptedStyleSheets.push(css2, css);
 
         expect(element.shadowRoot!.querySelectorAll('style').length).toBe(2);
       });
@@ -463,19 +460,9 @@ describe('Constructible Style Sheets polyfill', () => {
         const [tag] = createCustomElement([css]);
         const element = await fixture(`<${tag}></${tag}>`);
 
-        element.shadowRoot!.adoptedStyleSheets = [css2];
+        element.shadowRoot!.adoptedStyleSheets.push(css2);
 
-        checkShadowCss(element, {height: '82px'}, {width: '53px'});
-      });
-
-      it('forbids assigning a non-Array value to adoptedStyleSheets', async () => {
-        const [tag] = createCustomElement([css]);
-        const element = await fixture(`<${tag}></${tag}>`);
-
-        expect(() => {
-          // @ts-expect-error: an error should be thrown here at runtime
-          element.shadowRoot!.adoptedStyleSheets = {};
-        }).toThrow();
+        checkShadowCss(element, { height: '82px' }, { width: '53px' });
       });
 
       it('allows only CSSStyleSheet instances to be added to adoptedStyleSheets', async () => {
@@ -484,7 +471,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
         expect(() => {
           // @ts-expect-error: an error should be thrown here at runtime
-          element.shadowRoot!.adoptedStyleSheets = [{}, css];
+          element.shadowRoot!.adoptedStyleSheets.push({}, css);
         }).toThrow();
       });
     });
@@ -501,8 +488,8 @@ describe('Constructible Style Sheets polyfill', () => {
 
         css.insertRule('.test { line-height: 41px }');
 
-        checkShadowCss(element1, {...defaultChecker, 'line-height': '41px'});
-        checkShadowCss(element2, {...defaultChecker, 'line-height': '41px'});
+        checkShadowCss(element1, { ...defaultChecker, 'line-height': '41px' });
+        checkShadowCss(element2, { ...defaultChecker, 'line-height': '41px' });
       });
 
       it('applies performed updates to all new elements', async () => {
@@ -522,8 +509,8 @@ describe('Constructible Style Sheets polyfill', () => {
 
         await waitForMutationObserver();
 
-        checkShadowCss(element1, {...defaultChecker, 'line-height': '41px'});
-        checkShadowCss(element2, {...defaultChecker, 'line-height': '41px'});
+        checkShadowCss(element1, { ...defaultChecker, 'line-height': '41px' });
+        checkShadowCss(element2, { ...defaultChecker, 'line-height': '41px' });
       });
 
       it('updates styles of all elements if replace on CSSStyleSheet is called', async () => {
@@ -537,7 +524,7 @@ describe('Constructible Style Sheets polyfill', () => {
 
         css.replaceSync('.test { width: 25px; height: 9px; }');
 
-        const checker = {width: '25px', height: '9px'};
+        const checker = { height: '9px', width: '25px' };
         checkShadowCss(element1, checker);
         checkShadowCss(element2, checker);
       });
@@ -562,31 +549,31 @@ describe('Constructible Style Sheets polyfill', () => {
 
         await waitForMutationObserver();
 
-        checkShadowCss(element1, {...defaultChecker, 'line-height': '41px'});
-        checkShadowCss(element2, {...defaultChecker, 'line-height': '41px'});
+        checkShadowCss(element1, { ...defaultChecker, 'line-height': '41px' });
+        checkShadowCss(element2, { ...defaultChecker, 'line-height': '41px' });
       });
     });
 
     describe('closed mode', () => {
       it('works correctly with the closed shadow root', async () => {
-        const [tag] = createCustomElement([css], {mode: 'closed'});
+        const [tag] = createCustomElement([css], { mode: 'closed' });
         const element = await fixture(`<${tag}></${tag}>`);
         checkShadowCss(element, defaultChecker);
       });
 
       it('updates the styles in the closed shadow root', async () => {
-        const [tag] = createCustomElement([css], {mode: 'closed'});
+        const [tag] = createCustomElement([css], { mode: 'closed' });
         const element = await fixture(`<${tag}></${tag}>`);
         css.replaceSync('.test { width: 20px; height: 91px; }');
-        checkShadowCss(element, {width: '20px', height: '91px'});
+        checkShadowCss(element, { height: '91px', width: '20px' });
       });
 
       it('loads sheets of custom elements in the closed shadow root', async () => {
         const [tag1] = createCustomElement([css], {});
-        const [tag2] = createCustomElement([css], {mode: 'closed'});
+        const [tag2] = createCustomElement([css], { mode: 'closed' });
         const [tag3] = createCustomElement(undefined, {
-          mode: 'closed',
           html: `<div><div><${tag1}></${tag1}></div><div><${tag2}></${tag2}></div></div>`,
+          mode: 'closed',
         });
         const element3 = await fixture(`<${tag3}></${tag3}>`);
 
@@ -600,6 +587,10 @@ describe('Constructible Style Sheets polyfill', () => {
     });
   });
 
+  function cleanup() {
+    document.adoptedStyleSheets.splice(0, document.adoptedStyleSheets.length);
+  }
+
   describe('Document', () => {
     let css: CSSStyleSheet;
     let defaultChecker: ShadowCSSChecker;
@@ -607,11 +598,12 @@ describe('Constructible Style Sheets polyfill', () => {
     beforeEach(() => {
       css = new CSSStyleSheet();
       css.replaceSync('.foo { width: 20px; height: 82px; }');
-      defaultChecker = {width: '20px', height: '82px'};
+      defaultChecker = { height: '82px', width: '20px' };
+      cleanup();
     });
 
     it('allows adding new styles', async () => {
-      document.adoptedStyleSheets = [css];
+      document.adoptedStyleSheets.push(css);
 
       const element = await fixture('<div class="foo"></div>');
 
@@ -619,22 +611,23 @@ describe('Constructible Style Sheets polyfill', () => {
     });
 
     it('allows adding new styles that affect existing ones', async () => {
-      document.adoptedStyleSheets = [css];
+      document.adoptedStyleSheets.push(css);
 
       const element = await fixture('<div class="foo"></div>');
 
       const css2 = new CSSStyleSheet();
       css2.replaceSync('.foo { line-height: 9px }');
 
-      document.adoptedStyleSheets = [css, css2];
+      cleanup();
+      document.adoptedStyleSheets.push(css, css2);
 
-      checkGlobalCss(element, {...defaultChecker, 'line-height': '9px'});
+      checkGlobalCss(element, { ...defaultChecker, 'line-height': '9px' });
     });
 
     it('preserves styles if body is cleared', async () => {
       const bodyHtml = document.body.innerHTML;
 
-      document.adoptedStyleSheets = [css];
+      document.adoptedStyleSheets.push(css);
 
       const element = await fixture('<div class="foo"></div>');
 
@@ -656,7 +649,7 @@ describe('Constructible Style Sheets polyfill', () => {
       const css2 = new CSSStyleSheet();
       css2.replaceSync('.foo { line-height: 9px }');
 
-      document.adoptedStyleSheets = [css, css2];
+      document.adoptedStyleSheets.push(css, css2);
 
       const element = await fixture('<div class="foo"></div>');
 
@@ -667,14 +660,14 @@ describe('Constructible Style Sheets polyfill', () => {
 
       await awaiter;
 
-      checkGlobalCss(element, {...defaultChecker, 'line-height': '9px'});
+      checkGlobalCss(element, { ...defaultChecker, 'line-height': '9px' });
 
       document.body.innerHTML = bodyHtml;
     });
 
     it('returns the styles properly', () => {
       const styleSheets = [css];
-      document.adoptedStyleSheets = styleSheets;
+      document.adoptedStyleSheets.push(...styleSheets);
 
       expect(document.adoptedStyleSheets).toEqual(styleSheets);
     });
@@ -688,25 +681,28 @@ describe('Constructible Style Sheets polyfill', () => {
       const css2 = new CSSStyleSheet();
       css2.replaceSync('.foo { line-height: 10px !important }');
 
-      document.adoptedStyleSheets = [css1, css2];
-      checkGlobalCss(element, {'line-height': '10px'});
+      document.adoptedStyleSheets.push(css1, css2);
+      checkGlobalCss(element, { 'line-height': '10px' });
 
-      document.adoptedStyleSheets = [css1];
-      checkGlobalCss(element, {'line-height': '9px'});
+      cleanup();
+      document.adoptedStyleSheets.push(css1);
+      checkGlobalCss(element, { 'line-height': '9px' });
     });
   });
 
   describe('Cross-browser work', () => {
+    beforeEach(cleanup);
+
     describe('"content" rule', () => {
       let css: CSSStyleSheet;
       let element: HTMLElement;
 
       const checkContent = () =>
-        checkGlobalCss(element, {content: /"?bar"?/}, '::before');
+        checkGlobalCss(element, { content: /"?bar"?/u }, '::before');
 
       beforeEach(async () => {
         css = new CSSStyleSheet();
-        document.adoptedStyleSheets = [css];
+        document.adoptedStyleSheets.push(css);
         element = await fixture('<div class="foo"></div>');
       });
 
@@ -730,11 +726,11 @@ describe('Constructible Style Sheets polyfill', () => {
       let css: CSSStyleSheet;
       let element: HTMLElement;
 
-      const checkContent = () => checkGlobalCss(element, {background: ''});
+      const checkContent = () => checkGlobalCss(element, { background: '' });
 
       beforeEach(async () => {
         css = new CSSStyleSheet();
-        document.adoptedStyleSheets = [css];
+        document.adoptedStyleSheets.push(css);
         element = await fixture('<div class="foo"></div>');
       });
 

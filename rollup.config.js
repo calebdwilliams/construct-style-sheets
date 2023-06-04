@@ -37,7 +37,6 @@ const rollupConfig = {
     terser({
       compress: {
         booleans_as_integers: true,
-        ecma: 5,
         passes: 3,
         pure_funcs: [
           'unique',
@@ -48,9 +47,11 @@ const rollupConfig = {
           'removeNode',
         ],
         toplevel: true,
+        unsafe: true,
         unsafe_proto: true,
         unsafe_symbols: true,
       },
+      ecma: 2015,
     }),
   ],
 };

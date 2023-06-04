@@ -21,15 +21,18 @@
     "superIsCallableConstructor": true
   },
   "presets": [
-    "@babel/preset-typescript",
     [
       "@babel/preset-env",
       {
-        "exclude": [
-          "@babel/plugin-transform-typeof-symbol"
-        ],
+        "exclude": ["@babel/plugin-transform-typeof-symbol"],
         "shippedProposals": true,
         "useBuiltIns": false
+      }
+    ],
+    [
+      "@babel/preset-typescript",
+      {
+        "allowDeclareFields": true
       }
     ]
   ]

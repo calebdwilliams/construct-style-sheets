@@ -1,6 +1,11 @@
-import { _DOMException, bootstrapper, isPrototypeOf } from '../src/shared.js';
-import { rejectImports } from '../src/utils.js';
 import type Location from './Location.js';
+import {
+  _DOMException,
+  bootstrapper,
+  defineProperty,
+  isPrototypeOf,
+} from './shared.js';
+import { rejectImports } from './utils.js';
 
 const NonConstructedStyleSheet = CSSStyleSheet;
 const nonConstructedProto = NonConstructedStyleSheet.prototype;
@@ -42,7 +47,50 @@ export const removeAdopterLocation = Symbol();
 
 type AppliedMethod<T> = (sheet: CSSStyleSheet) => T;
 
+const cssStyleSheetProps = [
+  'cssRules',
+  'disabled',
+  'href',
+  'media',
+  'ownerNode',
+  'ownerRule',
+  'parentStyleSheet',
+  'rules',
+  'title',
+  'type',
+] as const;
+
 export default class ConstructedStyleSheet implements CSSStyleSheet {
+  static {
+    cssStyleSheetProps.forEach((prop) => {
+      const attrs: PropertyDescriptor = {
+        configurable: true,
+        get(this: ConstructedStyleSheet) {
+          return this.#basicStyleElement.sheet![prop];
+        },
+        writable: true,
+      };
+
+      if (prop === 'disabled') {
+        attrs.set = function (this: ConstructedStyleSheet, value: boolean) {
+          this.#basicStyleElement.disabled = value;
+        };
+      }
+
+      defineProperty(ConstructedStyleSheet.prototype, prop, attrs);
+    });
+  }
+
+  declare ['cssRules']: CSSRuleList;
+  declare ['disabled']: boolean;
+  declare ['href']: string | null;
+  declare ['media']: MediaList;
+  declare ['ownerNode']: Element | ProcessingInstruction | null;
+  declare ['ownerRule']: CSSRule | null;
+  declare ['parentStyleSheet']: CSSStyleSheet | null;
+  declare ['rules']: CSSRuleList;
+  declare ['title']: string | null;
+  declare ['type']: string;
   /**
    * Adopter is a `<style>` element that belongs to the document or a custom
    * element and contains the content of the basic stylesheet.
@@ -58,7 +106,6 @@ export default class ConstructedStyleSheet implements CSSStyleSheet {
    * reflected in document/custom element internal <style> elements.
    */
   readonly #basicStyleElement = document.createElement('style');
-
   /**
    * Contains all locations associated with the current ConstructedStyleSheet.
    */
@@ -66,54 +113,6 @@ export default class ConstructedStyleSheet implements CSSStyleSheet {
 
   constructor() {
     bootstrapper.body.appendChild(this.#basicStyleElement);
-  }
-
-  get cssRules(): CSSRuleList {
-    return this.#sheet.cssRules;
-  }
-
-  get disabled(): boolean {
-    return this.#sheet.disabled;
-  }
-
-  set disabled(value: boolean) {
-    this.#sheet.disabled = value;
-  }
-
-  get href(): string | null {
-    return this.#sheet.href;
-  }
-
-  get media(): MediaList {
-    return this.#basicStyleElement.sheet!.media;
-  }
-
-  get ownerNode(): Element | ProcessingInstruction | null {
-    return this.#sheet.ownerNode;
-  }
-
-  get ownerRule(): CSSRule | null {
-    return this.#sheet.ownerRule;
-  }
-
-  get parentStyleSheet(): CSSStyleSheet | null {
-    return this.#sheet.parentStyleSheet;
-  }
-
-  get rules(): CSSRuleList {
-    return this.#basicStyleElement.sheet!.rules;
-  }
-
-  get title(): string | null {
-    return this.#sheet.title;
-  }
-
-  get type(): string {
-    return this.#sheet.type;
-  }
-
-  get #sheet(): CSSStyleSheet {
-    return this.#basicStyleElement.sheet!;
   }
 
   addRule(selector?: string, style?: string, index?: number): number {

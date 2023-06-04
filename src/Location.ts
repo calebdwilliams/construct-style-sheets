@@ -1,5 +1,4 @@
-import { forEach, hasShadyCss } from '../src/shared.js';
-import { diff, isElementConnected, removeNode, unique } from '../src/utils.js';
+import createObservableArray from './AdoptedStyleSheetsArray.js';
 import type ConstructedStyleSheet from './ConstructedStyleSheet.js';
 import {
   addAdopterLocation,
@@ -9,8 +8,14 @@ import {
   removeAdopterLocation,
   restyleAdopter,
 } from './ConstructedStyleSheet.js';
-import { defineProperty } from './shared.js';
-import { getShadowRoot } from './utils.js';
+import { defineProperty, forEach, hasShadyCss } from './shared.js';
+import {
+  diff,
+  getShadowRoot,
+  isElementConnected,
+  removeNode,
+  unique,
+} from './utils.js';
 
 const defaultObserverOptions: MutationObserverInit = {
   childList: true,
@@ -48,9 +53,6 @@ export function attachAdoptedStyleSheetProperty(
     get(): ConstructedStyleSheet[] {
       return getAssociatedLocation(this).sheets;
     },
-    set(this: Document | ShadowRoot, sheets: ConstructedStyleSheet[]) {
-      getAssociatedLocation(this).update(sheets);
-    },
   });
 }
 
@@ -87,7 +89,7 @@ export default class Location {
    */
   readonly #element: Document | ShadowRoot;
   readonly #observer: MutationObserver;
-  #sheets: ConstructedStyleSheet[] = [];
+  #sheets = createObservableArray(this);
   #uniqueSheets: readonly ConstructedStyleSheet[] = [];
 
   constructor(element: Document | ShadowRoot) {
@@ -190,13 +192,6 @@ export default class Location {
 
   update(sheets: ConstructedStyleSheet[]): void {
     const locationType = this.#element === document ? 'Document' : 'ShadowRoot';
-
-    if (!Array.isArray(sheets)) {
-      // document.adoptedStyleSheets = new CSSStyleSheet();
-      throw new TypeError(
-        `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Iterator getter is not callable.`,
-      );
-    }
 
     if (!sheets.every(isCSSStyleSheetInstance)) {
       // document.adoptedStyleSheets = ['non-CSSStyleSheet value'];

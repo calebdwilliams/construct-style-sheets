@@ -7,9 +7,9 @@ interface CSSStyleSheet {
 }
 
 interface Document {
-  adoptedStyleSheets: readonly CSSStyleSheet[];
+  readonly adoptedStyleSheets: CSSStyleSheet[];
 }
 
 interface ShadowRoot {
-  adoptedStyleSheets: readonly CSSStyleSheet[];
+  readonly adoptedStyleSheets: CSSStyleSheet[];
 }

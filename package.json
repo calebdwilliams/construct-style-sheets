@@ -79,6 +79,7 @@
     "size-limit": "^8.2.4",
     "standard-version": "^9.5.0",
     "tslib": "^2.5.3",
+    "type-fest": "^3.11.1",
     "typescript": "5.1"
   },
   "keywords": [

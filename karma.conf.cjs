@@ -4,8 +4,6 @@
 const rollupCommonjs = require('@rollup/plugin-commonjs');
 const rollupNodeResolve = require('@rollup/plugin-node-resolve').default;
 const rollupPluginBabel = require('@rollup/plugin-babel').default;
-const rollupPluginInstrumentTsCode = require('./plugins/rollup-plugin-instrument-ts-code.js');
-const rollupPluginInjectCode = require('./plugins/rollup-plugin-inject-code.js');
 const babelConfig = require('./babel.config.json');
 
 const isCI = !!process.env.CI;
@@ -14,7 +12,15 @@ const coverage = !!process.argv.find((arg) => arg.includes('--coverage'));
 
 const extensions = ['.ts', '.js'];
 
-module.exports = (config) => {
+module.exports = async (config) => {
+  const [
+    { default: rollupPluginInjectCode },
+    { default: rollupPluginInstrumentTsCode },
+  ] = await Promise.all([
+    import('./plugins/rollup-plugin-inject-code.js'),
+    import('./plugins/rollup-plugin-instrument-ts-code.js'),
+  ]);
+
   config.set({
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
@@ -156,7 +162,7 @@ module.exports = (config) => {
             rollupPluginInjectCode({
               'index.js': {
                 line: 3,
-                code: "    if ('adoptedStyleSheets' in document) { return; }\n",
+                code: "  if ('adoptedStyleSheets' in document) { return; }\n",
               },
             }),
           ].filter(Boolean),
