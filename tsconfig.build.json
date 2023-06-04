@@ -1,19 +1,5 @@
 {
-  "compilerOptions": {
-    "importsNotUsedAsValues": "error",
-    "lib": [
-      "dom",
-      "es5"
-    ],
-    "target": "ES5",
-    "moduleResolution": "node",
-    "noImplicitAny": false,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "strict": true
-  },
+  "extends": "./tsconfig.json",
   "include": [
     "src/**/*.ts"
   ],

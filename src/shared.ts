@@ -2,7 +2,7 @@
  * Even if the polyfill does not support ShadyCSS, it should be detected in
  * order to avoid errors of parallel usage.
  */
-// @ts-expect-error: ShadyCSS is not a standard Window property.
+  // @ts-expect-error: ShadyCSS is not a standard Window property.
 export const hasShadyCss = 'ShadyCSS' in window && !ShadyCSS.nativeShadow;
 
 /**
