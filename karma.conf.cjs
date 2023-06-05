@@ -52,7 +52,6 @@ module.exports = (config) => {
       { pattern: 'src/index.ts', watched: false },
       { pattern: 'test/init-while-loading.js', watched: false },
       { pattern: 'test/polyfill.test.ts', watched: false },
-      { pattern: 'node_modules/jasmine-core/**', watched: false }
     ],
 
     preprocessors: {
