@@ -39,15 +39,13 @@ module.exports = (config) => {
       require('karma-babel-preprocessor')
     ],
 
-    frameworks: ['jasmine'],
+    frameworks: ['jasmine', 'detectBrowsers'],
 
     client: {
       jasmine: {
         random: false,
       },
     },
-
-    browser: ['Chrome'],
 
     files: [
       { pattern: 'test/polyfills.js', watched: false },
