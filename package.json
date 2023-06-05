@@ -12,7 +12,7 @@
   "type": "module",
   "scripts": {
     "build": "rollup -c rollup.config.js",
-    "test": "karma start",
+    "test": "karma start karma.conf.cjs",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "npm run test -- --coverage",
     "prerelease": "npm run test:coverage",

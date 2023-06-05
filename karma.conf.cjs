@@ -61,10 +61,6 @@ module.exports = (config) => {
 
     reporters: ['progress', coverage && 'coverage-istanbul'].filter(Boolean),
 
-    logLevel: config.LOG_INFO,
-
-    autoWatch: watch,
-
     coverageIstanbulReporter: {
       reports: isCI ? ['lcovonly'] : ['html'],
       dir: '.coverage',
@@ -74,10 +70,6 @@ module.exports = (config) => {
     },
 
     customLaunchers: {
-      ChromeHeadlessNoSandbox: {
-        base: 'ChromeHeadless',
-        flags: ['--no-sandbox', '--disable-setuid-sandbox'],
-      },
       Safari: {
         base: 'SafariNative',
       },
@@ -143,6 +135,7 @@ module.exports = (config) => {
       },
     },
 
+    autoWatch: watch,
     singleRun: !watch,
   });
 };
