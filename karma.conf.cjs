@@ -36,9 +36,10 @@ module.exports = (config) => {
       require('karma-coverage-istanbul-reporter'),
       require('karma-detect-browsers'),
       require('karma-rollup-preprocessor'),
+      require('karma-babel-preprocessor')
     ],
 
-    frameworks: ['jasmine', 'detectBrowsers'],
+    frameworks: ['jasmine'],
 
     client: {
       jasmine: {
@@ -46,17 +47,22 @@ module.exports = (config) => {
       },
     },
 
+    browser: ['Chrome'],
+
     files: [
       { pattern: 'test/polyfills.js', watched: false },
       { pattern: 'src/index.ts', watched: false },
       { pattern: 'test/init-while-loading.js', watched: false },
       { pattern: 'test/polyfill.test.ts', watched: false },
+      { pattern: 'node_modules/jasmine-core/**', watched: false }
     ],
 
     preprocessors: {
       'test/polyfills.js': ['rollup'],
       'src/index.ts': ['sourceRollup'],
+      'test/init-while-loading.js': ['rollup'],
       'test/polyfill.test.ts': ['rollup'],
+      'node_modules/jasmine-core/**/*.js': ['babel']
     },
 
     reporters: ['progress', coverage && 'coverage-istanbul'].filter(Boolean),

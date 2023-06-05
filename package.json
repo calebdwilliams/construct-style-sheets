@@ -37,6 +37,9 @@
     "url": "https://github.com/calebdwilliams/construct-style-sheets/issues"
   },
   "homepage": "https://github.com/calebdwilliams/construct-style-sheets#readme",
+  "overrides": {
+    "jasmine-core": "$jasmine-core"
+  },
   "devDependencies": {
     "@babel/core": "^7.22.1",
     "@babel/plugin-transform-instanceof": "^7.18.9",
@@ -56,7 +59,7 @@
     "eslint": "^8.42.0",
     "eslint-config-vaadin": "^1.0.0-alpha.12",
     "istanbul-lib-instrument": "^5.2.1",
-    "jasmine-core": "^5.0.0",
+    "jasmine-core": "^4.1.0",
     "karma": "^6.4.2",
     "karma-babel-preprocessor": "^8.0.2",
     "karma-chrome-launcher": "^3.2.0",
