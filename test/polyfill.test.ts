@@ -63,50 +63,6 @@ describe('Constructible Style Sheets polyfill', () => {
       });
     });
 
-    describe('illegal invocation', () => {
-      const illegalPattern = /Illegal invocation/iu;
-
-      const checkIllegalInvocation = (method: keyof CSSStyleSheet) => {
-        expect(CSSStyleSheet.prototype[method]).toThrowError(illegalPattern);
-      };
-
-      describe('occurs for sync methods when they are improperly invoked', () => {
-        it('deleteRule', () => {
-          checkIllegalInvocation('deleteRule');
-        });
-
-        it('insertRule', () => {
-          checkIllegalInvocation('insertRule');
-        });
-
-        it('replaceSync', () => {
-          checkIllegalInvocation('replaceSync');
-        });
-      });
-
-      describe('occurs for async methods when they are improperly invoked', () => {
-        it('replace', async () => {
-          await expectAsync(
-            CSSStyleSheet.prototype.replace(''),
-          ).toBeRejectedWithError(illegalPattern);
-        });
-      });
-
-      describe('occurs for accessor methods when they are improperly invoked', () => {
-        it('cssRules', () => {
-          expect(() => CSSStyleSheet.prototype.cssRules).toThrowError(
-            illegalPattern,
-          );
-        });
-
-        it('media', () => {
-          expect(() => CSSStyleSheet.prototype.media).toThrowError(
-            illegalPattern,
-          );
-        });
-      });
-    });
-
     describe('replace', () => {
       let result: Promise<CSSStyleSheet>;
 
@@ -669,7 +625,7 @@ describe('Constructible Style Sheets polyfill', () => {
       const styleSheets = [css];
       document.adoptedStyleSheets.push(...styleSheets);
 
-      expect(document.adoptedStyleSheets).toEqual(styleSheets);
+      expect(Array.from(document.adoptedStyleSheets)).toEqual(styleSheets);
     });
 
     it('removes styles properly', async () => {

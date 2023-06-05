@@ -1,27 +1,37 @@
 import type ConstructedStyleSheet from './ConstructedStyleSheet.js';
 import type Location from './Location.js';
+import type { UnknownFunction } from './shared.js';
 
-const methods = ['pop', 'unshift', 'push', 'shift', 'sort'] as const;
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface AdoptedStyleSheetsArray extends Array<ConstructedStyleSheet> {}
 
-export default function createObservableArray(
-  location: Location,
-): ConstructedStyleSheet[] {
-  const arr: ConstructedStyleSheet[] = [];
-  methods.reduce<Record<string, (...args: unknown[]) => unknown>>(
-    (prototype, method) => {
-      const m = prototype[method];
-      prototype[method] = function (
-        this: ConstructedStyleSheet[],
-        ...args: unknown[]
-      ) {
-        const result = m.apply(this, args);
-        location.update(this);
-        return result;
-      };
-      return prototype;
-    },
-    Object.getPrototypeOf(arr),
-  );
+class AdoptedStyleSheetsArray {
+  static {
+    Object.setPrototypeOf(
+      AdoptedStyleSheetsArray.prototype,
+      (['pop', 'unshift', 'push', 'shift', 'sort'] as const).reduce(
+        (proto, method) => {
+          const m = proto[method] as UnknownFunction;
+          Object.defineProperty(proto, method, {
+            configurable: true,
+            value(this: AdoptedStyleSheetsArray, ...args: unknown[]) {
+              const result = m.apply(this, args);
+              this.#location.update(this);
+              return result;
+            },
+          });
+          return proto;
+        },
+        [] as ConstructedStyleSheet[],
+      ),
+    );
+  }
 
-  return arr;
+  #location: Location;
+
+  constructor(location: Location) {
+    this.#location = location;
+  }
 }
+
+export default AdoptedStyleSheetsArray;

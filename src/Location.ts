@@ -1,14 +1,13 @@
-import createObservableArray from './AdoptedStyleSheetsArray.js';
+import AdoptedStyleSheetsArray from './AdoptedStyleSheetsArray.js';
 import type ConstructedStyleSheet from './ConstructedStyleSheet.js';
 import {
   addAdopterLocation,
   getAdopterByLocation,
-  isCSSStyleSheetInstance,
   isNonConstructedStyleSheetInstance,
   removeAdopterLocation,
   restyleAdopter,
 } from './ConstructedStyleSheet.js';
-import { defineProperty, forEach, hasShadyCss } from './shared.js';
+import { hasShadyCss } from './shared.js';
 import {
   diff,
   getShadowRoot,
@@ -47,7 +46,7 @@ export function getAssociatedLocation(
 export function attachAdoptedStyleSheetProperty(
   constructor: typeof Document | typeof ShadowRoot,
 ): void {
-  defineProperty(constructor.prototype, 'adoptedStyleSheets', {
+  Object.defineProperty(constructor.prototype, 'adoptedStyleSheets', {
     configurable: true,
     enumerable: true,
     get(): ConstructedStyleSheet[] {
@@ -89,7 +88,7 @@ export default class Location {
    */
   readonly #element: Document | ShadowRoot;
   readonly #observer: MutationObserver;
-  #sheets = createObservableArray(this);
+  #sheets = new AdoptedStyleSheetsArray(this);
   #uniqueSheets: readonly ConstructedStyleSheet[] = [];
 
   constructor(element: Document | ShadowRoot) {
@@ -109,7 +108,7 @@ export default class Location {
           // need to connect all web components. However, since any added node
           // may contain custom elements deeply nested we need to explore the
           // whole tree.
-          forEach.call(mutation.addedNodes, (node: Node) => {
+          Array.prototype.forEach.call(mutation.addedNodes, (node: Node) => {
             if (!(node instanceof Element)) {
               return;
             }
@@ -123,7 +122,7 @@ export default class Location {
         // When any `<style>` adopter is removed, we need to re-adopt all the
         // styles because otherwise we can break the order of appended styles
         // which affects the rules overriding.
-        forEach.call(mutation.removedNodes, (node: Node) => {
+        Array.prototype.forEach.call(mutation.removedNodes, (node: Node) => {
           if (!(node instanceof Element)) {
             return;
           }
@@ -190,18 +189,18 @@ export default class Location {
       : isElementConnected(this.#element.host);
   }
 
-  update(sheets: ConstructedStyleSheet[]): void {
+  update(sheets: AdoptedStyleSheetsArray): void {
     const locationType = this.#element === document ? 'Document' : 'ShadowRoot';
 
-    if (!sheets.every(isCSSStyleSheetInstance)) {
-      // document.adoptedStyleSheets = ['non-CSSStyleSheet value'];
+    if (!sheets.every((sheet) => sheet instanceof CSSStyleSheet)) {
+      // document.adoptedStyleSheets.push('non-CSSStyleSheet value');
       throw new TypeError(
-        `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Failed to convert value to 'CSSStyleSheet'`,
+        `Failed to add to the 'adoptedStyleSheets' property on ${locationType}: Failed to convert value to 'CSSStyleSheet'`,
       );
     }
 
     if (sheets.some(isNonConstructedStyleSheetInstance)) {
-      // document.adoptedStyleSheets = [document.styleSheets[0]];
+      // document.adoptedStyleSheets.push(document.styleSheets[0]);
       throw new TypeError(
         `Failed to set the 'adoptedStyleSheets' property on ${locationType}: Can't adopt non-constructed stylesheets`,
       );

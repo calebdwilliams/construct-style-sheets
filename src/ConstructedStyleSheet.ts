@@ -1,10 +1,5 @@
 import type Location from './Location.js';
-import {
-  _DOMException,
-  bootstrapper,
-  defineProperty,
-  isPrototypeOf,
-} from './shared.js';
+import { _DOMException, bootstrapper, type UnknownFunction } from './shared.js';
 import { rejectImports } from './utils.js';
 
 const NonConstructedStyleSheet = CSSStyleSheet;
@@ -24,17 +19,11 @@ nonConstructedProto.replaceSync = function () {
   );
 };
 
-export function isCSSStyleSheetInstance(instance: object): boolean {
-  return typeof instance === 'object'
-    ? isPrototypeOf.call(ConstructedStyleSheet.prototype, instance) ||
-        isPrototypeOf.call(nonConstructedProto, instance)
-    : false;
-}
-
-export function isNonConstructedStyleSheetInstance(instance: object): boolean {
-  return typeof instance === 'object'
-    ? isPrototypeOf.call(nonConstructedProto, instance)
-    : false;
+export function isNonConstructedStyleSheetInstance(instance: unknown): boolean {
+  return Object.prototype.isPrototypeOf.call(
+    nonConstructedProto,
+    instance as object,
+  );
 }
 
 /*
@@ -47,50 +36,85 @@ export const removeAdopterLocation = Symbol();
 
 type AppliedMethod<T> = (sheet: CSSStyleSheet) => T;
 
-const cssStyleSheetProps = [
-  'cssRules',
-  'disabled',
-  'href',
-  'media',
-  'ownerNode',
-  'ownerRule',
-  'parentStyleSheet',
-  'rules',
-  'title',
-  'type',
-] as const;
-
 export default class ConstructedStyleSheet implements CSSStyleSheet {
   static {
-    cssStyleSheetProps.forEach((prop) => {
-      const attrs: PropertyDescriptor = {
+    (
+      [
+        'cssRules',
+        'disabled',
+        'href',
+        'media',
+        'ownerNode',
+        'ownerRule',
+        'parentStyleSheet',
+        'rules',
+        'title',
+        'type',
+      ] as const
+    ).forEach((prop) => {
+      Object.defineProperty(ConstructedStyleSheet.prototype, prop, {
         configurable: true,
         get(this: ConstructedStyleSheet) {
           return this.#basicStyleElement.sheet![prop];
         },
-        writable: true,
-      };
+        ...(prop === 'disabled'
+          ? {
+              set(this: ConstructedStyleSheet, value: boolean) {
+                this.#basicStyleElement.disabled = value;
+              },
+            }
+          : {}),
+      });
+    });
 
-      if (prop === 'disabled') {
-        attrs.set = function (this: ConstructedStyleSheet, value: boolean) {
-          this.#basicStyleElement.disabled = value;
-        };
-      }
+    (['addRule', 'insertRule', 'deleteRule', 'removeRule'] as const).forEach(
+      (method) =>
+        Object.defineProperty(ConstructedStyleSheet.prototype, method, {
+          configurable: true,
+          value(this: ConstructedStyleSheet, ...args: unknown[]): unknown {
+            return this.#apply((sheet) =>
+              (sheet[method] as UnknownFunction)(...args),
+            );
+          },
+        }),
+    );
 
-      defineProperty(ConstructedStyleSheet.prototype, prop, attrs);
+    Object.defineProperty(ConstructedStyleSheet, Symbol.hasInstance, {
+      configurable: true,
+      value(instance: unknown) {
+        return (
+          Object.prototype.isPrototypeOf.call(
+            ConstructedStyleSheet.prototype,
+            instance as object,
+          ) ||
+          Object.prototype.isPrototypeOf.call(
+            nonConstructedProto,
+            instance as object,
+          )
+        );
+      },
     });
   }
 
-  declare ['cssRules']: CSSRuleList;
-  declare ['disabled']: boolean;
-  declare ['href']: string | null;
-  declare ['media']: MediaList;
-  declare ['ownerNode']: Element | ProcessingInstruction | null;
-  declare ['ownerRule']: CSSRule | null;
-  declare ['parentStyleSheet']: CSSStyleSheet | null;
-  declare ['rules']: CSSRuleList;
-  declare ['title']: string | null;
-  declare ['type']: string;
+  declare addRule: (
+    selector?: string,
+    style?: string,
+    index?: number,
+  ) => number;
+
+  declare cssRules: CSSRuleList;
+  declare deleteRule: (index: number) => void;
+  declare disabled: boolean;
+  declare href: string | null;
+  declare insertRule: (rule: string, index?: number) => number;
+  declare media: MediaList;
+  declare ownerNode: Element | ProcessingInstruction | null;
+  declare ownerRule: CSSRule | null;
+  declare parentStyleSheet: CSSStyleSheet | null;
+  declare removeRule: (index?: number) => void;
+  declare rules: CSSRuleList;
+  declare title: string | null;
+  declare type: string;
   /**
    * Adopter is a `<style>` element that belongs to the document or a custom
    * element and contains the content of the basic stylesheet.
@@ -113,22 +137,6 @@ export default class ConstructedStyleSheet implements CSSStyleSheet {
 
   constructor() {
     bootstrapper.body.appendChild(this.#basicStyleElement);
-  }
-
-  addRule(selector?: string, style?: string, index?: number): number {
-    return this.#apply((sheet) => sheet.addRule(selector, style, index));
-  }
-
-  deleteRule(index: number): void {
-    return this.#apply((sheet) => sheet.deleteRule(index));
-  }
-
-  insertRule(rule: string, index?: number): number {
-    return this.#apply((sheet) => sheet.insertRule(rule, index));
-  }
-
-  removeRule(index?: number): void {
-    return this.#apply((sheet) => sheet.removeRule(index));
   }
 
   replace(contents: string): Promise<this> {

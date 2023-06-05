@@ -23,8 +23,4 @@ export const closedShadowRootRegistry = new WeakMap<Element, ShadowRoot>();
 export const _DOMException =
   typeof DOMException === 'object' ? Error : DOMException;
 
-export const {
-  defineProperty,
-  prototype: { isPrototypeOf },
-} = Object;
-export const { forEach } = Array.prototype;
+export type UnknownFunction = (...args: unknown[]) => unknown;
