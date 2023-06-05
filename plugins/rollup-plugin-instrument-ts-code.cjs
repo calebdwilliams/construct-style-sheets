@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call */
-import { createInstrumenter } from 'istanbul-lib-instrument';
+const { createInstrumenter } = require('istanbul-lib-instrument');
 
-export default function rollupPluginInstrumentTsCode() {
+module.exports = function rollupPluginInstrumentTsCode() {
   return {
     name: 'istanbul',
     async transform(code, filename) {

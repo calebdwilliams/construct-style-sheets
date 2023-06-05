@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 import babel from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
-import copy from 'rollup-plugin-copy';
-import injectCode from './plugins/rollup-plugin-inject-code.js';
 import terser from '@rollup/plugin-terser';
+import copy from 'rollup-plugin-copy';
+import optimize from './plugins/rollup-plugin-optimize.js';
 
 const extensions = ['.ts', '.js'];
 
@@ -28,12 +28,7 @@ const rollupConfig = {
         },
       ],
     }),
-    injectCode({
-      'adoptedStyleSheets.js': {
-        code: "  if (typeof document === 'undefined' || 'adoptedStyleSheets' in document) { return; }\n",
-        line: 3,
-      },
-    }),
+    optimize(),
     terser({
       compress: {
         booleans_as_integers: true,

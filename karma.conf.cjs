@@ -4,6 +4,7 @@
 const rollupCommonjs = require('@rollup/plugin-commonjs');
 const rollupNodeResolve = require('@rollup/plugin-node-resolve').default;
 const rollupPluginBabel = require('@rollup/plugin-babel').default;
+const rollupPluginInstrumentTsCode = require('./plugins/rollup-plugin-instrument-ts-code.cjs');
 const babelConfig = require('./babel.config.json');
 
 const isCI = !!process.env.CI;
@@ -11,20 +12,20 @@ const watch = !!process.argv.find((arg) => arg.includes('watch')) && !isCI;
 const coverage = !!process.argv.find((arg) => arg.includes('--coverage'));
 
 const extensions = ['.ts', '.js'];
+const rollupPluginBabelConfig = {
+  ...babelConfig,
+  babelHelpers: 'bundled',
+  babelrc: false,
+  extensions,
+  plugins: [
+    ...babelConfig.plugins,
+    '@babel/plugin-transform-instanceof',
+    'babel-plugin-transform-async-to-promises',
+  ],
+};
 
-module.exports = async (config) => {
-  const [
-    { default: rollupPluginInjectCode },
-    { default: rollupPluginInstrumentTsCode },
-  ] = await Promise.all([
-    import('./plugins/rollup-plugin-inject-code.js'),
-    import('./plugins/rollup-plugin-instrument-ts-code.js'),
-  ]);
-
+module.exports = (config) => {
   config.set({
-    // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '',
-
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
@@ -37,21 +38,14 @@ module.exports = async (config) => {
       require('karma-rollup-preprocessor'),
     ],
 
-    browserNoActivityTimeout: 60000, //default 10000
-    browserDisconnectTimeout: 10000, // default 2000
-    browserDisconnectTolerance: 1, // default 0
-    captureTimeout: 60000,
-
-    // frameworks to use
-    // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine', 'detectBrowsers'],
+
     client: {
       jasmine: {
         random: false,
       },
     },
 
-    // list of files / patterns to load in the browser
     files: [
       { pattern: 'test/polyfills.js', watched: false },
       { pattern: 'src/index.ts', watched: false },
@@ -59,33 +53,16 @@ module.exports = async (config) => {
       { pattern: 'test/polyfill.test.ts', watched: false },
     ],
 
-    // list of files / patterns to exclude
-    exclude: [],
-
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       'test/polyfills.js': ['rollup'],
       'src/index.ts': ['sourceRollup'],
       'test/polyfill.test.ts': ['rollup'],
     },
 
-    // test results reporter to use
-    // possible values: 'dots', 'progress'
-    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['progress', coverage && 'coverage-istanbul'].filter(Boolean),
 
-    // web server port
-    port: 9876,
-
-    // enable / disable colors in the output (reporters and logs)
-    colors: true,
-
-    // level of logging
-    // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
     logLevel: config.LOG_INFO,
 
-    // enable / disable watching file and executing tests whenever any file changes
     autoWatch: watch,
 
     coverageIstanbulReporter: {
@@ -97,6 +74,10 @@ module.exports = async (config) => {
     },
 
     customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox', '--disable-setuid-sandbox'],
+      },
       Safari: {
         base: 'SafariNative',
       },
@@ -122,20 +103,12 @@ module.exports = async (config) => {
           extensions,
         }),
         rollupPluginBabel({
-          assumptions: babelConfig.assumptions,
-          babelHelpers: 'bundled',
-          babelrc: false,
-          extensions,
+          ...rollupPluginBabelConfig,
           include: [
             'node_modules/@open-wc/**',
             'node_modules/lit-element/**',
             'node_modules/lit-html/**',
             'test/**',
-          ],
-          presets: babelConfig.presets,
-          plugins: [
-            '@babel/plugin-transform-instanceof',
-            'babel-plugin-transform-async-to-promises',
           ],
         }),
       ],
@@ -155,16 +128,10 @@ module.exports = async (config) => {
               extensions,
             }),
             rollupPluginBabel({
-              isolatedModules: true,
-              tsconfig: require.resolve('./tsconfig.test.json'),
+              ...rollupPluginBabelConfig,
+              include: ['src/**'],
             }),
             coverage && rollupPluginInstrumentTsCode(),
-            rollupPluginInjectCode({
-              'index.js': {
-                line: 3,
-                code: "  if ('adoptedStyleSheets' in document) { return; }\n",
-              },
-            }),
           ].filter(Boolean),
           output: {
             format: 'iife',
@@ -176,12 +143,6 @@ module.exports = async (config) => {
       },
     },
 
-    // Continuous Integration mode
-    // if true, Karma captures browsers, runs the tests and exits
     singleRun: !watch,
-
-    // Concurrency level
-    // how many browser should be started simultaneous
-    concurrency: Infinity,
   });
 };
