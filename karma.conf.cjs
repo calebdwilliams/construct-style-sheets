@@ -37,7 +37,7 @@ module.exports = (config) => {
       require('karma-babel-preprocessor')
     ],
 
-    frameworks: ['jasmine'],
+    frameworks: ['jasmine', 'detectBrowsers'],
 
     client: {
       jasmine: {
