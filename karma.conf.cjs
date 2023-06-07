@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-require-imports,import/unambiguous */
-// Karma configuration
-// Generated on Sun Jan 20 2019 23:06:22 GMT-0600 (CST)
 const rollupCommonjs = require('@rollup/plugin-commonjs');
 const rollupNodeResolve = require('@rollup/plugin-node-resolve').default;
 const rollupPluginBabel = require('@rollup/plugin-babel').default;
@@ -39,7 +37,7 @@ module.exports = (config) => {
       require('karma-babel-preprocessor')
     ],
 
-    frameworks: ['jasmine', 'detectBrowsers'],
+    frameworks: ['jasmine'],
 
     client: {
       jasmine: {
@@ -59,7 +57,7 @@ module.exports = (config) => {
       'src/index.ts': ['sourceRollup'],
       'test/init-while-loading.js': ['rollup'],
       'test/polyfill.test.ts': ['rollup'],
-      'node_modules/jasmine-core/**/*.js': ['babel']
+      'node_modules/jasmine-core/lib/jasmine-core/jasmine.js': ['babel']
     },
 
     reporters: ['progress', coverage && 'coverage-istanbul'].filter(Boolean),
@@ -86,6 +84,16 @@ module.exports = (config) => {
           (browser) => browser !== 'SafariTechPreview' && browser !== 'Edge',
         );
       },
+    },
+
+    babelPreprocessor: {
+      options: {
+        ...babelConfig,
+        presets: babelConfig.presets.map(([name, options]) => name.includes('env') ? [name, {
+          ...options,
+          modules: false,
+        }] : [name, options])
+      }
     },
 
     rollupPreprocessor: {
