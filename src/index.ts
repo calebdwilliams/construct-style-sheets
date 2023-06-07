@@ -1,12 +1,10 @@
-import ConstructedStyleSheet from './ConstructedStyleSheet';
+import ConstructedStyleSheet from './ConstructedStyleSheet.js';
 import {
   attachAdoptedStyleSheetProperty,
   getAssociatedLocation,
-} from './Location';
-import {closedShadowRootRegistry} from './shared';
+} from './Location.js';
+import { closedShadowRootRegistry } from './shared.js';
 
-// @ts-expect-error: we need to replace the default CSSStyleSheet class with
-// the emulation.
 window.CSSStyleSheet = ConstructedStyleSheet;
 
 attachAdoptedStyleSheetProperty(Document);

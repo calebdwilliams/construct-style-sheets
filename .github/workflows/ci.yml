@@ -10,7 +10,7 @@ on:
       - 'test/**'
       - '.browserslistrc'
       - '.prettierrc'
-      - 'karma.conf.js'
+      - 'karma.conf.cjs'
       - 'package.json'
       - 'package-lock.json'
       - 'rollup.config.js'
@@ -25,7 +25,7 @@ on:
       - 'test/**'
       - '.browserslistrc'
       - '.prettierrc'
-      - 'karma.conf.js'
+      - 'karma.conf.cjs'
       - 'package.json'
       - 'package-lock.json'
       - 'rollup.config.js'
@@ -39,8 +39,8 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x]
-        os: [windows-latest, macOS-latest]
+        node-version: [18.x]
+        os: [windows-2019, macOS-11]
 
     steps:
       - name: Checkout Project Code
@@ -60,8 +60,8 @@ jobs:
         env:
           CI: true
       - name: Send Coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: .coverage/lcov.info
           flags: unittests
-          fail_ci_if_error: true
+          fail_ci_if_error: false

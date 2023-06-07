@@ -1,4 +1,6 @@
 .DS_Store
+.idea
 .coverage
+.vs-code
 dist
 node_modules

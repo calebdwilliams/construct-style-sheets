@@ -3,6 +3,7 @@
  * order to avoid errors of parallel usage.
  */
 // @ts-expect-error: ShadyCSS is not a standard Window property.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export const hasShadyCss = 'ShadyCSS' in window && !ShadyCSS.nativeShadow;
 
 /**
@@ -22,5 +23,4 @@ export const closedShadowRootRegistry = new WeakMap<Element, ShadowRoot>();
 export const _DOMException =
   typeof DOMException === 'object' ? Error : DOMException;
 
-export const defineProperty = Object.defineProperty;
-export const forEach = Array.prototype.forEach;
+export type UnknownFunction = (...args: unknown[]) => unknown;

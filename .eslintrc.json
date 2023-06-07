@@ -1,0 +1,19 @@
+{
+  "extends": [
+    "vaadin/typescript-requiring-type-checking",
+    "vaadin/imports-typescript",
+    "vaadin/prettier"
+  ],
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "rules": {
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/prefer-includes": "off",
+    "@typescript-eslint/promise-function-async": "off",
+    "@typescript-eslint/unbound-method": "off",
+    "class-methods-use-this": "off",
+    "func-names": "off"
+  }
+}
