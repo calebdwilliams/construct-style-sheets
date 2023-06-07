@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call */
-
 const assignPattern = /Object\.assign/gmu;
 const createPattern = /Object\.create/gmu;
 const definePropertyPattern = /Object\.defineProperty/gmu;
@@ -18,7 +17,7 @@ const {
 } = Object;
 `;
 
-export default function rollupPluginOptimize() {
+module.exports = function rollupPluginOptimize() {
   return {
     name: 'optimize',
     async renderChunk(code) {
