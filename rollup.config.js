@@ -3,7 +3,7 @@ import babel from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
-import optimize from './plugins/rollup-plugin-optimize.js';
+import optimize from './plugins/rollup-plugin-optimize.cjs';
 
 const extensions = ['.ts', '.js'];
 
