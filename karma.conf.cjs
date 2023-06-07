@@ -4,6 +4,7 @@ const rollupNodeResolve = require('@rollup/plugin-node-resolve').default;
 const rollupPluginBabel = require('@rollup/plugin-babel').default;
 const rollupPluginInstrumentTsCode = require('./plugins/rollup-plugin-instrument-ts-code.cjs');
 const babelConfig = require('./babel.config.json');
+const rollupPluginOptimize = require("./plugins/rollup-plugin-optimize.js");
 
 const isCI = !!process.env.CI;
 const watch = !!process.argv.find((arg) => arg.includes('watch')) && !isCI;
@@ -114,6 +115,7 @@ module.exports = (config) => {
             'test/**',
           ],
         }),
+        rollupPluginOptimize()
       ],
       output: {
         format: 'iife',

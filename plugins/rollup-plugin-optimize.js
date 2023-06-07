@@ -3,7 +3,6 @@
 const assignPattern = /Object\.assign/gmu;
 const createPattern = /Object\.create/gmu;
 const definePropertyPattern = /Object\.defineProperty/gmu;
-const getPrototypeOfPattern = /Object\.getPrototypeOf/gmu;
 const hasOwnPropertyPattern = /Object\.prototype\.hasOwnProperty/gmu;
 const isPrototypeOfPattern = /Object\.prototype\.isPrototypeOf/gmu;
 const setPrototypeOfPattern = /Object\.setPrototypeOf/gmu;
@@ -14,13 +13,12 @@ const {
   assign,
   create: createObject,
   defineProperty,
-  getPrototypeOf,
   prototype: {hasOwnProperty, isPrototypeOf},
   setPrototypeOf,
 } = Object;
 `;
 
-export default function rollupPluginOptimize(options) {
+export default function rollupPluginOptimize() {
   return {
     name: 'optimize',
     async renderChunk(code) {
@@ -32,7 +30,6 @@ export default function rollupPluginOptimize(options) {
         .replaceAll(createPattern, 'createObject')
         .replaceAll(definePropertyPattern, 'defineProperty')
         .replaceAll(hasOwnPropertyPattern, 'hasOwnProperty')
-        .replaceAll(getPrototypeOfPattern, 'getPrototypeOf')
         .replaceAll(isPrototypeOfPattern, 'isPrototypeOf')
         .replaceAll(setPrototypeOfPattern, 'setPrototypeOf');
     },
