@@ -4,9 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/construct-style-sheets-polyfill.svg?style=flat)](https://npmjs.org/package/construct-style-sheets-polyfill 'View this project on npm')
 [![codecov](https://codecov.io/gh/calebdwilliams/construct-style-sheets/branch/main/graph/badge.svg)](https://codecov.io/gh/calebdwilliams/construct-style-sheets)
 
-This package is a polyfill for the [constructible style sheets/adopted style sheets specification](https://github.com/WICG/construct-stylesheets/blob/gh-pages/explainer.md). The full specificaiton is enabled by default in Google Chrome as of version 73.
-
-Currently [Mozilla is considering implementation of the feature](https://github.com/mozilla/standards-positions/issues/103), marking it as "worth prototyping" while Apple has not publically signaled, they have been active in the standards discussions surrounding it.
+This package is a polyfill for the [constructible style sheets/adopted style sheets specification](https://github.com/WICG/construct-stylesheets/blob/gh-pages/explainer.md). The full specificaiton is enabled by default in Google Chrome as of version 73. Firefox only has support as of version 101, and Safari as of version 16.4.
 
 ## Use case
 
