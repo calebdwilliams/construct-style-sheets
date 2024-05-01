@@ -1,13 +1,6 @@
-import type Location from './Location';
-import {_DOMException, bootstrapper, defineProperty} from './shared';
-import {rejectImports} from './utils';
-
-const cssStyleSheetMethods = [
-  'addRule',
-  'deleteRule',
-  'insertRule',
-  'removeRule',
-];
+import type Location from './Location.js';
+import { _DOMException, bootstrapper, type UnknownFunction } from './shared.js';
+import { rejectImports } from './utils.js';
 
 const NonConstructedStyleSheet = CSSStyleSheet;
 const nonConstructedProto = NonConstructedStyleSheet.prototype;
@@ -26,237 +19,192 @@ nonConstructedProto.replaceSync = function () {
   );
 };
 
-export function isCSSStyleSheetInstance(instance: object): boolean {
-  return typeof instance === 'object'
-    ? proto.isPrototypeOf(instance) ||
-        nonConstructedProto.isPrototypeOf(instance)
-    : false;
+export function isNonConstructedStyleSheetInstance(instance: unknown): boolean {
+  return Object.prototype.isPrototypeOf.call(
+    nonConstructedProto,
+    instance as object,
+  );
 }
-
-export function isNonConstructedStyleSheetInstance(instance: object): boolean {
-  return typeof instance === 'object'
-    ? nonConstructedProto.isPrototypeOf(instance)
-    : false;
-}
-
-/*
- * Private properties
- */
-
-/**
- * Basic style element is a sample element that contains all the CSS of the
- * current constructable stylesheet. The document or custom elements can
- * adopt constructable stylesheet; in this case, basic stylesheet's CSS is
- * reflected in document/custom element internal <style> elements.
- */
-const $basicStyleElement = new WeakMap<
-  ConstructedStyleSheet,
-  HTMLStyleElement
->();
-
-/**
- * Contains all locations associated with the current ConstructedStyleSheet.
- */
-const $locations = new WeakMap<ConstructedStyleSheet, Location[]>();
-
-/**
- * Adopter is a `<style>` element that belongs to the document or a custom
- * element and contains the content of the basic stylesheet.
- *
- * This property contains a map of `<style>` adopter associated with locations.
- */
-const $adoptersByLocation = new WeakMap<
-  ConstructedStyleSheet,
-  WeakMap<Location, HTMLStyleElement>
->();
-
-type CSSStyleSheetMethodMeta = Readonly<{
-  args: IArguments;
-  method: string;
-}>;
-
-/**
- * Contains all the methods called for the constructable style sheet. Used to
- * reflect these methods in created or restyled `<style>` adopters.
- */
-const $appliedMethods = new WeakMap<
-  ConstructedStyleSheet,
-  Array<CSSStyleSheetMethodMeta>
->();
 
 /*
  * Package-level control functions
  */
+export const addAdopterLocation = Symbol();
+export const restyleAdopter = Symbol();
+export const getAdopterByLocation = Symbol();
+export const removeAdopterLocation = Symbol();
 
-export function addAdopterLocation(
-  sheet: ConstructedStyleSheet,
-  location: Location,
-): HTMLStyleElement {
-  const adopter = document.createElement('style');
-  $adoptersByLocation.get(sheet)!.set(location, adopter);
-  $locations.get(sheet)!.push(location);
+type AppliedMethod<T> = (sheet: CSSStyleSheet) => T;
 
-  return adopter;
-}
+export default class ConstructedStyleSheet implements CSSStyleSheet {
+  static {
+    (
+      [
+        'cssRules',
+        'disabled',
+        'href',
+        'media',
+        'ownerNode',
+        'ownerRule',
+        'parentStyleSheet',
+        'rules',
+        'title',
+        'type',
+      ] as const
+    ).forEach((prop) => {
+      Object.defineProperty(ConstructedStyleSheet.prototype, prop, {
+        configurable: true,
+        get(this: ConstructedStyleSheet) {
+          return this.#basicStyleElement.sheet![prop];
+        },
+        ...(prop === 'disabled'
+          ? {
+              set(this: ConstructedStyleSheet, value: boolean) {
+                this.#basicStyleElement.disabled = value;
+              },
+            }
+          : {}),
+      });
+    });
 
-export function getAdopterByLocation(
-  sheet: ConstructedStyleSheet,
-  location: Location,
-): HTMLStyleElement | undefined {
-  return $adoptersByLocation.get(sheet)!.get(location);
-}
+    (['addRule', 'insertRule', 'deleteRule', 'removeRule'] as const).forEach(
+      (method) =>
+        Object.defineProperty(ConstructedStyleSheet.prototype, method, {
+          configurable: true,
+          value(this: ConstructedStyleSheet, ...args: unknown[]): unknown {
+            return this.#apply((sheet) =>
+              (sheet[method] as UnknownFunction)(...args),
+            );
+          },
+        }),
+    );
 
-export function removeAdopterLocation(
-  sheet: ConstructedStyleSheet,
-  location: Location,
-): void {
-  $adoptersByLocation.get(sheet)!.delete(location);
-  $locations.set(
-    sheet,
-    $locations.get(sheet)!.filter((_location) => _location !== location),
-  );
-}
-
-/**
- * Re-styles a single `<style>` adopter according to the basic style sheet.
- *
- * NOTE: don't use it for disconnected adopters. It will throw an error.
- */
-export function restyleAdopter(
-  sheet: ConstructedStyleSheet,
-  adopter: HTMLStyleElement,
-): void {
-  requestAnimationFrame(() => {
-    adopter.textContent = $basicStyleElement.get(sheet)!.textContent;
-    $appliedMethods
-      .get(sheet)!
-      .forEach((command) =>
-        adopter.sheet![command.method].apply(adopter.sheet!, command.args),
-      );
-  });
-}
-
-/*
- * Private methods
- */
-
-/**
- * This method checks if the method of the class is called correctly using the
- * CSSStyleSheet instance. It is necessary to be sure that all private
- * properties are initialized.
- */
-function checkInvocationCorrectness(self: ConstructedStyleSheet) {
-  if (!$basicStyleElement.has(self)) {
-    throw new TypeError('Illegal invocation');
-  }
-}
-
-/**
- * A replacement for CSSStyleSheet class which is not actually constructable in
- * any browser that does not support Constructable Style Sheet proposal. To
- * fulfil the Constructable Style Sheet specification, it preserves a separate
- * HTMLStyleElement that behaves as a backup for all the `<style>` adopters.
- */
-declare class ConstructedStyleSheet extends CSSStyleSheet {
-  replace(text: string): Promise<ConstructedStyleSheet>;
-
-  replaceSync(text: string): void;
-}
-
-function ConstructedStyleSheet(this: ConstructedStyleSheet) {
-  const self = this;
-  const style = document.createElement('style');
-  bootstrapper.body.appendChild(style);
-
-  // Init private properties
-  $basicStyleElement.set(self, style);
-  $locations.set(self, []);
-  $adoptersByLocation.set(self, new WeakMap());
-  $appliedMethods.set(self, []);
-}
-
-const proto = ConstructedStyleSheet.prototype;
-
-proto.replace = function replace(
-  contents: string,
-): Promise<ConstructedStyleSheet> {
-  try {
-    this.replaceSync(contents);
-
-    return Promise.resolve(this);
-  } catch (e) {
-    return Promise.reject(e);
-  }
-};
-
-proto.replaceSync = function replaceSync(contents) {
-  // CSSStyleSheet.prototype.replaceSync('body {}')
-  checkInvocationCorrectness(this);
-
-  if (typeof contents === 'string') {
-    const self = this;
-
-    $basicStyleElement.get(self)!.textContent = rejectImports(contents);
-    $appliedMethods.set(self, []);
-
-    $locations.get(self)!.forEach((location) => {
-      if (location.isConnected()) {
-        // Type Note: if location is connected, adopter is already created.
-        restyleAdopter(self, getAdopterByLocation(self, location)!);
-      }
+    Object.defineProperty(ConstructedStyleSheet, Symbol.hasInstance, {
+      configurable: true,
+      value(instance: unknown) {
+        return (
+          Object.prototype.isPrototypeOf.call(
+            ConstructedStyleSheet.prototype,
+            instance as object,
+          ) ||
+          Object.prototype.isPrototypeOf.call(
+            nonConstructedProto,
+            instance as object,
+          )
+        );
+      },
     });
   }
-};
 
-defineProperty(proto, 'cssRules', {
-  configurable: true,
-  enumerable: true,
-  get: function cssRules() {
-    // CSSStyleSheet.prototype.cssRules;
-    checkInvocationCorrectness(this);
+  declare addRule: (
+    selector?: string,
+    style?: string,
+    index?: number,
+  ) => number;
 
-    return $basicStyleElement.get(this)!.sheet!.cssRules;
-  },
-});
+  declare cssRules: CSSRuleList;
+  declare deleteRule: (index: number) => void;
+  declare disabled: boolean;
+  declare href: string | null;
+  declare insertRule: (rule: string, index?: number) => number;
+  declare media: MediaList;
+  declare ownerNode: Element | ProcessingInstruction | null;
+  declare ownerRule: CSSRule | null;
+  declare parentStyleSheet: CSSStyleSheet | null;
+  declare removeRule: (index?: number) => void;
+  declare rules: CSSRuleList;
+  declare title: string | null;
+  declare type: string;
+  /**
+   * Adopter is a `<style>` element that belongs to the document or a custom
+   * element and contains the content of the basic stylesheet.
+   *
+   * This property contains a map of `<style>` adopter associated with locations.
+   */
+  readonly #adoptersByLocation = new WeakMap<Location, HTMLStyleElement>();
+  #appliedMethods: Array<AppliedMethod<unknown>> = [];
+  /**
+   * Basic style element is a sample element that contains all the CSS of the
+   * current constructable stylesheet. The document or custom elements can
+   * adopt constructable stylesheet; in this case, basic stylesheet's CSS is
+   * reflected in document/custom element internal <style> elements.
+   */
+  readonly #basicStyleElement = document.createElement('style');
+  /**
+   * Contains all locations associated with the current ConstructedStyleSheet.
+   */
+  #locations: Location[] = [];
 
-defineProperty(proto, 'media', {
-  configurable: true,
-  enumerable: true,
-  get: function media() {
-    // CSSStyleSheet.prototype.media;
-    checkInvocationCorrectness(this);
+  constructor() {
+    bootstrapper.body.appendChild(this.#basicStyleElement);
+  }
 
-    return $basicStyleElement.get(this)!.sheet!.media;
-  },
-});
+  replace(contents: string): Promise<this> {
+    try {
+      this.replaceSync(contents);
 
-cssStyleSheetMethods.forEach((method) => {
-  proto[method] = function () {
-    const self = this;
-    checkInvocationCorrectness(self);
+      return Promise.resolve(this);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
 
-    const args = arguments;
+  replaceSync(contents: string): void {
+    if (typeof contents === 'string') {
+      this.#basicStyleElement.textContent = rejectImports(contents);
+      this.#appliedMethods = [];
 
-    $appliedMethods.get(self)!.push({method, args});
+      this.#locations.forEach((location) => {
+        if (location.isConnected()) {
+          // Type Note: if location is connected, adopter is already created.
+          this[restyleAdopter](this[getAdopterByLocation](location)!);
+        }
+      });
+    }
+  }
 
-    $locations.get(self)!.forEach((location) => {
+  [addAdopterLocation](location: Location): HTMLStyleElement {
+    const adopter = document.createElement('style');
+    this.#adoptersByLocation.set(location, adopter);
+    this.#locations.push(location);
+
+    return adopter;
+  }
+
+  [getAdopterByLocation](location: Location): HTMLStyleElement | undefined {
+    return this.#adoptersByLocation.get(location);
+  }
+
+  [removeAdopterLocation](location: Location): void {
+    this.#adoptersByLocation.delete(location);
+    this.#locations = this.#locations.filter(
+      (_location) => _location !== location,
+    );
+  }
+
+  /**
+   * Re-styles a single `<style>` adopter according to the basic style sheet.
+   *
+   * NOTE: don't use it for disconnected adopters. It will throw an error.
+   */
+  [restyleAdopter](adopter: HTMLStyleElement): void {
+    requestAnimationFrame(() => {
+      adopter.textContent = this.#basicStyleElement.textContent;
+      this.#appliedMethods.forEach((callback) => callback(adopter.sheet!));
+    });
+  }
+
+  #apply<T>(callback: AppliedMethod<T>): T {
+    this.#appliedMethods.push(callback);
+
+    this.#locations.forEach((location) => {
       if (location.isConnected()) {
         // Type Note: If location is connected, adopter is already created; and
         // since it is connected to DOM, the sheet cannot be null.
-        const sheet = getAdopterByLocation(self, location)!.sheet!;
-        sheet[method].apply(sheet, args);
+        callback(this[getAdopterByLocation](location)!.sheet!);
       }
     });
 
-    const basicSheet = $basicStyleElement.get(self)!.sheet!;
-
-    return basicSheet[method].apply(basicSheet, args);
-  };
-});
-
-defineProperty(ConstructedStyleSheet, Symbol.hasInstance, {
-  configurable: true,
-  value: isCSSStyleSheetInstance,
-});
-
-export default ConstructedStyleSheet;
+    return callback(this.#basicStyleElement.sheet!);
+  }
+}

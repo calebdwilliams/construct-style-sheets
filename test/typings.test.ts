@@ -9,7 +9,7 @@ sheet
 sheet.addRule('.foo', 'color: white', 0);
 
 // Document
-document.adoptedStyleSheets = [sheet];
+document.adoptedStyleSheets.push(sheet);
 
 // Custom Elements
 
@@ -18,6 +18,6 @@ class Foo extends HTMLElement {
   constructor() {
     super();
     const root = this.attachShadow({mode: 'open'});
-    root.adoptedStyleSheets = [sheet];
+    root.adoptedStyleSheets.push(sheet);
   }
 }

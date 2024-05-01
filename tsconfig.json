@@ -1,8 +1,37 @@
 {
-  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "lib": ["dom", "es5"],
+    "jsx": "react-jsx",
+    "inlineSources": true,
+    "module": "esNext",
+    "target": "es2022",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "verbatimModuleSyntax": true
+  },
   "include": [
-    "dist/**/*.ts",
+    "plugins",
     "src/**/*.ts",
-    "test/**/*.ts"
+    "test/**/*.ts",
+    ".size-limit.cjs",
+    "commitlint.config.cjs",
+    "karma.conf.cjs",
+    "rollup.config.js"
   ]
 }

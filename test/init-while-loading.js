@@ -10,7 +10,7 @@ if ('ShadowRoot' in window) {
 
   const sheet = new CSSStyleSheet();
   sheet.replaceSync('span { color: rgb(0, 0, 255) }');
-  shadowRoot.adoptedStyleSheets = [sheet];
+  shadowRoot.adoptedStyleSheets.push(sheet);
   window.s = shadowRoot;
   document.body.appendChild(div);
 }

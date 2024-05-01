@@ -1,6 +1,6 @@
-import {closedShadowRootRegistry} from './shared';
+import { closedShadowRootRegistry } from './shared.js';
 
-const importPattern = /@import.+?;?$/gm;
+const importPattern = /@import.+?;?$/gmu;
 
 export function rejectImports(contents: string): string {
   const _contents = contents.replace(importPattern, '');
@@ -42,5 +42,5 @@ export function removeNode(node: Node): void {
 }
 
 export function getShadowRoot(element: Element): ShadowRoot | undefined {
-  return element.shadowRoot || closedShadowRootRegistry.get(element);
+  return element.shadowRoot ?? closedShadowRootRegistry.get(element);
 }

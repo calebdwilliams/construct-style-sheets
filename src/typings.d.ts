@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/unambiguous
 declare module 'construct-style-sheets-polyfill';
 
 interface CSSStyleSheet {
@@ -6,9 +7,9 @@ interface CSSStyleSheet {
 }
 
 interface Document {
-  adoptedStyleSheets: readonly CSSStyleSheet[];
+  readonly adoptedStyleSheets: CSSStyleSheet[];
 }
 
 interface ShadowRoot {
-  adoptedStyleSheets: readonly CSSStyleSheet[];
+  readonly adoptedStyleSheets: CSSStyleSheet[];
 }

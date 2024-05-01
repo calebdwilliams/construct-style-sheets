@@ -1,12 +1,13 @@
-const tsc = require('@rollup/plugin-typescript');
-const cleanup = require('rollup-plugin-cleanup');
-const copy = require('rollup-plugin-copy');
-const nodeResolve = require('@rollup/plugin-node-resolve').default;
-const injectCode = require('./plugins/rollup-plugin-inject-code');
+/* eslint-disable camelcase */
+import babel from '@rollup/plugin-babel';
+import nodeResolve from '@rollup/plugin-node-resolve';
+import terser from '@rollup/plugin-terser';
+import copy from 'rollup-plugin-copy';
+import optimize from './plugins/rollup-plugin-optimize.cjs';
 
 const extensions = ['.ts', '.js'];
 
-module.exports = {
+const rollupConfig = {
   input: 'src/index.ts',
   output: {
     file: 'dist/adoptedStyleSheets.js',
@@ -17,28 +18,37 @@ module.exports = {
     nodeResolve({
       extensions,
     }),
-    tsc({
-      isolatedModules: true,
-      tsconfig: require.resolve('./tsconfig.build.json'),
-    }),
-    cleanup({
-      extensions,
-    }),
+    babel({ babelHelpers: 'bundled', extensions }),
     copy({
       targets: [
         {
-          src: 'src/typings.d.ts',
           dest: 'dist',
           rename: 'adoptedStyleSheets.d.ts',
+          src: 'src/typings.d.ts',
         },
       ],
     }),
-    injectCode({
-      'adoptedStyleSheets.js': {
-        line: 3,
-        code:
-          "    if (typeof document === 'undefined' || 'adoptedStyleSheets' in document) { return; }\n",
+    optimize(),
+    terser({
+      compress: {
+        booleans_as_integers: true,
+        passes: 3,
+        pure_funcs: [
+          'unique',
+          'diff',
+          'getShadowRoot',
+          'isElementConnected',
+          'rejectImports',
+          'removeNode',
+        ],
+        toplevel: true,
+        unsafe: true,
+        unsafe_proto: true,
+        unsafe_symbols: true,
       },
+      ecma: 2015,
     }),
   ],
 };
+
+export default rollupConfig;
