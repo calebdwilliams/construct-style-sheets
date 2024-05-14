@@ -5,6 +5,7 @@
   "main": "dist/adoptedStyleSheets.js",
   "module": "dist/adoptedStyleSheets.js",
   "types": "dist/adoptedStyleSheets.d.ts",
+  "type": "module",
   "files": [
     "dist/adoptedStyleSheets.js",
     "dist/adoptedStyleSheets.d.ts"
