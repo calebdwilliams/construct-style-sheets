@@ -165,9 +165,13 @@ module.exports = (config) => {
             }),
             coverage && rollupPluginInstrumentTsCode(),
             rollupPluginInjectCode({
-              'index.js': {
-                line: 3,
-                code: "    if ('adoptedStyleSheets' in document) { return; }\n",
+              insertions: {
+                'index.js': [
+                  {
+                    line: 3,
+                    code: "    if ('adoptedStyleSheets' in document) { return; }\n",
+                  },
+                ],
               },
             }),
           ].filter(Boolean),
