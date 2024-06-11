@@ -216,7 +216,7 @@ function Location(this: Location, element: Document | ShadowRoot) {
     new MutationObserver((mutations, observer) => {
       // Workaround for
       // https://github.com/calebdwilliams/construct-style-sheets/pull/63
-      if (!document) {
+      if (typeof document === 'undefined') {
         observer.disconnect();
         return;
       }
